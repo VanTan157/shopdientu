@@ -1,0 +1,10 @@
+{
+  "env": {
+    "node": true
+  },
+  "extends": ["eslint:recommended", "plugin:prettier/recommended"],
+  "rules": {
+    "linebreak-style": "off", // Tắt kiểm tra kiểu xuống dòng (LF/CRLF)
+    "prettier/prettier": "off" // Tắt tích hợp Prettier trong ESLint
+  }
+}
