@@ -3,6 +3,7 @@ import Avatar from "./avatar";
 import Notification from "./notification";
 import { Input } from "./ui/input";
 import Link from "next/link";
+import { ShoppingCart } from "lucide-react";
 
 const HeaderUser = async () => {
   const cookieStore = cookies();
@@ -22,7 +23,9 @@ const HeaderUser = async () => {
           />
         </div>
         <div className="flex space-x-3 pt-3 text-xs">
-          <div className="hover:opacity-70 cursor-pointer">Điện thoại</div>
+          <div className="hover:opacity-70 cursor-pointer">
+            <Link href={"/mobiles"}>Điện thoại</Link>
+          </div>
           <div className="hover:opacity-70 cursor-pointer">Tai nghe</div>
           <div className="hover:opacity-70 cursor-pointer">Laptop</div>
           <div className="hover:opacity-70 cursor-pointer">Máy tính bảng</div>
@@ -31,7 +34,11 @@ const HeaderUser = async () => {
       </div>
       {accessToken ? (
         <>
-          <div className="hover:opacity-70 cursor-pointer">Giỏ hàng</div>
+          <div className="hover:opacity-70 cursor-pointer">
+            <Link href={"/cart"}>
+              <ShoppingCart />
+            </Link>
+          </div>
           <div className="hover:opacity-70 cursor-pointer">
             <Notification />
           </div>
@@ -41,7 +48,9 @@ const HeaderUser = async () => {
         </>
       ) : (
         <>
-          <div className="hover:opacity-70 cursor-pointer">Đăng ký</div>
+          <div className="hover:opacity-70 cursor-pointer">
+            <Link href={"/register"}>Đăng ký</Link>
+          </div>
           <div className="hover:opacity-70 cursor-pointer">
             <Link href={"/login"}>Đăng nhập</Link>
           </div>
