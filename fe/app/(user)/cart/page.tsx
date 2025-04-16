@@ -1,4 +1,4 @@
-import { CartItemMobile } from "@/lib/validate/order-item";
+import { CartItemMobile } from "@/lib/types/order-item";
 import { apiGet } from "@/lib/api";
 import { cookies } from "next/headers";
 import CartPage from "./cart-page";

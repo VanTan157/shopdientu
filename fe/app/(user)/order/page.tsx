@@ -1,5 +1,5 @@
 import { apiGet } from "@/lib/api";
-import { OrderMobile } from "@/lib/validate/order";
+import { OrderMobile } from "@/lib/types/order";
 import { cookies } from "next/headers";
 import OrderPage from "./order-page";
 

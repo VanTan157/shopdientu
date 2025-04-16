@@ -1,5 +1,5 @@
 import { apiGet } from "@/lib/api";
-import { Mobile } from "@/lib/validate/mobile";
+import { Mobile } from "@/lib/types/mobile";
 import MobileList from "../mobile-list";
 
 const Page = async () => {

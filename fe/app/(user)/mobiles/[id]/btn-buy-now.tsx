@@ -1,6 +1,6 @@
 "use client";
 
-import { Mobile } from "@/lib/validate/mobile";
+import { Mobile } from "@/lib/types/mobile";
 import { ShoppingBag } from "lucide-react";
 import { apiPost } from "@/lib/api";
 import { useRouter } from "next/navigation";

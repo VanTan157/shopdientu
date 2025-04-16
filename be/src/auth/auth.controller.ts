@@ -7,6 +7,7 @@ import {
   UnauthorizedException,
   UseGuards,
   Put,
+  Get,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LoginUserDto } from "./dto/login-user.dto";
@@ -80,6 +81,14 @@ export class AuthController {
       userId,
       changePasswordDto
     );
+    return result;
+  }
+
+  @UseGuards(AuthGuard)
+  @Get("get-me")
+  async GetMe(@Req() req: Request) {
+    const userId = (req.user as UserPayload).userId; // Lấy userId từ payload JWT qua AuthGuard
+    const result = await this.authService.getMe(userId);
     return result;
   }
 }

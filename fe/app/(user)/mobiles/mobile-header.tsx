@@ -2,7 +2,7 @@
 "use client";
 
 import { apiGet } from "@/lib/api";
-import { MobileType } from "@/lib/validate/mobile";
+import { MobileType } from "@/lib/types/mobile";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button"; // Từ shadcn/ui

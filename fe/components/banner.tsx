@@ -1,7 +1,7 @@
 // components/Banner.tsx
 "use client";
 
-import { Mobile } from "@/lib/validate/mobile";
+import { Mobile } from "@/lib/types/mobile";
 import Image from "next/image";
 import Link from "next/link";
 import "swiper/css";

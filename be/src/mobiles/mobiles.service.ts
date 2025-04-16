@@ -120,14 +120,21 @@ export class MobilesService {
 
     // Xử lý colorVariants khi có cập nhật
     if (updateMobileDto.colorVariants) {
-      const newColorVariants = updateMobileDto.colorVariants;
+      const newColorVariants: Array<{
+        color: string;
+        existingImage?: string;
+        hasNewImage?: string;
+        stock?: number;
+      }> = updateMobileDto.colorVariants;
+      let fileIndex = 0; // Theo dõi index của file trong mảng files
 
       // Xác định các ảnh cũ có thể cần xóa
       const oldImagesToCheck = mobile.colorVariants
         .filter((oldVariant) =>
           newColorVariants.some(
             (newVariant, idx) =>
-              newVariant.color === oldVariant.color && files?.[idx] // Có file mới cho màu này
+              newVariant.color === oldVariant.color &&
+              newVariant.hasNewImage === "true" // Có ảnh mới cho màu này
           )
         )
         .map((variant) => variant.image);
@@ -159,15 +166,21 @@ export class MobilesService {
       }
 
       // Cập nhật colorVariants với thông tin mới
-      colorVariants = newColorVariants.map((variant, index) => {
+      colorVariants = newColorVariants.map((variant) => {
         const existingVariant = mobile.colorVariants.find(
           (v) => v.color === variant.color
         );
+        let image = variant.existingImage || existingVariant?.image || "";
+
+        // Nếu biến thể này có ảnh mới
+        if (variant.hasNewImage === "true" && files && files[fileIndex]) {
+          image = `/image/${files[fileIndex].filename}`;
+          fileIndex++; // Tăng index để lấy file tiếp theo
+        }
+
         return {
           color: variant.color,
-          image: files?.[index]
-            ? `/image/${files[index].filename}` // Ảnh mới từ file upload
-            : existingVariant?.image || "", // Giữ ảnh cũ nếu không có file mới
+          image,
           stock: variant.stock ?? existingVariant?.stock ?? 0,
         };
       });

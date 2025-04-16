@@ -111,10 +111,8 @@ export class AuthService {
     };
   }
 
-  // async getUser(userId: string) {
-  //   const user = await this.usersService.findOne(userId);
-  //   return {
-  //     user,
-  //   };
-  // }
+  async getMe(userId: string) {
+    const user = await this.usersService.findOne(userId);
+    return user;
+  }
 }

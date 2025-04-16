@@ -1,5 +1,5 @@
 // components/MobileList.tsx
-import { Mobile } from "@/lib/validate/mobile";
+import { Mobile } from "@/lib/types/mobile";
 import Image from "next/image";
 import Link from "next/link";
 

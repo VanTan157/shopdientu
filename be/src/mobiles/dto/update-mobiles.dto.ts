@@ -33,6 +33,10 @@ export class UpdateMobileDto {
 
   @IsObject()
   @IsOptional()
+  @Transform(
+    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
+    { toClassOnly: true }
+  )
   specifications?: {
     screenSize?: number;
     resolution?: string;
@@ -46,10 +50,19 @@ export class UpdateMobileDto {
   @IsArray()
   @IsObject({ each: true })
   @IsOptional()
-  colorVariants?: { color: string; image?: string; stock?: number }[];
+  colorVariants?: {
+    color: string;
+    image?: string;
+    stock?: number;
+    hasNewImage?: string;
+  }[];
 
   @IsObject()
   @IsOptional()
+  @Transform(
+    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
+    { toClassOnly: true }
+  )
   camera?: {
     rear?: string;
     front?: string;
@@ -63,5 +76,9 @@ export class UpdateMobileDto {
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
+  @Transform(
+    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
+    { toClassOnly: true }
+  )
   tags?: string[];
 }

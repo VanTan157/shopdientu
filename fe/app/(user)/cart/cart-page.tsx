@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CartItemMobile } from "@/lib/validate/order-item";
+import { CartItemMobile } from "@/lib/types/order-item";
 import { Dialog, DialogTrigger } from "@radix-ui/react-dialog";
 import { ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";

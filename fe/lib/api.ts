@@ -90,6 +90,7 @@ export async function apiGet<T>(
       method: "GET",
       headers: getDefaultHeaders(headers),
       credentials: "include",
+      cache: "no-store",
     });
 
     const data = await response.json();
@@ -110,15 +111,16 @@ export async function apiGet<T>(
 // POST
 export async function apiPost<T, U>(
   endpoint: string,
-  body: U,
+  body: U | FormData,
   headers?: HeadersInit
 ): Promise<ApiResponse<T>> {
   console.log(BASE_URL);
   try {
+    const isFormData = body instanceof FormData;
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: "POST",
-      headers: getDefaultHeaders(headers),
-      body: JSON.stringify(body),
+      headers: isFormData ? headers : getDefaultHeaders(headers),
+      body: isFormData ? body : JSON.stringify(body),
       credentials: "include",
     });
 
@@ -140,14 +142,15 @@ export async function apiPost<T, U>(
 // PATCH
 export async function apiPatch<T, U>(
   endpoint: string,
-  body: U,
+  body: U | FormData,
   headers?: HeadersInit
 ): Promise<ApiResponse<T>> {
   try {
+    const isFormData = body instanceof FormData;
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: "PATCH",
-      headers: getDefaultHeaders(headers),
-      body: JSON.stringify(body),
+      headers: isFormData ? headers : getDefaultHeaders(headers),
+      body: isFormData ? body : JSON.stringify(body),
       credentials: "include",
     });
 

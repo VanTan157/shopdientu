@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { apiPost } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { RegisterFormInputs, RegisterResponse } from "@/lib/validate/auth";
+import { RegisterFormInputs, RegisterResponse } from "@/lib/types/auth";
 import { toast } from "sonner";
 
 const RegisterForm = () => {

@@ -1,7 +1,7 @@
 // lib/store.ts
 import { create } from "zustand";
 import { apiGet } from "@/lib/api";
-import { Mobile } from "./validate/mobile";
+import { Mobile } from "./types/mobile";
 type MobileStore = {
   mobiles: Mobile[];
   setMobiles: (products: Mobile[]) => void;

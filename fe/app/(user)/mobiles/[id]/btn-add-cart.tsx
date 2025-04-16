@@ -1,7 +1,7 @@
 // components/BtnAddToCart.tsx
 "use client";
 
-import { Mobile } from "@/lib/validate/mobile";
+import { Mobile } from "@/lib/types/mobile";
 import { ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button"; // Từ shadcn/ui

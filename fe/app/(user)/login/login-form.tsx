@@ -4,7 +4,7 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LoginFormInputs, LoginResponse } from "@/lib/validate/auth";
+import { LoginFormInputs, LoginResponse } from "@/lib/types/auth";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";

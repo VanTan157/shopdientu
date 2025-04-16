@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, Eye } from "lucide-react";
 import Image from "next/image";
-import { OrderMobile, OrderStatus } from "@/lib/validate/order";
+import { OrderMobile, OrderStatus } from "@/lib/types/order";
 import { apiPatch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -130,7 +130,7 @@ const OrderPage = ({ orders }: { orders: OrderMobile[] }) => {
                       <Eye className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-5xl">
+                  <DialogContent className="!w-[70%] ">
                     <DialogHeader>
                       <DialogTitle>Chi tiết đơn hàng: {order._id}</DialogTitle>
                     </DialogHeader>
@@ -150,11 +150,11 @@ const OrderPage = ({ orders }: { orders: OrderMobile[] }) => {
                       </p>
                       <h3 className="text-lg font-semibold">Sản phẩm:</h3>
                       {order.orderitem_ids.length > 0 ? (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto w-full">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="w-[150px]">
+                                <TableHead className="w-full">
                                   Sản phẩm
                                 </TableHead>
                                 <TableHead>Màu sắc</TableHead>
@@ -174,6 +174,7 @@ const OrderPage = ({ orders }: { orders: OrderMobile[] }) => {
                                       width={40}
                                       height={40}
                                       className="object-contain rounded-md"
+                                      quality={100}
                                     />
                                     <span className="truncate">
                                       {item.mobile_id.name}

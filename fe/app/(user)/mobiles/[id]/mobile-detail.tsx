@@ -1,10 +1,11 @@
 "use client";
-import { Mobile } from "@/lib/validate/mobile";
+import { Mobile } from "@/lib/types/mobile";
 import Image from "next/image";
 import { useState } from "react";
 import BtnBuyNow from "./btn-buy-now";
 import BtnAddToCart from "./btn-add-cart";
 const MobileDetail = ({ product }: { product: Mobile }) => {
+  console.log(product);
   const [colorVariant, setColorVariant] = useState(0);
   const totalStock = product.colorVariants.reduce(
     (sum, variant) => sum + variant.stock,
@@ -95,35 +96,39 @@ const MobileDetail = ({ product }: { product: Mobile }) => {
           <div className="mt-6">
             <p className="text-gray-600 mb-4">{product.description}</p>
             <h2 className="text-xl font-semibold mb-2">Thông số kỹ thuật</h2>
-            <ul className="space-y-2 text-gray-700">
-              <li>
-                <strong>Màn hình:</strong> {product.specifications.screenSize}"
-                ({product.specifications.resolution})
-              </li>
-              <li>
-                <strong>CPU:</strong> {product.specifications.cpu}
-              </li>
-              <li>
-                <strong>RAM:</strong> {product.specifications.ram}GB
-              </li>
-              <li>
-                <strong>Bộ nhớ:</strong> {product.specifications.storage}GB
-              </li>
-              <li>
-                <strong>Pin:</strong> {product.specifications.battery}mAh
-              </li>
-              <li>
-                <strong>Hệ điều hành:</strong> {product.specifications.os}
-              </li>
-              <li>
-                <strong>Camera sau:</strong> {product.camera.rear}
-              </li>
-              <li>
-                <strong>Camera trước:</strong> {product.camera.front}
-              </li>
-              <li>
-                <strong>Trọng lượng:</strong> {product.weight}g
-              </li>
+            <ul className=" text-gray-700 flex gap-4 justify-between flex-wrap">
+              <div className="flex flex-col gap-2">
+                <li>
+                  <strong>Màn hình:</strong> {product.specifications.screenSize}
+                  " ({product.specifications.resolution})
+                </li>
+                <li>
+                  <strong>CPU:</strong> {product.specifications.cpu}
+                </li>
+                <li>
+                  <strong>RAM:</strong> {product.specifications.ram}GB
+                </li>
+                <li>
+                  <strong>Bộ nhớ:</strong> {product.specifications.storage}GB
+                </li>
+                <li>
+                  <strong>Pin:</strong> {product.specifications.battery}mAh
+                </li>
+              </div>
+              <div className="flex flex-col gap-2">
+                <li>
+                  <strong>Hệ điều hành:</strong> {product.specifications.os}
+                </li>
+                <li>
+                  <strong>Camera sau:</strong> {product.camera.rear}
+                </li>
+                <li>
+                  <strong>Camera trước:</strong> {product.camera.front}
+                </li>
+                <li>
+                  <strong>Trọng lượng:</strong> {product.weight}g
+                </li>
+              </div>
             </ul>
           </div>
         </div>
