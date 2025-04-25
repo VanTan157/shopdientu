@@ -6,7 +6,6 @@ import { Mobile } from "@/lib/types/mobile";
 import { useEffect } from "react";
 
 export function HydrateMobileStore({ mobiles }: { mobiles: Mobile[] }) {
-  console.log("check", mobiles);
   const setMobiles = useMobileStore((state) => state.setMobiles);
 
   useEffect(() => {

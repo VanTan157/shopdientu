@@ -3,7 +3,7 @@
 
 import { Mobile } from "@/lib/types/mobile";
 import { ShoppingCart } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button"; // Từ shadcn/ui
 import {
   Dialog,

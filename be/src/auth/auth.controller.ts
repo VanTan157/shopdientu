@@ -91,4 +91,15 @@ export class AuthController {
     const result = await this.authService.getMe(userId);
     return result;
   }
+
+  @Get("google")
+  @UseGuards(new AuthGuard("google"))
+  async googleAuth(@Req() req: Request) {}
+
+  @Get("google/callback")
+  @UseGuards(new AuthGuard("google"))
+  async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
+    const result = await this.authService.googleLogin(req, res);
+    res.redirect("http://localhost:3000?login=success");
+  }
 }

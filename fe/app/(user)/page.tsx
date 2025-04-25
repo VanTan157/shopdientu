@@ -6,7 +6,6 @@ import MobileList from "./mobile-list";
 
 const Page = async () => {
   const res = await apiGet<Mobile[]>("/mobiles");
-  console.log(res);
   const mobiles = res.data || [];
   const hotDealsMobile = mobiles.filter((p) => p.IsPromotion);
   const newMobile = mobiles

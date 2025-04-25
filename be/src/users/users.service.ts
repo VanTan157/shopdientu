@@ -22,10 +22,9 @@ export class UsersService {
       throw new NotFoundException("User already exists");
     }
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(
-      createUserDto.password,
-      saltRounds
-    );
+    const hashedPassword = createUserDto.password
+      ? await bcrypt.hash(createUserDto.password, saltRounds)
+      : undefined;
     const newUser = new this.userModel({
       ...createUserDto,
       password: hashedPassword,
@@ -128,5 +127,8 @@ export class UsersService {
       throw new NotFoundException("Mật khẩu không chính xác");
     }
     return user;
+  }
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userModel.findOne({ email }).exec();
   }
 }

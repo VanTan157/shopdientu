@@ -20,8 +20,8 @@ export class CreateUserDto {
     example: "password123",
   })
   @IsString()
-  @IsNotEmpty()
-  password: string;
+  @IsOptional()
+  password?: string;
 
   @ApiProperty({
     description: "Loại người dùng",
@@ -31,4 +31,8 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   type?: string;
+
+  @IsString()
+  @IsOptional()
+  googleId?: string;
 }

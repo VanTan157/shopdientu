@@ -16,4 +16,8 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   type?: string;
+
+  @IsString()
+  @IsOptional()
+  googleId?: string;
 }

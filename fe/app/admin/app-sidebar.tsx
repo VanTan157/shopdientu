@@ -76,7 +76,7 @@ export async function AppSidebar() {
   const mobile_types = res.data || [];
 
   return (
-    <Sidebar className="pt-4">
+    <Sidebar className="">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Quản lý</SidebarGroupLabel>

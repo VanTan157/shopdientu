@@ -21,13 +21,13 @@ export class AuthService {
     }
 
     // Tạo payload cho JWT
-    const payload = { email: user.email, sub: user._id };
+    const payload = { email: user.email, sub: user._id, type: user.type };
 
     // Tạo accessToken và refreshToken
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" }); // Refresh token hết hạn sau 7 ngày
 
-    // Gửi tokens qua cookies
+    // Gửi tokens và role qua cookies
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Chỉ dùng secure trong production
@@ -42,7 +42,53 @@ export class AuthService {
 
     return {
       message: "Login successful",
-      user: { email: user.email, name: user.name },
+      user: { email: user.email, name: user.name, type: user.type },
+    };
+  }
+
+  async googleLogin(req: any, res: any) {
+    if (!req.user) {
+      throw new UnauthorizedException("No user from Google");
+    }
+
+    const { email, name, googleId } = req.user;
+
+    let user = await this.usersService.findByEmail(email);
+    if (!user) {
+      user = await this.usersService.create({
+        email,
+        name,
+        googleId,
+        type: "USER",
+      });
+    } else if (!user.googleId) {
+      user = await this.usersService.update(user._id as string, { googleId });
+    }
+
+    const payload = {
+      email: user.email,
+      sub: user._id,
+      type: user.type,
+      name: user.name,
+    };
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" });
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return {
+      message: "Google login successful",
+      user: { email: user.email, name: user.name, type: user.type },
     };
   }
 
@@ -55,12 +101,16 @@ export class AuthService {
 
     try {
       const payload = this.jwtService.verify(refreshToken);
-      const newAccessToken = this.jwtService.sign({
-        email: payload.email,
-        sub: payload.sub,
-      });
+      const user = await this.usersService.findOne(payload.sub); // Lấy thông tin user từ database
 
-      // Gửi accessToken mới qua cookie
+      if (!user) {
+        throw new UnauthorizedException("User not found");
+      }
+
+      const newPayload = { email: user.email, sub: user._id, type: user.type };
+      const newAccessToken = this.jwtService.sign(newPayload);
+
+      // Gửi accessToken và role mới qua cookie
       res.cookie("accessToken", newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -86,6 +136,9 @@ export class AuthService {
 
   async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
     const user = await this.usersService.findOne(userId);
+    if (!user.password) {
+      throw new UnauthorizedException("Người dùng không có mật khẩu");
+    }
     const isMatch = await bcrypt.compare(
       changePasswordDto.oldPassword,
       user.password

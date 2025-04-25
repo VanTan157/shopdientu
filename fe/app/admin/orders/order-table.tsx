@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-import { apiPatch } from "@/lib/api";
+import { apiPatch, apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -27,9 +27,11 @@ const OrderTable = ({ orders }: { orders: OrderMobile[] }) => {
   });
   const UpdateStatus = async ({
     orderId,
+    userId,
     status,
   }: {
     orderId: string;
+    userId: string;
     status: string;
   }) => {
     const res = await apiPatch<OrderMobile, { status: string }>(
@@ -41,6 +43,10 @@ const OrderTable = ({ orders }: { orders: OrderMobile[] }) => {
     console.log(res);
     if (res.data) {
       toast.success("Cập nhật trạng thái đơn hàng thành công!");
+      await apiPost("/notifications", {
+        userId,
+        message: `Đơn hàng ${orderId} của bạn đã chuyển sang trạng thái ${status}!`,
+      });
       router.refresh();
     } else if (res.error) toast.error(res.error);
     else
@@ -151,6 +157,7 @@ const OrderTable = ({ orders }: { orders: OrderMobile[] }) => {
                           onClick={() =>
                             UpdateStatus({
                               orderId: order._id,
+                              userId: order.user_id,
                               status: "Đã xác nhận",
                             })
                           }
@@ -162,6 +169,7 @@ const OrderTable = ({ orders }: { orders: OrderMobile[] }) => {
                           onClick={() =>
                             UpdateStatus({
                               orderId: order._id,
+                              userId: order.user_id,
                               status: "Đã hủy",
                             })
                           }
@@ -176,6 +184,7 @@ const OrderTable = ({ orders }: { orders: OrderMobile[] }) => {
                         onClick={() =>
                           UpdateStatus({
                             orderId: order._id,
+                            userId: order.user_id,
                             status: "Đang vận chuyển",
                           })
                         }

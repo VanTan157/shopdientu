@@ -6,7 +6,7 @@ import { apiPost } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
   const router = useRouter();
@@ -24,12 +31,105 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
   // State cho form
   const [isOpen, setIsOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [address, setAddress] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+  const [ward, setWard] = useState("");
+  const [street, setStreet] = useState("");
+  const [provinces, setProvinces] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [wards, setWards] = useState<any[]>([]);
 
   const handleBuyNow = async () => {
     setIsOpen(true);
+  };
+
+  const isVietnamesePhoneNumber = (number: string) => {
+    return /(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})\b/.test(number);
+  };
+  // Gọi API tỉnh/thành phố
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        const response = await fetch("/api/provinces", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch provinces");
+        }
+        const data = await response.json();
+        console.log("check", data);
+        setProvinces(data.results);
+      } catch (error) {
+        console.error("Error fetching provinces:", error);
+        toast.error("Không thể tải danh sách tỉnh/thành phố!");
+      }
+    };
+    fetchProvinces();
+  }, [province]);
+
+  useEffect(() => {
+    if (district) {
+      const fetchWards = async () => {
+        try {
+          const response = await fetch(`/api/wards/${district}`, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+          });
+          if (!response.ok) {
+            throw new Error("Failed to fetch wards");
+          }
+          const data = await response.json();
+          setWards(data.results);
+          setWard("");
+        } catch (error) {
+          console.error("Error fetching wards:", error);
+          toast.error("Không thể tải danh sách phường/xã!");
+        }
+      };
+      fetchWards();
+    }
+  }, [district]);
+
+  useEffect(() => {
+    if (province) {
+      const fetchDistricts = async () => {
+        try {
+          const response = await fetch(`/api/districts/${province}`, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+          });
+          if (!response.ok) {
+            throw new Error("Failed to fetch districts");
+          }
+          const data = await response.json();
+          setDistricts(data.results);
+          setDistrict("");
+          setWards([]);
+        } catch (error) {
+          console.error("Error fetching districts:", error);
+          toast.error("Không thể tải danh sách quận/huyện!");
+        }
+      };
+      fetchDistricts();
+    }
+  }, [province]);
+
+  const getFullAddress = () => {
+    const provinceName =
+      provinces.find((p) => p.province_id === province)?.province_name || "";
+    const districtName =
+      districts.find((d) => d.district_id === district)?.district_name || "";
+    const wardName = wards.find((w) => w.ward_id === ward)?.ward_name || "";
+    return `${street}, ${wardName}, ${districtName}, ${provinceName}`;
   };
 
   const handleConfirmBuy = async () => {
@@ -48,9 +148,20 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
         setIsLoading(false);
         return;
       }
-      if (!phoneNumber || !address || quantity < 1) {
+      if (
+        !phoneNumber ||
+        !street ||
+        quantity < 1 ||
+        !province ||
+        !district ||
+        !ward
+      ) {
         toast.error("Vui lòng điền đầy đủ thông tin!");
         setIsLoading(false);
+        return;
+      }
+      if (!isVietnamesePhoneNumber(phoneNumber)) {
+        toast.error("Số điện thoại không hợp lệ!");
         return;
       }
 
@@ -79,8 +190,8 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
       // Bước 2: Tạo Order
       const orderData = {
         orderitem_ids: [orderItemId],
-        phone_number: phoneNumber, // Từ form
-        address: address, // Từ form
+        phone_number: phoneNumber,
+        address: getFullAddress(),
       };
 
       const orderResponse = await apiPost<any, typeof orderData>(
@@ -145,14 +256,77 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
               />
             </div>
             <div>
-              <Label htmlFor="address" className="mb-2">
-                Địa chỉ
+              <Label htmlFor="province" className="mb-2">
+                Tỉnh/Thành phố
+              </Label>
+              <Select
+                value={province}
+                onValueChange={setProvince}
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn tỉnh/thành phố" />
+                </SelectTrigger>
+                <SelectContent>
+                  {provinces.map((p) => (
+                    <SelectItem key={p.province_id} value={p.province_id}>
+                      {p.province_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="district" className="mb-2">
+                Quận/Huyện
+              </Label>
+              <Select
+                value={district}
+                onValueChange={setDistrict}
+                disabled={isLoading || !province}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn quận/huyện" />
+                </SelectTrigger>
+                <SelectContent>
+                  {districts.map((d) => (
+                    <SelectItem key={d.district_id} value={d.district_id}>
+                      {d.district_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="ward" className="mb-2">
+                Phường/Xã
+              </Label>
+              <Select
+                value={ward}
+                onValueChange={setWard}
+                disabled={isLoading || !district}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn phường/xã" />
+                </SelectTrigger>
+                <SelectContent>
+                  {wards.map((w) => (
+                    <SelectItem key={w.ward_id} value={w.ward_id}>
+                      {w.ward_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="street" className="mb-2">
+                Đường, số nhà
               </Label>
               <Input
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Nhập địa chỉ giao hàng"
+                id="street"
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                placeholder="Nhập đường, số nhà"
                 disabled={isLoading}
               />
             </div>

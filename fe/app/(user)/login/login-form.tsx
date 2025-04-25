@@ -8,6 +8,7 @@ import { LoginFormInputs, LoginResponse } from "@/lib/types/auth";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Facebook, Circle } from "lucide-react"; //ng Circle làm placeholder cho Google
 
 const LoginPage = () => {
   const {
@@ -68,7 +69,7 @@ const LoginPage = () => {
             htmlFor="password"
             className="block text-sm font-medium text-gray-700"
           >
-            Password
+            Mật khẩu
           </label>
           <Input
             id="password"
@@ -89,6 +90,56 @@ const LoginPage = () => {
             </p>
           )}
         </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <input
+              id="remember"
+              type="checkbox"
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label
+              htmlFor="remember"
+              className="ml-2 block text-sm text-gray-900"
+            >
+              Ghi nhớ tôi
+            </label>
+          </div>
+          <a href="#" className="text-sm text-blue-500 hover:underline">
+            Quên mật khẩu?
+          </a>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <hr className="w-full border-gray-300" />
+          <span className="mx-2 text-gray-500">Hoặc</span>
+          <hr className="w-full border-gray-300" />
+        </div>
+        <div className="space-y-">
+          <div className="flex justify-center gap-4">
+            <div
+              className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 border rounded-md px-4 py-2 cursor-pointer"
+              onClick={() => {
+                // Thêm logic đăng nhập Facebook tại đây
+                console.log("Đã nhấn đăng nhập Facebook");
+              }}
+            >
+              <Facebook className="w-5 h-5 text-blue-600" />
+              Facebook
+            </div>
+            <div
+              className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 border rounded-md px-4 py-2 cursor-pointer"
+              onClick={() => {
+                // Thêm logic đăng nhập Google tại đây
+                console.log("Đã nhấn đăng nhập Google");
+              }}
+            >
+              <Circle className="w-5 h-5 text-red-500" />
+              Google
+            </div>
+          </div>
+        </div>
+
         <Button
           type="submit"
           className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md"
