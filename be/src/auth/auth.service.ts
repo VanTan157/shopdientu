@@ -3,6 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import { UsersService } from "../users/users.service";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { ChangePasswordDto, UpdateProfileDto } from "./dto/update-profile.dto";
+import { Request, Response } from "express";
 import * as bcrypt from "bcrypt";
 
 @Injectable()
@@ -12,7 +13,7 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async login(loginUserDto: LoginUserDto, res: any) {
+  async login(loginUserDto: LoginUserDto, res: Response) {
     const { email, password } = loginUserDto;
     const user = await this.usersService.validateUser(email, password);
 
@@ -20,24 +21,22 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    // Tạo payload cho JWT
-    const payload = { email: user.email, sub: user._id, type: user.type };
-
-    // Tạo accessToken và refreshToken
+    const payload = { email: user.email, userId: user._id, type: user.type };
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" }); // Refresh token hết hạn sau 7 ngày
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" });
 
-    // Gửi tokens và role qua cookies
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Chỉ dùng secure trong production
-      maxAge: 15 * 60 * 1000, // 15 phút
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return {
@@ -46,30 +45,25 @@ export class AuthService {
     };
   }
 
-  async googleLogin(req: any, res: any) {
-    if (!req.user) {
-      throw new UnauthorizedException("No user from Google");
+  async googleLogin(user: any, res: Response) {
+    if (!user || !user.googleId || !user.email) {
+      throw new UnauthorizedException("Invalid Google user data");
     }
 
-    const { email, name, googleId } = req.user;
-
-    let user = await this.usersService.findByEmail(email);
-    if (!user) {
-      user = await this.usersService.create({
-        email,
-        name,
-        googleId,
+    let dbUser = await this.usersService.findByGoogleId(user.googleId);
+    if (!dbUser) {
+      dbUser = await this.usersService.create({
+        googleId: user.googleId,
+        email: user.email,
+        name: user.name,
         type: "USER",
       });
-    } else if (!user.googleId) {
-      user = await this.usersService.update(user._id as string, { googleId });
     }
 
     const payload = {
-      email: user.email,
-      sub: user._id,
-      type: user.type,
-      name: user.name,
+      email: dbUser.email,
+      userId: dbUser._id,
+      type: dbUser.type,
     };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" });
@@ -77,48 +71,53 @@ export class AuthService {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return {
-      message: "Google login successful",
-      user: { email: user.email, name: user.name, type: user.type },
+      user: { email: dbUser.email, name: dbUser.name, type: dbUser.type },
     };
   }
 
-  async refreshToken(req: any, res: any) {
-    const refreshToken = req.cookies["refreshToken"];
-
+  async refreshToken(req: Request, res: Response) {
+    const refreshToken = (req as any).cookies["refreshToken"];
     if (!refreshToken) {
       throw new UnauthorizedException("No refresh token provided");
     }
 
     try {
       const payload = this.jwtService.verify(refreshToken);
-      const user = await this.usersService.findOne(payload.sub); // Lấy thông tin user từ database
-
+      const user = await this.usersService.findOne(payload.userId);
       if (!user) {
+        res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
         throw new UnauthorizedException("User not found");
       }
 
-      const newPayload = { email: user.email, sub: user._id, type: user.type };
+      const newPayload = {
+        email: user.email,
+        userId: user._id,
+        type: user.type,
+      };
       const newAccessToken = this.jwtService.sign(newPayload);
 
-      // Gửi accessToken và role mới qua cookie
       res.cookie("accessToken", newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        maxAge: 15 * 60 * 1000, // 15 phút
+        sameSite: "strict",
+        maxAge: 15 * 60 * 1000,
       });
 
       return { message: "Token refreshed successfully" };
     } catch (e) {
+      res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
       throw new UnauthorizedException("Invalid refresh token");
     }
   }
@@ -130,7 +129,11 @@ export class AuthService {
     return {
       success: true,
       message: "Cập nhật tên thành công",
-      user: updatedUser,
+      user: {
+        email: updatedUser.email,
+        name: updatedUser.name,
+        type: updatedUser.type,
+      },
     };
   }
 
@@ -143,7 +146,6 @@ export class AuthService {
       changePasswordDto.oldPassword,
       user.password
     );
-
     if (!isMatch) {
       throw new UnauthorizedException("Mật khẩu cũ không đúng");
     }
@@ -159,13 +161,17 @@ export class AuthService {
     });
     return {
       success: true,
-      user: updatedUser,
       message: "Đổi mật khẩu thành công",
+      user: {
+        email: updatedUser.email,
+        name: updatedUser.name,
+        type: updatedUser.type,
+      },
     };
   }
 
   async getMe(userId: string) {
     const user = await this.usersService.findOne(userId);
-    return user;
+    return { email: user.email, name: user.name, type: user.type };
   }
 }

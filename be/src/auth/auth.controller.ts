@@ -14,6 +14,7 @@ import { LoginUserDto } from "./dto/login-user.dto";
 import { Response, Request } from "express";
 import { AuthGuard } from "./auth.guard";
 import { ChangePasswordDto, UpdateProfileDto } from "./dto/update-profile.dto";
+import { AuthGuard as PassportAuthGuard } from "@nestjs/passport";
 
 interface UserPayload {
   userId: string;
@@ -30,7 +31,7 @@ export class AuthController {
   @Post("me")
   async getProfile(@Req() req: Request) {
     if (!req.user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException("User not authenticated");
     }
     return req.user;
   }
@@ -51,8 +52,8 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Post("logout")
   logout(@Res() res: Response) {
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
+    res.clearCookie("accessToken", { httpOnly: true, sameSite: "strict" });
+    res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
     return res.json({ message: "Logged out successfully" });
   }
 
@@ -62,12 +63,11 @@ export class AuthController {
     @Req() req: Request,
     @Body() updateProfileDto: UpdateProfileDto
   ) {
-    const userId = (req.user as UserPayload).userId;
-    const result = await this.authService.updateProfile(
-      userId,
-      updateProfileDto
-    );
-    return result;
+    const user = req.user as UserPayload;
+    if (!user?.userId) {
+      throw new UnauthorizedException("Invalid user payload");
+    }
+    return this.authService.updateProfile(user.userId, updateProfileDto);
   }
 
   @UseGuards(AuthGuard)
@@ -76,30 +76,39 @@ export class AuthController {
     @Req() req: Request,
     @Body() changePasswordDto: ChangePasswordDto
   ) {
-    const userId = (req.user as UserPayload).userId; // Lấy userId từ payload JWT qua AuthGuard
-    const result = await this.authService.changePassword(
-      userId,
-      changePasswordDto
-    );
-    return result;
+    const user = req.user as UserPayload;
+    if (!user?.userId) {
+      throw new UnauthorizedException("Invalid user payload");
+    }
+    return this.authService.changePassword(user.userId, changePasswordDto);
   }
 
   @UseGuards(AuthGuard)
   @Get("get-me")
-  async GetMe(@Req() req: Request) {
-    const userId = (req.user as UserPayload).userId; // Lấy userId từ payload JWT qua AuthGuard
-    const result = await this.authService.getMe(userId);
-    return result;
+  async getMe(@Req() req: Request) {
+    const user = req.user as UserPayload;
+    if (!user?.userId) {
+      throw new UnauthorizedException("Invalid user paylod");
+    }
+    return this.authService.getMe(user.userId);
   }
 
   @Get("google")
-  @UseGuards(new AuthGuard("google"))
-  async googleAuth(@Req() req: Request) {}
+  @UseGuards(PassportAuthGuard("google"))
+  async googleAuth() {}
 
   @Get("google/callback")
-  @UseGuards(new AuthGuard("google"))
+  @UseGuards(PassportAuthGuard("google"))
   async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
-    const result = await this.authService.googleLogin(req, res);
-    res.redirect("http://localhost:3000?login=success");
+    try {
+      if (!req.user) {
+        return res.redirect("http://localhost:3000?error=google_auth_failed");
+      }
+      await this.authService.googleLogin(req.user, res);
+      return res.redirect("http://localhost:3000/login?success=google_auth");
+    } catch (error) {
+      console.error("Google callback error:", error);
+      return res.redirect("http://localhost:3000?error=server_error");
+    }
   }
 }

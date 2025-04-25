@@ -1,14 +1,15 @@
-// app/(user)/login/page.tsx
 "use client";
 
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoginFormInputs, LoginResponse } from "@/lib/types/auth";
-import { apiPost } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Facebook, Circle } from "lucide-react"; //ng Circle làm placeholder cho Google
+import { Circle, Facebook } from "lucide-react";
+import { useGoogleLogin } from "@react-oauth/google";
+import { useEffect, useState } from "react";
 
 const LoginPage = () => {
   const {
@@ -16,6 +17,7 @@ const LoginPage = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormInputs>();
+  const [loading, setLoading] = useState<boolean>();
   const router = useRouter();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
@@ -24,7 +26,6 @@ const LoginPage = () => {
       data,
       {}
     );
-    console.log(response);
     if (response.error) {
       toast.error(response.error);
     }
@@ -33,9 +34,37 @@ const LoginPage = () => {
       router.push("/");
       router.refresh();
     }
-    console.log("Dữ liệu đăng nhập:", data);
   };
 
+  const handleGoogleLogin = () => {
+    // Chuyển hướng trực tiếp tới endpoint Google trên backend
+    setLoading(true);
+    window.location.href = "http://localhost:8080/auth/google";
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "google_auth") {
+      setLoading(true);
+      toast.success("Đăng nhập Google thành công");
+      router.push("/");
+      setLoading(false);
+      router.refresh(); // Làm mới trang để cập nhật Server Component
+    } else if (params.get("error")) {
+      toast.error("Đăng nhập Google thất bại");
+    }
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="flex items-center gap-4 justify-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-lg font-medium text-gray-700">Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold text-center mb-6">Đăng nhập</h2>
@@ -115,24 +144,27 @@ const LoginPage = () => {
           <span className="mx-2 text-gray-500">Hoặc</span>
           <hr className="w-full border-gray-300" />
         </div>
-        <div className="space-y-">
+
+        <div className="space-y-3">
+          <div className="text-sm font-medium text-gray-700 text-center">
+            Đăng nhập bằng
+          </div>
           <div className="flex justify-center gap-4">
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="Đăng nhập bằng Facebook"
               className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 border rounded-md px-4 py-2 cursor-pointer"
-              onClick={() => {
-                // Thêm logic đăng nhập Facebook tại đây
-                console.log("Đã nhấn đăng nhập Facebook");
-              }}
             >
               <Facebook className="w-5 h-5 text-blue-600" />
               Facebook
             </div>
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="Đăng nhập bằng Google"
               className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 border rounded-md px-4 py-2 cursor-pointer"
-              onClick={() => {
-                // Thêm logic đăng nhập Google tại đây
-                console.log("Đã nhấn đăng nhập Google");
-              }}
+              onClick={() => handleGoogleLogin()}
             >
               <Circle className="w-5 h-5 text-red-500" />
               Google

@@ -15,8 +15,8 @@ async function bootstrap() {
   app.enableCors({
     origin: "http://localhost:3000", // Cho phép FE từ localhost:3000
     credentials: true, // Cho phép gửi/nhận cookies
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Các phương thức được phép
-    allowedHeaders: "Content-Type, Accept", // Headers được phép
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS", // Các phương thức được phép
+    allowedHeaders: "Content-Type, Accept, Authorization", // Headers được phép
   });
   await app.listen(process.env.PORT ?? 8080, "0.0.0.0");
 }

@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 
-@Schema()
+@Schema({ timestamps: true })
 export class User extends Document {
   @Prop({ required: true })
   name: string;
@@ -10,16 +10,16 @@ export class User extends Document {
   email: string;
 
   @Prop()
-  password: string; // Không bắt buộc vì người dùng đăng nhập xã hội không cần mật khẩu
+  password: string;
 
   @Prop({ required: true, default: "USER" })
   type: string;
 
-  @Prop()
-  googleId: string; // Thêm trường cho Google
+  @Prop({ unique: true, sparse: true })
+  googleId: string;
 
-  @Prop()
-  facebookId: string; // Thêm trường cho Facebook
+  @Prop({ unique: true, sparse: true })
+  facebookId: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

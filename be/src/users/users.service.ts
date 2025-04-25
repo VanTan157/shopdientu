@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  ConflictException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -15,16 +16,23 @@ export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.userModel
-      .findOne({ email: createUserDto.email })
+    const existingUser = await this.userModel
+      .findOne({
+        $or: [
+          { email: createUserDto.email },
+          createUserDto.googleId ? { googleId: createUserDto.googleId } : {},
+        ],
+      })
       .exec();
-    if (user) {
-      throw new NotFoundException("User already exists");
+    if (existingUser) {
+      throw new ConflictException("Email or Google ID already exists");
     }
+
     const saltRounds = 10;
     const hashedPassword = createUserDto.password
       ? await bcrypt.hash(createUserDto.password, saltRounds)
       : undefined;
+
     const newUser = new this.userModel({
       ...createUserDto,
       password: hashedPassword,
@@ -33,44 +41,36 @@ export class UsersService {
   }
 
   async paginationSearch(
-    page: number = 1, // Trang mặc định là 1
-    limit: number = 10, // Số lượng bản ghi mỗi trang mặc định là 10
-    search?: string // Từ khóa tìm kiếm (tùy chọn)
+    page: number = 1,
+    limit: number = 10,
+    search?: string
   ): Promise<{
     users: User[];
     totalItems: number;
     totalPages: number;
     currentPage: number;
   }> {
-    // Chuẩn hóa tham số page và limit
-    const currentPage = Math.max(1, page); // Đảm bảo page không nhỏ hơn 1
-    const itemsPerPage = Math.max(1, limit); // Đảm bảo limit không nhỏ hơn 1
-    const skip = (currentPage - 1) * itemsPerPage; // Số bản ghi cần bỏ qua
+    const currentPage = Math.max(1, page);
+    const itemsPerPage = Math.max(1, limit);
+    const skip = (currentPage - 1) * itemsPerPage;
 
-    // Điều kiện tìm kiếm
     const query: any = {};
     if (search) {
-      // Tìm kiếm không phân biệt hoa thường trên email hoặc name
       query.$or = [
         { email: { $regex: search, $options: "i" } },
         { name: { $regex: search, $options: "i" } },
       ];
     }
 
-    // Lấy tổng số bản ghi
     const totalItems = await this.userModel.countDocuments(query).exec();
-
-    // Lấy danh sách người dùng với phân trang
     const users = await this.userModel
       .find(query)
       .skip(skip)
       .limit(itemsPerPage)
       .exec();
 
-    // Tính tổng số trang
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-    // Trả về kết quả
     return {
       users,
       totalItems,
@@ -84,51 +84,58 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<User> {
+    console.log("findOne", id);
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("ID không hợp lệ");
+      throw new NotFoundException("Invalid user ID11");
     }
-    const user = await this.userModel.findById({ _id: id }).exec();
+    const user = await this.userModel.findById(id).exec();
     if (!user) {
-      throw new NotFoundException("Không tìm thấy người dùng");
+      throw new NotFoundException("User not found");
     }
     return user;
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.userModel.findOne({ googleId }).exec();
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userModel.findOne({ email }).exec();
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("ID không hợp lệ");
+      throw new NotFoundException("Invalid user ID");
     }
     const user = await this.userModel
-      .findByIdAndUpdate({ _id: id }, { $set: updateUserDto }, { new: true })
+      .findByIdAndUpdate(id, { $set: updateUserDto }, { new: true })
       .exec();
     if (!user) {
-      throw new NotFoundException("Không tìm thấy người dùng");
+      throw new NotFoundException("User not found");
     }
     return user;
   }
 
   async remove(id: string): Promise<User> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("ID không hợp lệ");
+      throw new NotFoundException("Invalid user ID");
     }
-    const user = await this.userModel.findByIdAndDelete({ _id: id }).exec();
+    const user = await this.userModel.findByIdAndDelete(id).exec();
     if (!user) {
-      throw new NotFoundException("Không tìm thấy người dùng");
+      throw new NotFoundException("User not found");
     }
     return user;
   }
+
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userModel.findOne({ email }).exec();
-    if (!user) {
-      throw new NotFoundException("Email không chính xác");
+    if (!user || !user.password) {
+      throw new UnauthorizedException("Tài khoản không tồn tại");
     }
-    const checkPassword = await bcrypt.compare(password, user.password);
-    if (!checkPassword) {
-      throw new NotFoundException("Mật khẩu không chính xác");
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new UnauthorizedException("Sai mật khẩu");
     }
     return user;
-  }
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email }).exec();
   }
 }

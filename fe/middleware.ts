@@ -14,6 +14,7 @@ export async function middleware(request: NextRequest) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken");
   const url = request.nextUrl.pathname;
+  console.log("url", url);
   if (authURL.some((path) => url.includes(path)) && accessToken)
     return NextResponse.redirect(new URL("/", request.url));
   if (privateURL.some((path) => url.includes(path)) && !accessToken) {

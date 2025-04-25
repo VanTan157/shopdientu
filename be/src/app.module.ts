@@ -13,6 +13,10 @@ import { NotificationsGateway } from "./notifications.gateway";
 import { NotificationsModule } from "./notifications/notifications.module";
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // Làm ConfigModule доступным toàn cục
+      envFilePath: ".env", // Đảm bảo tải file .env
+    }),
     MongooseModule.forRoot("mongodb://localhost:27017/nestjs_db"),
     UsersModule,
     AuthModule,
