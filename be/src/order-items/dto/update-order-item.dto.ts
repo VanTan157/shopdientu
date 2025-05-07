@@ -1,10 +1,15 @@
 import { Transform } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsString, Min } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsString, Min } from "class-validator";
+import { ProductType } from "../entities/order-item.entity";
 
 export class UpdateOrderItemDto {
   @IsNotEmpty()
   @IsString()
-  mobile_id: string;
+  product_id: string;
+
+  @IsNotEmpty()
+  @IsEnum(ProductType)
+  product_type: ProductType;
 
   @IsNotEmpty()
   @Transform(({ value }) => parseInt(value, 10)) // Chuyển chuỗi thành số nguyên

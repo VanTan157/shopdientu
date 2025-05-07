@@ -17,7 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CartItemMobile } from "@/lib/types/order-item";
 import { Dialog, DialogTrigger } from "@radix-ui/react-dialog";
 import { ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -34,8 +33,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CartItem } from "@/lib/types/order-item";
 
-const CartPage = ({ carts }: { carts: CartItemMobile[] }) => {
+const CartPage = ({ carts }: { carts: CartItem[] }) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [address, setAddress] = useState("");
@@ -245,12 +245,12 @@ const CartPage = ({ carts }: { carts: CartItemMobile[] }) => {
               <TableCell className="flex items-center gap-4">
                 <Image
                   src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${item.colorVariant.image}`}
-                  alt={item.mobile_id.name}
+                  alt={item.product.name}
                   width={50}
                   height={50}
                   className="object-contain rounded-md"
                 />
-                <span>{item.mobile_id.name}</span>
+                <span>{item.product.name}</span>
               </TableCell>
               <TableCell>{item.colorVariant.color}</TableCell>
               <TableCell>{item.quantity}</TableCell>
@@ -270,7 +270,7 @@ const CartPage = ({ carts }: { carts: CartItemMobile[] }) => {
                       <DialogTitle>Xác nhận xóa</DialogTitle>
                     </DialogHeader>
                     <p>
-                      Bạn có chắc muốn xóa {item.mobile_id.name} khỏi giỏ hàng?
+                      Bạn có chắc muốn xóa {item.product.name} khỏi giỏ hàng?
                     </p>
                     <DialogFooter>
                       <Button variant="outline">Hủy</Button>

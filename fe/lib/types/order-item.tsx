@@ -1,55 +1,19 @@
-export interface Specifications {
-  screenSize: string;
-  resolution: string;
-  cpu: string;
-  ram: string;
-  storage: string;
-  battery: string;
-  os: string;
-}
+import { Laptop } from "./laptop";
+import { Mobile } from "./mobile";
 
-export interface Camera {
-  rear: string;
-  front: string;
-}
-
-export interface ColorVariant {
-  color: string;
-  image: string;
-  stock: number;
-  _id: string;
-}
-
-export interface Mobile {
-  _id: string;
-  name: string;
-  StartingPrice: number;
-  promotion: number;
-  IsPromotion: boolean;
-  finalPrice: number;
-  description: string;
-  mobile_type_id: string;
-  specifications: Specifications;
-  colorVariants: ColorVariant[];
-  isAvailable: boolean;
-  camera: Camera;
-  weight: number;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
+// Type cho CartColorVariant
 export interface CartColorVariant {
   _id: string;
   color: string;
   image: string;
 }
 
-export interface CartItemMobile {
+// Type cho CartItem (sửa để hỗ trợ cả Mobile và Laptop)
+export interface CartItem {
   _id: string;
   user_id: string;
-  mobile_id: Mobile;
+  product_id: string; // Thay vì mobile_id
+  product_type: "mobile" | "laptop"; // Enum cho product_type
   quantity: number;
   unit_price: number;
   total_price: number;
@@ -57,4 +21,5 @@ export interface CartItemMobile {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  product: Mobile | Laptop; // Trường product có thể là Mobile hoặc Laptop
 }

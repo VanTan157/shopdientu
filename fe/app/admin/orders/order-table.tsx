@@ -1,6 +1,5 @@
 "use client";
 
-import { OrderMobile } from "@/lib/types/order";
 import OrderDetail from "./order-detail";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
@@ -15,16 +14,19 @@ import { useEffect, useState } from "react";
 import { apiPatch, apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Order } from "@/lib/types/order";
 
-const OrderTable = ({ orders }: { orders: OrderMobile[] }) => {
+const OrderTable = ({ orders }: { orders: Order[] }) => {
   console.log(orders);
   const router = useRouter();
   const [orderStatus, setOrderStatus] = useState<string>("Tất cả");
+  const [product_type, setProductType] = useState<string>("Tất cả");
   console.log(orderStatus);
   const ordersByStatus = orders.filter((order) => {
     if (orderStatus === "Tất cả") return true; // Hiển thị tất cả đơn hàng
     return order.status === orderStatus; // Hiển thị đơn hàng theo trạng thái đã chọn
   });
+
   const UpdateStatus = async ({
     orderId,
     userId,
@@ -34,12 +36,9 @@ const OrderTable = ({ orders }: { orders: OrderMobile[] }) => {
     userId: string;
     status: string;
   }) => {
-    const res = await apiPatch<OrderMobile, { status: string }>(
-      `/order/${orderId}`,
-      {
-        status: status,
-      }
-    );
+    const res = await apiPatch<Order, { status: string }>(`/order/${orderId}`, {
+      status: status,
+    });
     console.log(res);
     if (res.data) {
       toast.success("Cập nhật trạng thái đơn hàng thành công!");

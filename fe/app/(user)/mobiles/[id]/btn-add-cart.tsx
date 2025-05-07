@@ -34,7 +34,8 @@ const BtnAddToCart = ({
   const handleAddToCart = async () => {
     setLoading(true);
     const res = await apiPost("/order-items", {
-      mobile_id: product._id,
+      product_id: product._id,
+      product_type: "mobile",
       quantity,
       colorVariant: product.colorVariants[index],
     });

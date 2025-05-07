@@ -225,7 +225,7 @@ export class MobilesService {
     }
 
     // Xóa bản ghi trong database
-    return this.mobileModel.findByIdAndDelete(id).exec();
+    return await this.mobileModel.findByIdAndDelete(id).exec();
   }
 
   async findByMobileType(mobileTypeId: string): Promise<Mobile[]> {

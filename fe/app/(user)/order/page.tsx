@@ -1,13 +1,13 @@
 import { apiGet } from "@/lib/api";
-import { OrderMobile } from "@/lib/types/order";
 import { cookies } from "next/headers";
 import OrderPage from "./order-page";
+import { Order } from "@/lib/types/order";
 
 const Cart = async () => {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value || null;
   console.log("accessToken", accessToken);
-  const res = await apiGet<OrderMobile[]>("/order/find-by-user", {
+  const res = await apiGet<Order[]>("/order/find-by-user", {
     Cookie: `accessToken=${accessToken}`,
   });
   console.log(res);

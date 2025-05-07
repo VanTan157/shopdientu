@@ -1,4 +1,4 @@
-import { CartItemMobile } from "./order-item";
+import { CartItem } from "./order-item";
 
 export type OrderStatus =
   | "Đang chờ xác nhận"
@@ -7,16 +7,21 @@ export type OrderStatus =
   | "Hoàn thành"
   | "Đã hủy";
 
-export interface OrderMobile {
+export interface Order {
   _id: string;
   user_id: string;
-  orderitem_ids: CartItemMobile[]; // Populate từ OrderItem
+  orderitem_ids: CartItem[];
+  total_amount: number;
   phone_number: string;
   address: string;
-  status: OrderStatus;
-  total_amount: number;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
+  status:
+    | "Đang chờ xác nhận"
+    | "Đã xác nhận"
+    | "Đang vận chuyển"
+    | "Hoàn thành"
+    | "Đã hủy";
+  createdAt: string;
+  updatedAt: string;
   __v: number;
 }
 

@@ -2,7 +2,7 @@ import Banner from "@/components/banner";
 import { HydrateMobileStore } from "@/components/HydrateMobileStore";
 import { apiGet } from "@/lib/api";
 import { Mobile } from "@/lib/types/mobile";
-import MobileList from "./mobile-list";
+import MobileList from "./mobiles/mobile-list";
 
 const Page = async () => {
   const res = await apiGet<Mobile[]>("/mobiles");

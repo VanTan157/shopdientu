@@ -12,23 +12,13 @@ const AdminMobilePage = async ({
   params: Promise<{ type: string }>;
 }) => {
   const resMobiles = await apiGet<Mobile[]>("/mobiles");
-  const resTypes = await apiGet<MobileType[]>("/mobile-types"); // Giả định endpoint lấy MobileType
+  const resTypes = await apiGet<MobileType[]>("/mobile-types");
   const { type } = await params;
 
   const mobiles =
     resMobiles?.data?.filter((mobile) => mobile.mobile_type_id.type === type) ||
     [];
   const mobileTypes = resTypes?.data || [];
-
-  // if (!mobiles || mobiles.length === 0) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-screen bg-white">
-  //       <p className="text-lg text-gray-600 font-medium">
-  //         Không tìm thấy điện thoại nào cho loại {type}
-  //       </p>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="min-h-screen bg-white p-6">

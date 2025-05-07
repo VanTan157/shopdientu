@@ -1,4 +1,4 @@
-import MobileList from "@/app/(user)/mobile-list";
+import MobileList from "@/app/(user)/mobiles/mobile-list";
 import { apiGet } from "@/lib/api";
 import { Mobile } from "@/lib/types/mobile";
 

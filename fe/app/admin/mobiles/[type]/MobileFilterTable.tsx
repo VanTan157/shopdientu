@@ -88,30 +88,30 @@ const MobileFilterTable = ({ initialMobiles }: MobileFilterTableProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">#</TableHead>
-              <TableHead>Tên</TableHead>
-              <TableHead>Giá gốc</TableHead>
-              <TableHead>Giá cuối</TableHead>
-              <TableHead>Khuyến mãi</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead className="w-[150px]">Hành động</TableHead>
+              <TableHead className="text-center">#</TableHead>
+              <TableHead className="text-center">Tên</TableHead>
+              <TableHead className="text-center">Giá gốc</TableHead>
+              <TableHead className="text-center">Giá cuối</TableHead>
+              <TableHead className="text-center">Khuyến mãi</TableHead>
+              <TableHead className="text-center">Trạng thái</TableHead>
+              <TableHead className="text-center">Hành động</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredMobiles.map((mobile, index) => (
               <TableRow key={mobile._id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{mobile.name}</TableCell>
-                <TableCell>
+                <TableCell className="text-center">{index + 1}</TableCell>
+                <TableCell className="text-center">{mobile.name}</TableCell>
+                <TableCell className="text-center">
                   {mobile.StartingPrice.toLocaleString("vi-VN")} ₫
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-center">
                   {mobile.finalPrice.toLocaleString("vi-VN")} ₫
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-center">
                   {mobile.IsPromotion ? `${mobile.promotion}%` : "Không"}
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-center">
                   {mobile.isAvailable ? "Có sẵn" : "Hết hàng"}
                 </TableCell>
                 <TableCell className="flex gap-2 justify-center items-center">
@@ -135,22 +135,6 @@ const MobileFilterTable = ({ initialMobiles }: MobileFilterTableProps) => {
             ))}
           </TableBody>
         </Table>
-      </div>
-
-      {/* Phân trang */}
-      <div className="flex justify-between items-center mt-6">
-        <p className="text-gray-600">
-          Hiển thị {filteredMobiles.length} trong tổng số{" "}
-          {initialMobiles.length} điện thoại
-        </p>
-        <div className="flex gap-2">
-          <Button variant="outline" disabled>
-            Trước
-          </Button>
-          <Button variant="outline" disabled>
-            Sau
-          </Button>
-        </div>
       </div>
     </div>
   );

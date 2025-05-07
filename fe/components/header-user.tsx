@@ -26,8 +26,12 @@ const HeaderUser = async () => {
           <div className="hover:opacity-70 cursor-pointer">
             <Link href={"/mobiles"}>Điện thoại</Link>
           </div>
-          <div className="hover:opacity-70 cursor-pointer">Tai nghe</div>
-          <div className="hover:opacity-70 cursor-pointer">Laptop</div>
+          <div className="hover:opacity-70 cursor-pointer">
+            <Link href={"/headphones"}>Tai nghe</Link>
+          </div>
+          <div className="hover:opacity-70 cursor-pointer">
+            <Link href={"/laptop"}>Laptop</Link>
+          </div>
           <div className="hover:opacity-70 cursor-pointer">Máy tính bảng</div>
           <div className="hover:text-blue-400 cursor-pointer">Máy tính</div>
         </div>

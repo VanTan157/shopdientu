@@ -7,6 +7,7 @@ import {
   Laptop,
   ChevronDown,
   ShoppingBag,
+  House,
 } from "lucide-react";
 
 import {
@@ -61,19 +62,28 @@ const items = [
   },
   {
     title: "Laptop",
-    url: "#",
+    url: "/admin/laptops",
     icon: Laptop,
+    hasSubmenu: true, // Thêm thuộc tính để nhận biết có submenu
   },
   {
     title: "Đơn hàng",
     url: "/admin/orders",
     icon: ShoppingBag,
   },
+  {
+    title: "Trang chủ",
+    url: "/",
+    icon: House,
+  },
 ];
 
 export async function AppSidebar() {
-  const res = await apiGet<MobileType[]>("/mobile-types");
-  const mobile_types = res.data || [];
+  const resTypesMobile = await apiGet<MobileType[]>("/mobile-types");
+  const mobile_types = resTypesMobile.data || [];
+
+  const resBrandsLaptop = await apiGet<string[]>("/laptops/get-all-brand");
+  const brands_laptop = resBrandsLaptop.data || [];
 
   return (
     <Sidebar className="">
@@ -98,15 +108,26 @@ export async function AppSidebar() {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {mobile_types.map((type) => (
-                            <SidebarMenuSubItem key={type._id}>
-                              <SidebarMenuSubButton asChild>
-                                <Link href={`/admin/mobiles/${type.type}`}>
-                                  <span>{type.type}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
+                          {item.title === "Điện thoại" &&
+                            mobile_types.map((type) => (
+                              <SidebarMenuSubItem key={type._id}>
+                                <SidebarMenuSubButton asChild>
+                                  <Link href={`/admin/mobiles/${type.type}`}>
+                                    <span>{type.type}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          {item.title === "Laptop" &&
+                            brands_laptop.map((brand, index) => (
+                              <SidebarMenuSubItem key={index}>
+                                <SidebarMenuSubButton asChild>
+                                  <Link href={`/admin/laptops/${brand}`}>
+                                    <span>{brand}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </Collapsible>

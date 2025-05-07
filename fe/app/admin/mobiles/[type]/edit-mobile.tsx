@@ -189,7 +189,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
             <Label htmlFor="startingPrice">Giá gốc (VNĐ)</Label>
             <Input
               id="startingPrice"
-              type="number"
+              type="text"
               value={formData.StartingPrice || ""}
               onChange={(e) =>
                 setFormData({
@@ -207,7 +207,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
             <Label htmlFor="promotion">Khuyến mãi (%)</Label>
             <Input
               id="promotion"
-              type="number"
+              type="text"
               value={formData.promotion || ""}
               onChange={(e) =>
                 setFormData({
@@ -387,7 +387,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                   />
                 </div>
                 <Input
-                  type="number"
+                  type="text"
                   placeholder="Tồn kho"
                   value={variant.stock || ""}
                   onChange={(e) => {
@@ -453,7 +453,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
             <Label htmlFor="weight">Trọng lượng (g)</Label>
             <Input
               id="weight"
-              type="number"
+              type="text"
               value={formData.weight || ""}
               onChange={(e) =>
                 setFormData({

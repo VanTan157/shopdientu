@@ -8,7 +8,6 @@ import { apiGet, apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Circle, Facebook } from "lucide-react";
-import { useGoogleLogin } from "@react-oauth/google";
 import { useEffect, useState } from "react";
 
 const LoginPage = () => {

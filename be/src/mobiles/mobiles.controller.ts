@@ -40,11 +40,12 @@ export class MobilesController {
         },
       }),
       fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif/;
+        const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const ext = allowedTypes.test(extname(file.originalname).toLowerCase());
         const mime = allowedTypes.test(file.mimetype);
         if (ext && mime) cb(null, true);
-        else cb(new Error("Chỉ chấp nhận file ảnh (jpg, png, gif)"), false);
+        else
+          cb(new Error("Chỉ chấp nhận file ảnh (jpg, png, gif,webp)"), false);
       },
     })
   )
@@ -80,11 +81,12 @@ export class MobilesController {
         },
       }),
       fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif/;
+        const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const ext = allowedTypes.test(extname(file.originalname).toLowerCase());
         const mime = allowedTypes.test(file.mimetype);
         if (ext && mime) cb(null, true);
-        else cb(new Error("Chỉ chấp nhận file ảnh (jpg, png, gif)"), false);
+        else
+          cb(new Error("Chỉ chấp nhận file ảnh (jpg, png, gif,webp)"), false);
       },
     })
   )

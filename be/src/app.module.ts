@@ -11,6 +11,8 @@ import { MobilesModule } from "./mobiles/mobiles.module";
 import { MobileTypesModule } from "./mobile-types/mobile-types.module";
 import { NotificationsGateway } from "./notifications.gateway";
 import { NotificationsModule } from "./notifications/notifications.module";
+import { LaptopModule } from './laptop/laptop.module';
+import { HeadphoneModule } from './headphone/headphone.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,6 +28,8 @@ import { NotificationsModule } from "./notifications/notifications.module";
     OrderItemsModule,
     OrderModule,
     NotificationsModule,
+    LaptopModule,
+    HeadphoneModule,
   ],
   controllers: [AppController],
   providers: [AppService, NotificationsGateway],

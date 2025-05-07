@@ -25,14 +25,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Trash2, Eye } from "lucide-react";
+import { Trash2, Eye, Check } from "lucide-react";
 import Image from "next/image";
-import { OrderMobile, OrderStatus } from "@/lib/types/order";
+import { Order, OrderStatus } from "@/lib/types/order";
 import { apiPatch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-const OrderPage = ({ orders }: { orders: OrderMobile[] }) => {
+const OrderPage = ({ orders }: { orders: Order[] }) => {
   const [filterStatus, setFilterStatus] = useState<OrderStatus | "Tất cả">(
     "Tất cả"
   );
@@ -65,6 +65,25 @@ const OrderPage = ({ orders }: { orders: OrderMobile[] }) => {
     } catch (error) {
       console.error("Error canceling order:", error);
       toast.error("Có lỗi khi hủy đơn hàng!");
+    }
+  };
+
+  const handleCompleteOrder = async (orderId: string) => {
+    try {
+      const res = await apiPatch<any, { status: OrderStatus }>(
+        `/order/${orderId}`,
+        {
+          status: "Hoàn thành",
+        }
+      );
+      if (res.error) {
+        throw new Error(res.error);
+      }
+      toast.success("Nhận hàng thành công!");
+      router.refresh();
+    } catch (error) {
+      console.error("Error compelete order:", error);
+      toast.error("Có lỗi khi nhận đơn hàng!");
     }
   };
 
@@ -105,6 +124,7 @@ const OrderPage = ({ orders }: { orders: OrderMobile[] }) => {
         <TableHeader>
           <TableRow>
             <TableHead>Mã đơn hàng</TableHead>
+            <TableHead>Sản phẩm</TableHead>
             <TableHead>Ngày đặt</TableHead>
             <TableHead>Tổng tiền</TableHead>
             <TableHead>Trạng thái</TableHead>
@@ -115,6 +135,16 @@ const OrderPage = ({ orders }: { orders: OrderMobile[] }) => {
           {ordersToDisplay.map((order) => (
             <TableRow key={order._id}>
               <TableCell>{order._id}</TableCell>
+              <TableCell className="flex items-center gap-2">
+                {order.orderitem_ids.map((item, index) => (
+                  <div key={item._id} className="flex items-center gap-2">
+                    <span className="truncate">
+                      {item.product.name}
+                      {index < order.orderitem_ids.length - 1 && ", "}
+                    </span>
+                  </div>
+                ))}
+              </TableCell>
               <TableCell>
                 {new Date(order.createdAt).toLocaleDateString("vi-VN")}
               </TableCell>
@@ -170,14 +200,14 @@ const OrderPage = ({ orders }: { orders: OrderMobile[] }) => {
                                   <TableCell className="flex items-center gap-2">
                                     <Image
                                       src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${item.colorVariant.image}`}
-                                      alt={item.mobile_id.name}
+                                      alt={item.product.name}
                                       width={40}
                                       height={40}
                                       className="object-contain rounded-md"
                                       quality={100}
                                     />
                                     <span className="truncate">
-                                      {item.mobile_id.name}
+                                      {item.product.name}
                                     </span>
                                   </TableCell>
                                   <TableCell>
@@ -219,6 +249,36 @@ const OrderPage = ({ orders }: { orders: OrderMobile[] }) => {
                         <Button
                           variant="destructive"
                           onClick={() => handleCancelOrder(order._id)}
+                        >
+                          Có
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+
+                {order.status === "Đang vận chuyển" && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        className="bg-green-500 hover:bg-green-600"
+                        size="icon"
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Xác nhận nhận hàng</DialogTitle>
+                      </DialogHeader>
+                      <p>Bạn chắc chắn đã nhận được hàng?</p>
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="outline" onClick={() => {}}>
+                          Không
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleCompleteOrder(order._id)}
                         >
                           Có
                         </Button>

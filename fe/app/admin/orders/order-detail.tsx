@@ -6,12 +6,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CartItemMobile } from "@/lib/types/order-item";
+import { CartItem } from "@/lib/types/order-item";
 import Image from "next/image";
 
 interface OrderDetailProps {
   orderId: string;
-  orderDetails: CartItemMobile[];
+  orderDetails: CartItem[];
   children: React.ReactNode;
 }
 
@@ -19,7 +19,7 @@ const OrderDetail = ({ orderId, orderDetails, children }: OrderDetailProps) => {
   return (
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
-      <DialogContent className="max-w-4xl w-full sm:w-[90%] p-6 bg-white rounded-lg shadow-xl">
+      <DialogContent className="max-w-4xl w-full sm:w-[90%] p-6 bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-gray-900">
             Chi tiết sản phẩm của đơn hàng: {orderId}
