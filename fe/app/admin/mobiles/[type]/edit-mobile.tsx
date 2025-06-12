@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Textarea } from "@/components/ui/textarea";
 
 interface EditMobileProps {
   mobile: Mobile; // Thông tin điện thoại
@@ -223,7 +224,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
           {/* Mô tả */}
           <div>
             <Label htmlFor="description">Mô tả</Label>
-            <Input
+            <Textarea
               id="description"
               value={formData.description}
               onChange={(e) =>

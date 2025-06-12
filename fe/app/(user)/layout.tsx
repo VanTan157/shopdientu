@@ -7,7 +7,7 @@ export default function UserLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-l from-gray-600 to-gray-800 flex flex-col text-white">
       <header className="fixed top-0 left-0 w-full z-50">
         <HeaderUser />
       </header>

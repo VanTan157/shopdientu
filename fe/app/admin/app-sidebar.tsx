@@ -31,6 +31,9 @@ import {
 import Link from "next/link";
 import { apiGet } from "@/lib/api";
 import { MobileType } from "@/lib/types/mobile";
+import { Button } from "@/components/ui/button";
+import AddMobileForm from "./mobiles/[type]/AddMobileForm";
+import AddLaptopForm from "./laptops/[brand]/add-laptop";
 
 // Menu items.
 const items = [
@@ -84,12 +87,16 @@ export async function AppSidebar() {
 
   const resBrandsLaptop = await apiGet<string[]>("/laptops/get-all-brand");
   const brands_laptop = resBrandsLaptop.data || [];
+  console.log(mobile_types);
 
   return (
-    <Sidebar className="">
-      <SidebarContent>
+    <Sidebar className="pt-6 bg-white shadow-lg">
+      <SidebarContent className="bg-white">
         <SidebarGroup>
-          <SidebarGroupLabel>Quản lý</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xl font-semibold text-gray-800 mb-4">
+            Quản lý
+          </SidebarGroupLabel>
+          <hr className="pb-2" />
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -109,24 +116,43 @@ export async function AppSidebar() {
                       <CollapsibleContent>
                         <SidebarMenuSub>
                           {item.title === "Điện thoại" &&
-                            mobile_types.map((type) => (
-                              <SidebarMenuSubItem key={type._id}>
-                                <SidebarMenuSubButton asChild>
-                                  <Link href={`/admin/mobiles/${type.type}`}>
-                                    <span>{type.type}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
+                            (mobile_types.length === 0 ? (
+                              <div>
+                                <p className="text-gray-500 text-sm mb-2">
+                                  Hiện tại chưa có sản phẩm nào
+                                </p>
+                                <AddMobileForm />
+                              </div>
+                            ) : (
+                              mobile_types.map((type) => (
+                                <SidebarMenuSubItem key={type._id}>
+                                  <SidebarMenuSubButton asChild>
+                                    <Link href={`/admin/mobiles/${type.type}`}>
+                                      <span>{type.type}</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              ))
                             ))}
+
                           {item.title === "Laptop" &&
-                            brands_laptop.map((brand, index) => (
-                              <SidebarMenuSubItem key={index}>
-                                <SidebarMenuSubButton asChild>
-                                  <Link href={`/admin/laptops/${brand}`}>
-                                    <span>{brand}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
+                            (brands_laptop.length === 0 ? (
+                              <div>
+                                <p className="text-gray-500 text-sm mb-2">
+                                  Hiện tại chưa có sản phầm nào
+                                </p>
+                                <AddLaptopForm />
+                              </div>
+                            ) : (
+                              brands_laptop.map((brand, index) => (
+                                <SidebarMenuSubItem key={index}>
+                                  <SidebarMenuSubButton asChild>
+                                    <Link href={`/admin/laptops/${brand}`}>
+                                      <span>{brand}</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              ))
                             ))}
                         </SidebarMenuSub>
                       </CollapsibleContent>

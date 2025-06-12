@@ -5,12 +5,14 @@ import Link from "next/link";
 const LaptopList = ({ laptops }: { laptops: Laptop[] }) => {
   return (
     <section className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Danh sách laptop</h2>
+      <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 pb-4">
+        Danh sách laptop
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {laptops.map((laptop) => (
           <div
             key={laptop._id}
-            className="relative border rounded-lg p-4 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300"
+            className="relative border rounded-lg p-4 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-to-b from-zinc-600 to-zinc-800 text-white "
           >
             <Link href={`/laptop/${laptop._id}`}>
               {/* Phần trăm khuyến mãi ở góc trên bên trái */}
@@ -32,7 +34,9 @@ const LaptopList = ({ laptops }: { laptops: Laptop[] }) => {
                 />
               </div>
               {/* Thông tin sản phẩm */}
-              <h3 className="text-lg font-semibold">{laptop.name}</h3>
+              <h3 className="text-lg font-semibold text-cyan-300 mb-2">
+                {laptop.name}
+              </h3>
               <p className="text-sm text-gray-600">
                 {laptop.brand} - {laptop.category}
               </p>

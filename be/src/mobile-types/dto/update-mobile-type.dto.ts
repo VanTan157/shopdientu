@@ -1,4 +1,4 @@
 import { PartialType } from "@nestjs/swagger";
-import { CreateMobileTypeDto } from "./create-mobile-type.dto"; // Thay CreateProductTypeDto
+import { CreateMobileTypeDto } from "./create-mobile-type.dto";
 
-export class UpdateMobileTypeDto extends PartialType(CreateMobileTypeDto) {} // Thay UpdateProductTypeDto
+export class UpdateMobileTypeDto extends PartialType(CreateMobileTypeDto) {}

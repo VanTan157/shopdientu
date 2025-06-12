@@ -17,16 +17,19 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Textarea } from "@/components/ui/textarea";
 
 interface AddMobileFormProps {
-  type: string; // Type hiện tại từ params
-  mobileTypes: MobileType[]; // Danh sách MobileType từ Page
+  type?: string; // Type hiện tại từ params
+  mobileTypes?: MobileType[]; // Danh sách MobileType từ Page
 }
 
 const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [mobileType, setMobileType] = useState<boolean>(false); // Để kiểm tra việc có chọn thêm loại điện thoại mới hay không
+  const [newMobileType, setNewMobileType] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
     StartingPrice: 0,
@@ -50,6 +53,8 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
   const [tagInput, setTagInput] = useState("");
   const [imagePreview, setImagePreview] = useState([] as string[]);
 
+  const handleAddMobileType = async () => {};
+
   const handleAddMobile = async () => {
     setIsLoading(true);
 
@@ -59,12 +64,17 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
       setIsLoading(false);
       return;
     }
+    if (isNaN(Number(formData.StartingPrice))) {
+      toast.error("Giá gốc phải là một số hợp lệ!");
+      setIsLoading(false);
+      return;
+    }
     if (formData.StartingPrice <= 0) {
       toast.error("Giá gốc phải lớn hơn 0!");
       setIsLoading(false);
       return;
     }
-    if (!formData.mobile_type_id) {
+    if (!formData.mobile_type_id && !mobileType) {
       toast.error("Vui lòng chọn loại điện thoại!");
       setIsLoading(false);
       return;
@@ -81,12 +91,26 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
     console.log(formData);
 
     try {
+      let mobileTypeId;
+      if (mobileType) {
+        const res = await apiPost<MobileType, {}>("/mobile-types", {
+          type: newMobileType,
+        });
+        console.log(res);
+        if (!res.data) {
+          throw new Error("Không nhận được dữ liệu loại điện thoại mới!");
+        }
+        mobileTypeId = res.data._id;
+        toast.success("Thêm loại điện thoại mới thành công!");
+      }
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("StartingPrice", formData.StartingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
-      formDataToSend.append("mobile_type_id", formData.mobile_type_id);
+      mobileType && mobileTypeId
+        ? formDataToSend.append("mobile_type_id", mobileTypeId)
+        : formDataToSend.append("mobile_type_id", formData.mobile_type_id);
       formDataToSend.append(
         "specifications",
         JSON.stringify(formData.specifications)
@@ -206,7 +230,7 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
             </Label>
             <Input
               id="startingPrice"
-              type="number"
+              type="text"
               value={formData.StartingPrice || ""}
               onChange={(e) =>
                 setFormData({
@@ -226,7 +250,7 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
             </Label>
             <Input
               id="promotion"
-              type="number"
+              type="text"
               value={formData.promotion || ""}
               onChange={(e) =>
                 setFormData({
@@ -244,7 +268,7 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
             <Label htmlFor="description" className="mb-2">
               Mô tả
             </Label>
-            <Input
+            <Textarea
               id="description"
               value={formData.description}
               onChange={(e) =>
@@ -256,38 +280,60 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
           </div>
 
           {/* Mobile Type ID (Select) */}
-          <div>
-            <Label htmlFor="mobile_type_id" className="mb-2">
-              Loại điện thoại
-            </Label>
-            <div className="flex gap-2">
-              <select
-                id="mobile_type_id"
-                value={formData.mobile_type_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, mobile_type_id: e.target.value })
-                }
-                className="w-full p-2 border rounded"
-                disabled={isLoading}
-              >
-                <option value="">Chọn loại điện thoại</option>
-                {mobileTypes.map((mt) => (
-                  <option key={mt._id} value={mt._id}>
-                    {mt.type} {mt.type === type && "(Hiện tại)"}
-                  </option>
-                ))}
-              </select>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  toast.info("Chức năng tạo type mới chưa được triển khai!")
-                }
-                disabled={isLoading}
-              >
-                Tạo type mới
-              </Button>
+          {!mobileType ? (
+            <div>
+              <Label htmlFor="mobile_type_id" className="mb-2">
+                Loại điện thoại
+              </Label>
+              <div className="flex gap-2">
+                <select
+                  id="mobile_type_id"
+                  value={formData.mobile_type_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, mobile_type_id: e.target.value })
+                  }
+                  className="w-full p-2 border rounded"
+                  disabled={isLoading}
+                >
+                  <option value="">Chọn loại điện thoại</option>
+                  {mobileTypes?.map((mt) => (
+                    <option key={mt._id} value={mt._id}>
+                      {mt.type} {mt.type === type && "(Hiện tại)"}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  variant="outline"
+                  onClick={() => setMobileType(true)}
+                  disabled={isLoading}
+                >
+                  Tạo type mới
+                </Button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <Label htmlFor="mobile_type_id" className="mb-2">
+                Loại điện thoại
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="mobile_type_id"
+                  value={newMobileType}
+                  onChange={(e) => setNewMobileType(e.target.value)}
+                  placeholder="Nhập loại điện thoại"
+                  disabled={isLoading}
+                />
+                <Button
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  onClick={() => setMobileType(false)}
+                  disabled={isLoading}
+                >
+                  Hủy tạo type mới
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Specifications */}
           <div className="space-y-2">
@@ -437,7 +483,7 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                 />
                 <Input
                   required
-                  type="number"
+                  type="text"
                   placeholder="Tồn kho"
                   value={variant.stock || ""}
                   onChange={(e) => {
@@ -505,7 +551,7 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
             </Label>
             <Input
               id="weight"
-              type="number"
+              type="text"
               value={formData.weight || ""}
               onChange={(e) =>
                 setFormData({

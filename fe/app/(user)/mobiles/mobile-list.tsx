@@ -6,12 +6,14 @@ import Link from "next/link";
 const MobileList = ({ mobiles }: { mobiles: Mobile[] }) => {
   return (
     <section className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Danh sách điện thoại</h2>
+      <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 pb-4">
+        Danh sách điện thoại
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {mobiles.map((mobile) => (
           <div
             key={mobile._id}
-            className="relative border rounded-lg p-4 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300"
+            className="relative border rounded-lg p-4 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-to-b from-zinc-600 to-zinc-800 text-white "
           >
             <Link href={`/mobiles/${mobile._id}`}>
               {/* Phần trăm khuyến mãi ở góc trên bên trái */}
@@ -29,11 +31,13 @@ const MobileList = ({ mobiles }: { mobiles: Mobile[] }) => {
                   }
                   alt={mobile.name}
                   fill
-                  className="object-contain rounded-md"
+                  className="object-contain rounded-md "
                 />
               </div>
               {/* Thông tin sản phẩm */}
-              <h3 className="text-lg font-semibold">{mobile.name}</h3>
+              <h3 className="text-lg font-semibold text-cyan-300 mb-2">
+                {mobile.name}
+              </h3>
               {mobile.IsPromotion ? (
                 <div className="mt-2">
                   <span className="text-gray-500 line-through">

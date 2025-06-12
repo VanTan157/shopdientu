@@ -20,7 +20,7 @@ export class UsersService {
       .findOne({
         $or: [
           { email: createUserDto.email },
-          createUserDto.googleId ? { googleId: createUserDto.googleId } : {},
+          ...(createUserDto.googleId !== undefined ? [{ googleId: createUserDto.googleId }] : []),
         ],
       })
       .exec();

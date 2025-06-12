@@ -6,7 +6,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     <SidebarProvider className="flex min-h-screen bg-white">
       <AppSidebar />
       <main className="flex-1">
-        <SidebarTrigger className="fixed top-0 left-0 z-10" />
+        <SidebarTrigger className="fixed top-0 left-0 z-10 cursor-pointer" />
         {children}
       </main>
     </SidebarProvider>

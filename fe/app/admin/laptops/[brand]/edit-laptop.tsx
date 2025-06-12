@@ -15,6 +15,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 interface EditLaptopProps {
   laptop: Laptop;
@@ -317,7 +318,7 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
             <Label htmlFor="description" className="text-gray-700 font-medium">
               Mô tả
             </Label>
-            <Input
+            <Textarea
               id="description"
               value={formData.description}
               onChange={(e) =>

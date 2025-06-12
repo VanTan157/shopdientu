@@ -29,7 +29,11 @@ const LaptopHeader = () => {
     >
       {/* Nút trigger */}
       <div onMouseEnter={() => setIsOpen(true)}>
-        <Button variant="outline" size="icon" className="m-4">
+        <Button
+          variant="outline"
+          size="icon"
+          className="m-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-colors duration-200 hover:shadow-xl"
+        >
           <Menu className="h-5 w-5" />
         </Button>
       </div>

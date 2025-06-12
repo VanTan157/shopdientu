@@ -30,7 +30,7 @@ const ProfilePage = async () => {
   console.log("check", user);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white shadow-lg rounded-xl p-8 space-y-6">
         <h1 className="text-3xl font-bold text-gray-800 text-center">
           Hồ sơ người dùng
@@ -55,15 +55,14 @@ const ProfilePage = async () => {
           </div>
         </div>
 
-        {user.type === "ADMIN" && (
-          <Link href="/admin">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors">
-              Trang quản lý
-            </Button>
-          </Link>
-        )}
-
         <div className="flex items-center justify-center gap-4 mt-6">
+          {user.type === "ADMIN" && (
+            <Link href="/admin">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                Trang quản lý
+              </Button>
+            </Link>
+          )}
           <BtnEditProfile />
           <BtnChangPassWord />
         </div>

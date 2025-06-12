@@ -54,7 +54,7 @@ const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
                 <strong className="font-medium">Trạng thái:</strong>{" "}
                 {laptop.isAvailable ? "Có sẵn" : "Hết hàng"}
               </p>
-              <p className="text-gray-700 col-span-1 sm:col-span-2">
+              <p className="text-gray-700 col-span-1 sm:col-span-2 whitespace-pre-wrap">
                 <strong className="font-medium">Mô tả:</strong>{" "}
                 {laptop.description || "Không có"}
               </p>

@@ -13,11 +13,11 @@ const MobileDetail = ({ product }: { product: Mobile }) => {
   );
 
   return (
-    <section className="container mx-auto p-5 my-10">
+    <section className="container mx-auto p-5 my-10 bg-blue-900s rounded-lg shadow-lg">
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Hình ảnh sản phẩm */}
-          <div className="relative w-full h-96">
+          <div className="relative w-full h-96 rounded-lg overflow-hidden shadow-lg">
             <Image
               src={
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}${product.colorVariants[colorVariant]?.image}` ||
@@ -37,7 +37,9 @@ const MobileDetail = ({ product }: { product: Mobile }) => {
 
           {/* Thông tin sản phẩm */}
           <div>
-            <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
+            <h1 className="text-4xl font-bold mb-4 text-cyan-300">
+              {product.name}
+            </h1>
 
             {/* Giá */}
             <div className="mb-4">
@@ -51,9 +53,9 @@ const MobileDetail = ({ product }: { product: Mobile }) => {
 
             {/* Tình trạng */}
             <p className="mb-4">
-              <span className="font-semibold">Tình trạng: </span>
+              <span className="font-semibold text-xl">Tình trạng: </span>
               {product.isAvailable && totalStock > 0 ? (
-                <span className="text-green-500">
+                <span className="text-green-500 text-lg">
                   Còn hàng ({totalStock} sản phẩm)
                 </span>
               ) : (
@@ -63,56 +65,59 @@ const MobileDetail = ({ product }: { product: Mobile }) => {
 
             {/* Màu sắc */}
             <div className="mb-4">
-              <p className="font-semibold">Màu sắc:</p>
+              <p className="font-semibold text-xl">Màu sắc:</p>
               <div className="flex gap-2 mt-2">
                 {product.colorVariants.map((variant, index) => (
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setColorVariant(index)}
                     key={variant._id}
-                    className="flex items-center gap-1 border p-2 rounded-md hover:border-blue-500 transition-colors hover:cursor-pointer"
-                    style={{
-                      borderColor:
-                        colorVariant === index ? "#3b82f6" : "#d1d5db",
-                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors duration-200
+                      ${
+                        colorVariant === index
+                          ? "border-blue-500 bg-blue-900 text-cyan-300 shadow-lg"
+                          : "border-gray-400 bg-gray-800 text-white hover:border-blue-400"
+                      }
+                      focus:outline-none`}
                   >
-                    <span>{variant.color}</span>
-                    <span className="text-sm text-gray-500">
+                    <span className="font-semibold">{variant.color}</span>
+                    <span className="text-xs text-white">
                       ({variant.stock} còn)
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
 
             {/* Nút hành động */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 pt-5">
               <BtnBuyNow product={product} index={colorVariant} />
               <BtnAddToCart product={product} index={colorVariant} />
             </div>
           </div>
         </div>
         {/* Thông số kỹ thuật */}
+
         <div>
           <div className="mt-6">
-            <p className="text-gray-600 mb-4">{product.description}</p>
-            <h2 className="text-xl font-semibold mb-2">Thông số kỹ thuật</h2>
-            <ul className=" text-gray-700 flex gap-4 justify-between flex-wrap">
+            <p className="text-white mb-4 whitespace-pre-wrap">
+              {product.description}
+            </p>
+            <hr className="my-8" />
+            <h2 className="text-2xl font-semibold mb-2 text-indigo-400 uppercase pt-4">
+              Thông số kỹ thuật
+            </h2>
+            <ul className=" text-white list-none grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="flex flex-col gap-2">
                 <li>
                   <strong>Màn hình:</strong> {product.specifications.screenSize}
-                  " ({product.specifications.resolution})
+                  ({product.specifications.resolution})
                 </li>
                 <li>
                   <strong>CPU:</strong> {product.specifications.cpu}
                 </li>
                 <li>
                   <strong>RAM:</strong> {product.specifications.ram}GB
-                </li>
-                <li>
-                  <strong>Bộ nhớ:</strong> {product.specifications.storage}GB
-                </li>
-                <li>
-                  <strong>Pin:</strong> {product.specifications.battery}mAh
                 </li>
               </div>
               <div className="flex flex-col gap-2">
@@ -124,6 +129,14 @@ const MobileDetail = ({ product }: { product: Mobile }) => {
                 </li>
                 <li>
                   <strong>Camera trước:</strong> {product.camera.front}
+                </li>
+              </div>
+              <div className="flex flex-col gap-2">
+                <li>
+                  <strong>Bộ nhớ:</strong> {product.specifications.storage}GB
+                </li>
+                <li>
+                  <strong>Pin:</strong> {product.specifications.battery}mAh
                 </li>
                 <li>
                   <strong>Trọng lượng:</strong> {product.weight}g

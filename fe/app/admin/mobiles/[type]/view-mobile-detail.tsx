@@ -47,7 +47,7 @@ const ViewMobileDetail = ({ mobile, children }: ViewMobileDetailProps) => {
                 <strong className="font-medium">Trạng thái:</strong>
                 {mobile.isAvailable ? "Có sẵn" : "Hết hàng"}
               </p>
-              <p className="text-gray-700 col-span-1 sm:col-span-2">
+              <p className="text-gray-700 col-span-1 sm:col-span-2 whitespace-pre-wrap">
                 <strong className="font-medium">Mô tả:</strong>
                 {mobile.description || "Không có"}
               </p>
