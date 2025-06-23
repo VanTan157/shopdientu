@@ -80,24 +80,175 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
     setIsLoading(true);
 
     // Validate dữ liệu
-    if (!formData.name) {
+    // Validate dữ liệu cơ bản
+    if (!formData.name.trim()) {
       toast.error("Tên laptop không được để trống!");
       setIsLoading(false);
       return;
     }
-    if (formData.startingPrice <= 0) {
+    if (!formData.brand.trim()) {
+      toast.error("Thương hiệu không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.category.trim()) {
+      toast.error("Danh mục không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (isNaN(formData.startingPrice) || formData.startingPrice <= 0) {
       toast.error("Giá gốc phải lớn hơn 0!");
       setIsLoading(false);
       return;
     }
     if (
+      isNaN(formData.promotion) ||
+      formData.promotion < 0 ||
+      formData.promotion > 100
+    ) {
+      toast.error("Khuyến mãi phải từ 0 đến 100!");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.description.trim()) {
+      toast.error("Mô tả không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.warranty.trim()) {
+      toast.error("Bảo hành không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    // Validate thông số kỹ thuật
+    const specs = formData.specifications;
+    if (!String(specs.screenSize).trim()) {
+      toast.error("Kích thước màn hình không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!specs.resolution.trim()) {
+      toast.error("Độ phân giải không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!specs.refreshRate.trim()) {
+      toast.error("Tần số quét không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!specs.cpu.trim()) {
+      toast.error("CPU không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!specs.gpu.trim()) {
+      toast.error("GPU không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!String(specs.ram).trim()) {
+      toast.error("RAM không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!String(specs.storage).trim()) {
+      toast.error("Bộ nhớ không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!String(specs.battery).trim()) {
+      toast.error("Pin không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!specs.os.trim()) {
+      toast.error("Hệ điều hành không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!specs.keyboard.trim()) {
+      toast.error("Bàn phím không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (
+      !Array.isArray(specs.ports) ||
+      specs.ports.length === 0 ||
+      specs.ports.some((p) => !p.trim())
+    ) {
+      toast.error("Cổng kết nối không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!specs.webcam.trim()) {
+      toast.error("Webcam không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!specs.audio.trim()) {
+      toast.error("Âm thanh không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    // Validate kích thước
+    if (
+      isNaN(formData.dimensions.length) ||
+      isNaN(formData.dimensions.width) ||
+      isNaN(formData.dimensions.height) ||
+      formData.dimensions.length <= 0 ||
+      formData.dimensions.width <= 0 ||
+      formData.dimensions.height <= 0
+    ) {
+      toast.error("Kích thước phải lớn hơn 0!");
+      setIsLoading(false);
+      return;
+    }
+    // Validate trọng lượng
+    if (isNaN(formData.weight) || formData.weight <= 0) {
+      toast.error("Trọng lượng phải lớn hơn 0!");
+      setIsLoading(false);
+      return;
+    }
+    // Validate biến thể màu
+    if (
+      !Array.isArray(formData.colorVariants) ||
+      formData.colorVariants.length === 0 ||
       formData.colorVariants.some(
-        (v) => !v.color || v.stock < 0 || (!v.image && !v.existingImage)
+        (v) =>
+          !v.color.trim() ||
+          isNaN(v.stock) ||
+          v.stock < 0 ||
+          (!v.image && !v.existingImage)
       )
     ) {
       toast.error(
         "Mỗi biến thể màu phải có tên, ảnh (hoặc ảnh hiện tại), và số lượng tồn kho hợp lệ!"
       );
+      setIsLoading(false);
+      return;
+    }
+    // Validate kết nối
+    if (
+      !Array.isArray(formData.connectivity) ||
+      formData.connectivity.some((c) => !c.trim())
+    ) {
+      toast.error("Kết nối không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    // Validate phụ kiện
+    if (
+      !Array.isArray(formData.accessories) ||
+      formData.accessories.some((a) => !a.trim())
+    ) {
+      toast.error("Phụ kiện không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    // Validate tags
+    if (!Array.isArray(formData.tags) || formData.tags.some((t) => !t.trim())) {
+      toast.error("Tag không được để trống!");
       setIsLoading(false);
       return;
     }

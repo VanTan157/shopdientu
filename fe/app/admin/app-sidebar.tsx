@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ShoppingBag,
   House,
+  User,
 } from "lucide-react";
 
 import {
@@ -34,18 +35,19 @@ import { MobileType } from "@/lib/types/mobile";
 import { Button } from "@/components/ui/button";
 import AddMobileForm from "./mobiles/[type]/AddMobileForm";
 import AddLaptopForm from "./laptops/[brand]/add-laptop";
+import AddHeadphoneForm from "./headphones/[brand]/add-headphone";
 
 // Menu items.
 const items = [
   {
     title: "Dashboard",
-    url: "#",
+    url: "/admin",
     icon: LayoutDashboard,
   },
   {
     title: "Khách hàng",
     url: "/admin/customers",
-    icon: Users,
+    icon: User,
   },
   {
     title: "Điện thoại",
@@ -57,6 +59,7 @@ const items = [
     title: "Tai nghe",
     url: "#",
     icon: Headphones,
+    hasSubmenu: true, // Thêm thuộc tính để nhận biết có submenu
   },
   {
     title: "PC",
@@ -87,13 +90,21 @@ export async function AppSidebar() {
 
   const resBrandsLaptop = await apiGet<string[]>("/laptops/get-all-brand");
   const brands_laptop = resBrandsLaptop.data || [];
-  console.log(mobile_types);
+
+  const resBrandsHeadphone = await apiGet<string[]>(
+    "/headphones/get-all-brand"
+  );
+  const brands_headphone = resBrandsHeadphone.data || [];
 
   return (
     <Sidebar className="pt-6 bg-white shadow-lg">
       <SidebarContent className="bg-white">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xl font-semibold text-gray-800 mb-4">
+          <SidebarGroupLabel className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <span className="w-6 h-6 text-gray-700">
+              {/* You can use a different icon here, e.g. Users or House */}
+              <Users className="w-6 h-6 text-gray-700" />
+            </span>
             Quản lý
           </SidebarGroupLabel>
           <hr className="pb-2" />
@@ -148,6 +159,26 @@ export async function AppSidebar() {
                                 <SidebarMenuSubItem key={index}>
                                   <SidebarMenuSubButton asChild>
                                     <Link href={`/admin/laptops/${brand}`}>
+                                      <span>{brand}</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              ))
+                            ))}
+
+                          {item.title === "Tai nghe" &&
+                            (brands_headphone.length === 0 ? (
+                              <div>
+                                <p className="text-gray-500 text-sm mb-2">
+                                  Hiện tại chưa có sản phẩm nào
+                                </p>
+                                <AddHeadphoneForm />
+                              </div>
+                            ) : (
+                              brands_headphone.map((brand, index) => (
+                                <SidebarMenuSubItem key={index}>
+                                  <SidebarMenuSubButton asChild>
+                                    <Link href={`/admin/headphones/${brand}`}>
                                       <span>{brand}</span>
                                     </Link>
                                   </SidebarMenuSubButton>

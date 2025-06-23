@@ -5,26 +5,30 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Laptop } from "@/lib/types/laptop";
+import { Headphone } from "@/lib/types/headphone";
 import Image from "next/image";
 import React from "react";
 
-interface ViewLaptopDetailProps {
-  laptop: Laptop;
+interface ViewHeadphoneDetailProps {
+  headphone: Headphone;
   children: React.ReactNode;
 }
 
-const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
+const ViewHeadphoneDetail = ({
+  headphone,
+  children,
+}: ViewHeadphoneDetailProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto !max-w-[90%] bg-white rounded-lg shadow-xl">
         <DialogHeader className="border-b pb-4">
           <DialogTitle className="text-2xl font-bold text-gray-800">
-            Chi tiết laptop: {laptop.name}
+            Chi tiết tai nghe: {headphone.name}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6 p-6">
+          {/* Thông tin cơ bản */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h1 className="font-semibold text-xl text-gray-900 mb-3">
               Thông tin cơ bản
@@ -32,161 +36,171 @@ const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <p className="text-gray-700">
                 <strong className="font-medium">Thương hiệu:</strong>{" "}
-                {laptop.brand}
+                {headphone.brand}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Danh mục:</strong>{" "}
-                {laptop.category}
+                <strong className="font-medium">Loại:</strong> {headphone.type}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Giá gốc:</strong>{" "}
-                {laptop.startingPrice.toLocaleString("vi-VN")} ₫
+                {headphone.startingPrice?.toLocaleString("vi-VN")} ₫
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Giá cuối:</strong>{" "}
-                {laptop.finalPrice.toLocaleString("vi-VN")} ₫
+                {headphone.finalPrice?.toLocaleString("vi-VN")} ₫
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Khuyến mãi:</strong>{" "}
-                {laptop.isPromotion ? `${laptop.promotion}%` : "Không"}
+                {headphone.isPromotion ? `${headphone.promotion}%` : "Không"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Trạng thái:</strong>{" "}
-                {laptop.isAvailable ? "Có sẵn" : "Hết hàng"}
+                {headphone.isAvailable ? "Có sẵn" : "Hết hàng"}
               </p>
-              <p className="text-gray-700 col-span-1 sm:col-span-2">
+              <p className="text-gray-700 col-span-1 sm:col-span-2 whitespace-pre-wrap">
                 <strong className="font-medium">Mô tả:</strong>{" "}
-                {laptop.description || "Không có"}
+                {headphone.description || "Không có"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Bảo hành:</strong>{" "}
-                {laptop.warranty || "N/A"}
+                {headphone.warranty || "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Ngày phát hành:</strong>{" "}
-                {new Date(laptop.releaseDate).toLocaleDateString("vi-VN") ||
-                  "N/A"}
+                {headphone.releaseDate
+                  ? new Date(headphone.releaseDate).toLocaleDateString("vi-VN")
+                  : "N/A"}
+              </p>
+              <p className="text-gray-700">
+                <strong className="font-medium">SKU:</strong> {headphone.sku}
+              </p>
+              <p className="text-gray-700">
+                <strong className="font-medium">Slug:</strong> {headphone.slug}
               </p>
             </div>
           </div>
+          {/* Thông số kỹ thuật */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">
               Thông số kỹ thuật
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <p className="text-gray-700">
-                <strong className="font-medium">Kích thước màn hình:</strong>{" "}
-                {laptop.specifications.screenSize
-                  ? `${laptop.specifications.screenSize} inch`
+                <strong className="font-medium">Loại driver:</strong>{" "}
+                {headphone.specifications?.driverType || "N/A"}
+              </p>
+              <p className="text-gray-700">
+                <strong className="font-medium">Kích thước driver:</strong>{" "}
+                {headphone.specifications?.driverSize
+                  ? `${headphone.specifications.driverSize} mm`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Độ phân giải:</strong>{" "}
-                {laptop.specifications.resolution || "N/A"}
+                <strong className="font-medium">Dải tần số:</strong>{" "}
+                {headphone.specifications?.frequencyRange || "N/A"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Tần số quét:</strong>{" "}
-                {laptop.specifications.refreshRate || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">CPU:</strong>{" "}
-                {laptop.specifications.cpu || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">GPU:</strong>{" "}
-                {laptop.specifications.gpu || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">RAM:</strong>{" "}
-                {laptop.specifications.ram
-                  ? `${laptop.specifications.ram} GB`
+                <strong className="font-medium">Độ nhạy:</strong>{" "}
+                {headphone.specifications?.sensitivity
+                  ? `${headphone.specifications.sensitivity} dB`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Bộ nhớ:</strong>{" "}
-                {laptop.specifications.storage
-                  ? `${laptop.specifications.storage} GB`
+                <strong className="font-medium">Trở kháng:</strong>{" "}
+                {headphone.specifications?.impedance
+                  ? `${headphone.specifications.impedance} Ω`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Pin:</strong>{" "}
-                {laptop.specifications.battery
-                  ? `${laptop.specifications.battery} Wh`
+                <strong className="font-medium">Chống ồn:</strong>{" "}
+                {headphone.specifications?.noiseCancellation || "N/A"}
+              </p>
+              <p className="text-gray-700">
+                <strong className="font-medium">Thời lượng pin:</strong>{" "}
+                {headphone.specifications?.batteryLife
+                  ? `${headphone.specifications.batteryLife} giờ`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Hệ điều hành:</strong>{" "}
-                {laptop.specifications.os || "N/A"}
+                <strong className="font-medium">Thời gian sạc:</strong>{" "}
+                {headphone.specifications?.chargingTime
+                  ? `${headphone.specifications.chargingTime} giờ`
+                  : "N/A"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Bàn phím:</strong>{" "}
-                {laptop.specifications.keyboard || "N/A"}
+                <strong className="font-medium">Cổng sạc:</strong>{" "}
+                {headphone.specifications?.chargingPort || "N/A"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Cổng kết nối:</strong>{" "}
-                {laptop.specifications.ports?.join(", ") || "N/A"}
+                <strong className="font-medium">Micro:</strong>{" "}
+                {headphone.specifications?.microphone || "N/A"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Âm thanh:</strong>{" "}
-                {laptop.specifications.audio || "N/A"}
+                <strong className="font-medium">Chất lượng âm thanh:</strong>{" "}
+                {headphone.specifications?.audioQuality || "N/A"}
               </p>
             </div>
           </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-xl text-gray-900 mb-3">Camera</h3>
-            <p className="text-gray-700">
-              <strong className="font-medium">Webcam:</strong>{" "}
-              {laptop.specifications.webcam || "N/A"}
-            </p>
-          </div>
+          {/* Kích thước và trọng lượng */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">
-              Kích thước và trọng lượng
+              Kích thước & Trọng lượng
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <p className="text-gray-700">
                 <strong className="font-medium">Kích thước:</strong>{" "}
-                {laptop.dimensions
-                  ? `${laptop.dimensions.length} x ${laptop.dimensions.width} x ${laptop.dimensions.height} cm`
+                {headphone.dimensions
+                  ? `${headphone.dimensions.length} x ${headphone.dimensions.width} x ${headphone.dimensions.height} cm`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Trọng lượng:</strong>{" "}
-                {laptop.weight ? `${laptop.weight} kg` : "N/A"}
+                {headphone.weight ? `${headphone.weight} g` : "N/A"}
               </p>
             </div>
           </div>
+          {/* Kết nối */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">
               Kết nối
             </h3>
             <p className="text-gray-700">
               <strong className="font-medium">Kết nối:</strong>{" "}
-              {laptop.connectivity?.join(", ") || "Không có"}
+              {headphone.connectivity?.length
+                ? headphone.connectivity.join(", ")
+                : "Không có"}
             </p>
           </div>
+          {/* Phụ kiện */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">
               Phụ kiện
             </h3>
             <p className="text-gray-700">
               <strong className="font-medium">Phụ kiện:</strong>{" "}
-              {laptop.accessories?.join(", ") || "Không có"}
+              {headphone.accessories?.length
+                ? headphone.accessories.join(", ")
+                : "Không có"}
             </p>
           </div>
+          {/* Biến thể màu */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">
               Biến thể màu
             </h3>
-            {laptop.colorVariants.length > 0 ? (
+            {headphone.colorVariants?.length > 0 ? (
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {laptop.colorVariants.map((variant, index) => (
+                {headphone.colorVariants.map((variant, index) => (
                   <li
                     key={index}
                     className="flex items-center gap-4 bg-white p-3 rounded-md shadow-sm"
                   >
                     <Image
-                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${variant.image}`}
+                      src={
+                        variant.image.startsWith("/")
+                          ? `${process.env.NEXT_PUBLIC_API_BASE_URL}${variant.image}`
+                          : variant.image
+                      }
                       alt={variant.color}
                       width={100}
                       height={100}
@@ -203,10 +217,11 @@ const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
               <p className="text-gray-700">Không có biến thể màu</p>
             )}
           </div>
+          {/* Tags */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">Tags</h3>
             <p className="text-gray-700">
-              {laptop.tags.join(", ") || "Không có"}
+              {headphone.tags?.length ? headphone.tags.join(", ") : "Không có"}
             </p>
           </div>
         </div>
@@ -215,4 +230,4 @@ const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
   );
 };
 
-export default ViewLaptopDetail;
+export default ViewHeadphoneDetail;

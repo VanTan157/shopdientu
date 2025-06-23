@@ -1,18 +1,27 @@
-const page = () => {
+import { Button } from "@/components/ui/button";
+import { apiGet } from "@/lib/api";
+import { User } from "@/lib/types/user";
+import { Plus } from "lucide-react";
+import { cookies } from "next/headers";
+import { TableUser } from "./table-user";
+
+const page = async () => {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value || null;
+  const res = await apiGet<User>("/users", {
+    Cookie: `accessToken=${accessToken}`,
+  });
+
   return (
-    <div className="relative max-w-sm mx-auto bg-gray-800 text-white rounded-xl p-6 shadow-2xl shadow-purple-500/50 group overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 group-hover:opacity-100 opacity-0 transition-opacity duration-500"></div>
-      <div className="relative z-10">
-        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-400">
-          Card Tương Tác
-        </h2>
-        <p className="mt-2 text-gray-300">
-          Card với hiệu ứng gradient động, bóng neon, và chuyển động mượt mà.
-        </p>
-        <button className="mt-4 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 active:scale-95">
-          Khám phá ngay
-        </button>
+    <div className="bg-white min-h-screen mx-auto p-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Quản lý người dùng</h1>
+        <Button className="bg-green-600 hover:bg-green-700 cursor-pointer">
+          <Plus className="w-5 h-5" />
+          Thêm người dùng
+        </Button>
       </div>
+      <TableUser users={Array.isArray(res.data) ? res.data : []} />
     </div>
   );
 };

@@ -36,6 +36,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
   const [filterStatus, setFilterStatus] = useState<OrderStatus | "Tất cả">(
     "Tất cả"
   );
+  const [open, setOpen] = useState(false);
   const router = useRouter();
 
   // Các trạng thái đơn hàng
@@ -96,17 +97,19 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
       : orders.filter((order) => order.status === filterStatus);
 
   return (
-    <section className="p-5">
-      <h1 className="text-3xl font-bold mb-6">Đơn hàng của bạn</h1>
+    <section className="px-5 py-8">
+      <h1 className="text-4xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-600 text-transparent bg-clip-text drop-shadow-lg">
+        Đơn hàng của bạn
+      </h1>
 
       {/* Lọc theo trạng thái */}
-      <div className="mb-6">
+      <div className="my-6">
         <Select
           onValueChange={(value) =>
             setFilterStatus(value as OrderStatus | "Tất cả")
           }
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px] border border-cyan-300 bg-white text-gray-800 hover:bg-gray-50 focus:ring-2 focus:ring-cyan-500">
             <SelectValue placeholder="Lọc theo trạng thái" />
           </SelectTrigger>
           <SelectContent>
@@ -123,19 +126,31 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Mã đơn hàng</TableHead>
-            <TableHead>Sản phẩm</TableHead>
-            <TableHead>Ngày đặt</TableHead>
-            <TableHead>Tổng tiền</TableHead>
-            <TableHead>Trạng thái</TableHead>
-            <TableHead>Hành động</TableHead>
+            <TableHead className="text-cyan-300 font-bold text-lg">
+              Mã đơn hàng
+            </TableHead>
+            <TableHead className="text-cyan-300 font-bold text-lg">
+              Ngày đặt
+            </TableHead>
+            <TableHead className="text-cyan-300 font-bold text-lg">
+              Tổng tiền
+            </TableHead>
+            <TableHead className="text-cyan-300 font-bold text-lg">
+              Trạng thái
+            </TableHead>
+            <TableHead className="text-cyan-300 font-bold text-lg">
+              Hành động
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {ordersToDisplay.map((order) => (
-            <TableRow key={order._id}>
-              <TableCell>{order._id}</TableCell>
-              <TableCell className="flex items-center gap-2">
+            <TableRow
+              key={order._id}
+              className="hover:bg-gray-900 transition-colors"
+            >
+              <TableCell className="font-semibold">{order._id}</TableCell>
+              {/* <TableCell className="flex items-center gap-2 font-semibold">
                 {order.orderitem_ids.map((item, index) => (
                   <div key={item._id} className="flex items-center gap-2">
                     <span className="truncate">
@@ -144,23 +159,27 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                     </span>
                   </div>
                 ))}
-              </TableCell>
-              <TableCell>
+              </TableCell> */}
+              <TableCell className="font-semibold">
                 {new Date(order.createdAt).toLocaleDateString("vi-VN")}
               </TableCell>
-              <TableCell>
+              <TableCell className="font-semibold">
                 {order.total_amount.toLocaleString("vi-VN")} ₫
               </TableCell>
-              <TableCell>{order.status}</TableCell>
+              <TableCell className="font-semibold">{order.status}</TableCell>
               <TableCell className="flex gap-2">
                 {/* Xem chi tiết */}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="icon">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="bg-blue-800 border-0 hover:bg-blue-200 text-white cursor-pointer hover:scale-110 transition-transform duration-200"
+                    >
                       <Eye className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="!w-[70%] ">
+                  <DialogContent className="!min-w-fit w-full max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Chi tiết đơn hàng: {order._id}</DialogTitle>
                     </DialogHeader>
@@ -175,7 +194,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                         <strong>Trạng thái:</strong> {order.status}
                       </p>
                       <p>
-                        <strong>Tổng tiền:</strong>{" "}
+                        <strong>Tổng tiền:</strong>
                         {order.total_amount.toLocaleString("vi-VN")} ₫
                       </p>
                       <h3 className="text-lg font-semibold">Sản phẩm:</h3>
@@ -231,9 +250,13 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
 
                 {/* Hủy đơn (chỉ khi trạng thái cho phép) */}
                 {order.status === "Đang chờ xác nhận" && (
-                  <Dialog>
+                  <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                      <Button variant="destructive" size="icon">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="cursor-pointer hover:scale-110 transition-transform duration-200"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </DialogTrigger>
@@ -243,7 +266,12 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                       </DialogHeader>
                       <p>Bạn có chắc muốn hủy đơn hàng {order._id} không?</p>
                       <div className="flex justify-end gap-2 mt-4">
-                        <Button variant="outline" onClick={() => {}}>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setOpen(false);
+                          }}
+                        >
                           Không
                         </Button>
                         <Button

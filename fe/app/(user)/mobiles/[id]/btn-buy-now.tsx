@@ -227,7 +227,7 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
   return (
     <>
       <Button
-        className="flex items-center gap-2 px-8 py-5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed active:scale-95"
+        className="cursor-pointer hover:scale-110 transition-transform duration-200 flex items-center gap-2 px-8 py-5 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
         disabled={
           !product.isAvailable || product.colorVariants[index].stock === 0
         }

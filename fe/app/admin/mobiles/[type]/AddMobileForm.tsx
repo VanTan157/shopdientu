@@ -59,11 +59,14 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
     setIsLoading(true);
 
     // Validate dữ liệu
-    if (!formData.name) {
+    // Validate tên
+    if (!formData.name.trim()) {
       toast.error("Tên điện thoại không được để trống!");
       setIsLoading(false);
       return;
     }
+
+    // Validate giá gốc
     if (isNaN(Number(formData.StartingPrice))) {
       toast.error("Giá gốc phải là một số hợp lệ!");
       setIsLoading(false);
@@ -74,13 +77,59 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
       setIsLoading(false);
       return;
     }
+
+    // Validate khuyến mãi
+    if (
+      isNaN(Number(formData.promotion)) ||
+      formData.promotion < 0 ||
+      formData.promotion > 100
+    ) {
+      toast.error("Khuyến mãi phải là số từ 0 đến 100!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate mô tả
+    if (!formData.description.trim()) {
+      toast.error("Mô tả không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate loại điện thoại
     if (!formData.mobile_type_id && !mobileType) {
       toast.error("Vui lòng chọn loại điện thoại!");
       setIsLoading(false);
       return;
     }
+    if (mobileType && !newMobileType.trim()) {
+      toast.error("Vui lòng nhập loại điện thoại mới!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate thông số kỹ thuật
+    const specs = formData.specifications;
     if (
-      formData.colorVariants.some((v) => !v.color || v.stock < 0 || !v.image)
+      !specs.screenSize.trim() ||
+      !specs.resolution.trim() ||
+      !specs.cpu.trim() ||
+      !specs.ram.trim() ||
+      !specs.storage.trim() ||
+      !specs.battery.trim() ||
+      !specs.os.trim()
+    ) {
+      toast.error("Vui lòng nhập đầy đủ thông số kỹ thuật!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate biến thể màu
+    if (
+      formData.colorVariants.some(
+        (v) =>
+          !v.color.trim() || v.stock < 0 || isNaN(Number(v.stock)) || !v.image
+      )
     ) {
       toast.error(
         "Mỗi biến thể màu phải có tên, ảnh và số lượng tồn kho hợp lệ!"
@@ -88,6 +137,27 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
       setIsLoading(false);
       return;
     }
+
+    // Validate camera
+    if (!formData.camera.rear.trim() || !formData.camera.front.trim()) {
+      toast.error("Vui lòng nhập thông tin camera trước và sau!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate trọng lượng
+    if (isNaN(Number(formData.weight)) || formData.weight <= 0) {
+      toast.error("Trọng lượng phải là số lớn hơn 0!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate tags (optional, nếu muốn bắt buộc)
+    // if (formData.tags.length === 0) {
+    //   toast.error("Vui lòng nhập ít nhất một tag!");
+    //   setIsLoading(false);
+    //   return;
+    // }
     console.log(formData);
 
     try {

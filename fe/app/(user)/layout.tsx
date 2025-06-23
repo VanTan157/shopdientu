@@ -11,7 +11,7 @@ export default function UserLayout({
       <header className="fixed top-0 left-0 w-full z-50">
         <HeaderUser />
       </header>
-      <main className="mt-20 flex-1">{children}</main>
+      <main className="mt-18 flex-1">{children}</main>
       <Footer />
     </div>
   );

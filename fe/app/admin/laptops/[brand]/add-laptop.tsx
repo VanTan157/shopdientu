@@ -74,28 +74,101 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
     setIsLoading(true);
 
     // Validate dữ liệu
-    if (!formData.name) {
+    if (!formData.name.trim()) {
       toast.error("Tên laptop không được để trống!");
       setIsLoading(false);
       return;
     }
-    if (!formData.brand) {
+    if (!formData.brand.trim()) {
       toast.error("Thương hiệu không được để trống!");
       setIsLoading(false);
       return;
     }
-    if (!formData.category) {
+    if (!formData.category.trim()) {
       toast.error("Danh mục không được để trống!");
       setIsLoading(false);
       return;
     }
-    if (formData.startingPrice <= 0) {
-      toast.error("Giá gốc phải lớn hơn 0!");
+    if (!formData.slug.trim()) {
+      toast.error("Đường dẫn SEO không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.sku.trim()) {
+      toast.error("Mã hàng hóa không được để trống!");
       setIsLoading(false);
       return;
     }
     if (
-      formData.colorVariants.some((v) => !v.color || v.stock < 0 || !v.image)
+      isNaN(Number(formData.startingPrice)) ||
+      Number(formData.startingPrice) <= 0
+    ) {
+      toast.error("Giá gốc phải là số lớn hơn 0!");
+      setIsLoading(false);
+      return;
+    }
+    if (isNaN(Number(formData.promotion)) || Number(formData.promotion) < 0) {
+      toast.error("Khuyến mãi phải là số không âm!");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.description.trim()) {
+      toast.error("Mô tả không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.warranty.trim()) {
+      toast.error("Bảo hành không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    const specs = formData.specifications;
+    if (
+      !specs.screenSize.trim() ||
+      !specs.resolution.trim() ||
+      !specs.refreshRate.trim() ||
+      !specs.cpu.trim() ||
+      !specs.gpu.trim() ||
+      !specs.ram.trim() ||
+      !specs.storage.trim() ||
+      !specs.battery.trim() ||
+      !specs.os.trim() ||
+      !specs.keyboard.trim() ||
+      !specs.webcam.trim() ||
+      !specs.audio.trim() ||
+      !specs.ports.length ||
+      specs.ports.some((p) => !p.trim())
+    ) {
+      toast.error("Tất cả thông số kỹ thuật phải được điền đầy đủ!");
+      setIsLoading(false);
+      return;
+    }
+    if (
+      isNaN(Number(formData.dimensions.length)) ||
+      Number(formData.dimensions.length) <= 0 ||
+      isNaN(Number(formData.dimensions.width)) ||
+      Number(formData.dimensions.width) <= 0 ||
+      isNaN(Number(formData.dimensions.height)) ||
+      Number(formData.dimensions.height) <= 0
+    ) {
+      toast.error("Kích thước phải là số lớn hơn 0!");
+      setIsLoading(false);
+      return;
+    }
+    if (isNaN(Number(formData.weight)) || Number(formData.weight) <= 0) {
+      toast.error("Trọng lượng phải là số lớn hơn 0!");
+      setIsLoading(false);
+      return;
+    }
+    if (
+      formData.colorVariants.some(
+        (v) =>
+          !v.color.trim() ||
+          v.stock === undefined ||
+          isNaN(Number(v.stock)) ||
+          Number(v.stock) < 0 ||
+          !v.image
+      )
     ) {
       toast.error(
         "Mỗi biến thể màu phải có tên, ảnh và số lượng tồn kho hợp lệ!"
@@ -405,7 +478,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             </Label>
             <Input
               id="startingPrice"
-              type="number"
+              type="text"
               value={formData.startingPrice || ""}
               onChange={(e) =>
                 setFormData({
@@ -426,7 +499,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             </Label>
             <Input
               id="promotion"
-              type="number"
+              type="text"
               value={formData.promotion || ""}
               onChange={(e) =>
                 setFormData({
@@ -684,7 +757,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Input
                 placeholder="Chiều dài"
-                type="number"
+                type="text"
                 value={formData.dimensions.length || ""}
                 onChange={(e) =>
                   setFormData({
@@ -700,7 +773,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               />
               <Input
                 placeholder="Chiều rộng"
-                type="number"
+                type="text"
                 value={formData.dimensions.width || ""}
                 onChange={(e) =>
                   setFormData({
@@ -716,7 +789,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               />
               <Input
                 placeholder="Chiều cao"
-                type="number"
+                type="text"
                 value={formData.dimensions.height || ""}
                 onChange={(e) =>
                   setFormData({
@@ -740,7 +813,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             </Label>
             <Input
               id="weight"
-              type="number"
+              type="text"
               value={formData.weight || ""}
               onChange={(e) =>
                 setFormData({
@@ -804,7 +877,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
                   />
                 </div>
                 <Input
-                  type="number"
+                  type="text"
                   placeholder="Tồn kho"
                   value={variant.stock || ""}
                   onChange={(e) => {

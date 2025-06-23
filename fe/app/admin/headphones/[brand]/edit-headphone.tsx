@@ -1,104 +1,161 @@
-"use client";
-
-import { apiPost } from "@/lib/api";
-import { Laptop } from "@/lib/types/laptop";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2, X } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Headphone } from "@/lib/types/headphone";
+import { apiPatch } from "@/lib/api";
+import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
-interface AddLaptopFormProps {
-  children?: React.ReactNode;
-  brands?: string[]; // Danh sách thương hiệu
+interface EditHeadphoneProps {
+  headphone: Headphone;
+  children: React.ReactNode;
 }
 
-const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
+const defaultSpecifications = {
+  driverType: "",
+  driverSize: 0,
+  frequencyRange: "",
+  sensitivity: 0,
+  impedance: 0,
+  noiseCancellation: "",
+  batteryLife: 0,
+  chargingTime: 0,
+  chargingPort: "",
+  microphone: "",
+  audioQuality: "",
+};
+
+const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAddingNewBrand, setIsAddingNewBrand] = useState(false); // Trạng thái nhập thương hiệu mới
   const [formData, setFormData] = useState({
-    name: "",
-    brand: "",
-    category: "",
-    startingPrice: 0,
-    promotion: 0,
-    description: "",
+    name: headphone.name,
+    brand: headphone.brand,
+    type: headphone.type,
+    startingPrice: headphone.startingPrice,
+    promotion: headphone.promotion,
+    description: headphone.description || "",
     specifications: {
-      screenSize: "",
-      resolution: "",
-      cpu: "",
-      gpu: "",
-      ram: "",
-      storage: "",
-      battery: "",
-      os: "",
-      refreshRate: "",
-      keyboard: "",
-      ports: [] as string[],
-      webcam: "",
-      audio: "",
+      ...defaultSpecifications,
+      ...headphone.specifications,
     },
-    colorVariants: [{ color: "", image: null as File | null, stock: 0 }],
-    weight: 0,
+    colorVariants: headphone.colorVariants.map((variant) => ({
+      color: variant.color,
+      image: null as File | null,
+      stock: variant.stock,
+      existingImage: variant.image || "",
+    })),
+    weight: headphone.weight || 0,
     dimensions: {
-      length: 0,
-      width: 0,
-      height: 0,
+      length: headphone.dimensions?.length || 0,
+      width: headphone.dimensions?.width || 0,
+      height: headphone.dimensions?.height || 0,
     },
-    connectivity: [] as string[],
-    accessories: [] as string[],
-    warranty: "",
-    tags: [] as string[],
-    slug: "",
-    sku: "",
+    connectivity: headphone.connectivity || [],
+    accessories: headphone.accessories || [],
+    warranty: headphone.warranty || "",
+    tags: headphone.tags || [],
+    slug: headphone.slug || "",
+    sku: headphone.sku || "",
   });
+  const [imagePreview, setImagePreview] = useState<string[]>(
+    headphone.colorVariants.map((variant) =>
+      variant.image
+        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}${variant.image}`
+        : ""
+    )
+  );
   const [tagInput, setTagInput] = useState("");
   const [connectivityInput, setConnectivityInput] = useState("");
   const [accessoryInput, setAccessoryInput] = useState("");
-  const [imagePreview, setImagePreview] = useState([] as string[]);
 
-  const handleAddLaptop = async () => {
+  useEffect(() => {
+    return () => {
+      imagePreview.forEach((url) => {
+        if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
+      });
+    };
+    // eslint-disable-next-line
+  }, []);
+
+  const handleUpdateHeadphone = async () => {
     setIsLoading(true);
 
-    // Validate dữ liệu
-    if (!formData.name) {
-      toast.error("Tên laptop không được để trống!");
+    // Validate dữ liệu cơ bản
+    if (!formData.name.trim()) {
+      toast.error("Tên tai nghe không được để trống!");
       setIsLoading(false);
       return;
     }
-    if (!formData.brand) {
+    if (!formData.brand.trim()) {
       toast.error("Thương hiệu không được để trống!");
       setIsLoading(false);
       return;
     }
-    if (!formData.category) {
-      toast.error("Danh mục không được để trống!");
+    if (!formData.type.trim()) {
+      toast.error("Loại tai nghe không được để trống!");
       setIsLoading(false);
       return;
     }
-    if (formData.startingPrice <= 0) {
-      toast.error("Giá gốc phải lớn hơn 0!");
+    if (!formData.slug.trim()) {
+      toast.error("Đường dẫn SEO không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.sku.trim()) {
+      toast.error("Mã hàng hóa không được để trống!");
       setIsLoading(false);
       return;
     }
     if (
-      formData.colorVariants.some((v) => !v.color || v.stock < 0 || !v.image)
+      isNaN(Number(formData.startingPrice)) ||
+      Number(formData.startingPrice) <= 0
+    ) {
+      toast.error("Giá gốc phải là số lớn hơn 0!");
+      setIsLoading(false);
+      return;
+    }
+    if (isNaN(Number(formData.promotion)) || Number(formData.promotion) < 0) {
+      toast.error("Khuyến mãi phải là số không âm!");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.description.trim()) {
+      toast.error("Mô tả không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.warranty.trim()) {
+      toast.error("Bảo hành không được để trống!");
+      setIsLoading(false);
+      return;
+    }
+    // Validate biến thể màu
+    if (
+      !Array.isArray(formData.colorVariants) ||
+      formData.colorVariants.length === 0 ||
+      formData.colorVariants.some(
+        (v) =>
+          !v.color.trim() ||
+          isNaN(Number(v.stock)) ||
+          Number(v.stock) < 0 ||
+          (!v.image && !v.existingImage)
+      )
     ) {
       toast.error(
-        "Mỗi biến thể màu phải có tên, ảnh và số lượng tồn kho hợp lệ!"
+        "Mỗi biến thể màu phải có tên, ảnh (hoặc ảnh hiện tại), và số lượng tồn kho hợp lệ!"
       );
       setIsLoading(false);
       return;
@@ -108,7 +165,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("brand", formData.brand);
-      formDataToSend.append("category", formData.category);
+      formDataToSend.append("type", formData.type);
       formDataToSend.append("startingPrice", formData.startingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
@@ -128,6 +185,8 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
       );
       formDataToSend.append("warranty", formData.warranty);
       formDataToSend.append("tags", JSON.stringify(formData.tags));
+      formDataToSend.append("slug", formData.slug);
+      formDataToSend.append("sku", formData.sku);
 
       formData.colorVariants.forEach((variant, index) => {
         formDataToSend.append(`colorVariants[${index}][color]`, variant.color);
@@ -135,67 +194,28 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
           `colorVariants[${index}][stock]`,
           variant.stock.toString()
         );
+        formDataToSend.append(
+          `colorVariants[${index}][existingImage]`,
+          variant.existingImage
+        );
         if (variant.image) {
           formDataToSend.append("images", variant.image);
+          formDataToSend.append(`colorVariants[${index}][hasNewImage]`, "true");
         }
       });
 
-      formDataToSend.append("sku", formData.sku);
-      formDataToSend.append("slug", formData.slug);
-
-      const response = await apiPost<Laptop, FormData>(
-        "/laptops",
+      const response = await apiPatch<Headphone, FormData>(
+        `/headphones/${headphone._id}`,
         formDataToSend
       );
 
       if (response.error) throw new Error(response.error);
 
-      toast.success("Thêm laptop thành công!");
+      toast.success("Cập nhật tai nghe thành công!");
       router.refresh();
       setIsOpen(false);
-      setFormData({
-        name: "",
-        brand: "",
-        category: "",
-        startingPrice: 0,
-        promotion: 0,
-        description: "",
-        specifications: {
-          screenSize: "",
-          resolution: "",
-          cpu: "",
-          gpu: "",
-          ram: "",
-          storage: "",
-          battery: "",
-          os: "",
-          refreshRate: "",
-          keyboard: "",
-          ports: [],
-          webcam: "",
-          audio: "",
-        },
-        colorVariants: [{ color: "", image: null, stock: 0 }],
-        weight: 0,
-        dimensions: {
-          length: 0,
-          width: 0,
-          height: 0,
-        },
-        connectivity: [],
-        accessories: [],
-        warranty: "",
-        tags: [],
-        slug: "",
-        sku: "",
-      });
-      setTagInput("");
-      setConnectivityInput("");
-      setAccessoryInput("");
-      setImagePreview([]);
-      setIsAddingNewBrand(false);
     } catch (error) {
-      toast.error("Có lỗi khi thêm laptop!");
+      toast.error("Có lỗi khi cập nhật tai nghe!");
     } finally {
       setIsLoading(false);
     }
@@ -206,9 +226,10 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
       ...formData,
       colorVariants: [
         ...formData.colorVariants,
-        { color: "", image: null, stock: 0 },
+        { color: "", image: null, stock: 0, existingImage: "" },
       ],
     });
+    setImagePreview((prev) => [...prev, ""]);
   };
 
   const removeColorVariant = (index: number) => {
@@ -251,25 +272,18 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children || (
-          <Button className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
-            <Plus className="w-5 h-5" />
-            Thêm laptop mới
-          </Button>
-        )}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="w-[90%] !max-w-[90%] max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl">
         <DialogHeader className="border-b pb-4">
           <DialogTitle className="text-2xl font-bold text-gray-800">
-            Thêm laptop mới
+            Chỉnh sửa tai nghe: {headphone.name}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6 p-6">
           {/* Tên */}
           <div>
             <Label htmlFor="name" className="text-gray-700 font-medium">
-              Tên laptop
+              Tên tai nghe
             </Label>
             <Input
               id="name"
@@ -277,7 +291,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              placeholder="Nhập tên laptop"
+              placeholder="Nhập tên tai nghe"
               disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -288,74 +302,30 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             <Label htmlFor="brand" className="text-gray-700 font-medium">
               Thương hiệu
             </Label>
-            <div className="flex gap-2 mt-1">
-              {!isAddingNewBrand ? (
-                <>
-                  <select
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
-                    }
-                    disabled={isLoading}
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Chọn thương hiệu</option>
-                    {brands.map((brand) => (
-                      <option key={brand} value={brand}>
-                        {brand}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddingNewBrand(true)}
-                    disabled={isLoading}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                  >
-                    Thêm thương hiệu mới
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Input
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
-                    }
-                    placeholder="Nhập thương hiệu mới"
-                    disabled={isLoading}
-                    className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsAddingNewBrand(false);
-                      setFormData({ ...formData, brand: "" });
-                    }}
-                    disabled={isLoading}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                  >
-                    Hủy
-                  </Button>
-                </>
-              )}
-            </div>
+            <Input
+              id="brand"
+              value={formData.brand}
+              onChange={(e) =>
+                setFormData({ ...formData, brand: e.target.value })
+              }
+              placeholder="Nhập thương hiệu"
+              disabled={isLoading}
+              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
 
-          {/* Danh mục */}
+          {/* Loại tai nghe */}
           <div>
-            <Label htmlFor="category" className="text-gray-700 font-medium">
-              Danh mục
+            <Label htmlFor="type" className="text-gray-700 font-medium">
+              Loại tai nghe
             </Label>
             <Input
-              id="category"
-              value={formData.category}
+              id="type"
+              value={formData.type}
               onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
+                setFormData({ ...formData, type: e.target.value })
               }
-              placeholder="Nhập danh mục (ví dụ: Ultrabook, Gaming)"
+              placeholder="Nhập loại tai nghe"
               disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -372,9 +342,9 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, slug: e.target.value })
               }
-              placeholder="Nhập đường dẫn SEO (ví dụ: laptop-dell-xps)"
+              placeholder="Nhập đường dẫn SEO"
               disabled={isLoading}
-              className="mt-1 border-gray-300 focus:ring-cond-blue-500 focus:border-blue-500"
+              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -389,7 +359,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, sku: e.target.value })
               }
-              placeholder="Nhập mã hàng hóa (ví dụ: LT-DEL-001)"
+              placeholder="Nhập mã hàng hóa"
               disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -405,7 +375,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             </Label>
             <Input
               id="startingPrice"
-              type="number"
+              type="text"
               value={formData.startingPrice || ""}
               onChange={(e) =>
                 setFormData({
@@ -426,7 +396,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             </Label>
             <Input
               id="promotion"
-              type="number"
+              type="text"
               value={formData.promotion || ""}
               onChange={(e) =>
                 setFormData({
@@ -445,7 +415,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             <Label htmlFor="description" className="text-gray-700 font-medium">
               Mô tả
             </Label>
-            <Input
+            <Textarea
               id="description"
               value={formData.description}
               onChange={(e) =>
@@ -468,7 +438,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, warranty: e.target.value })
               }
-              placeholder="Nhập thời gian bảo hành (ví dụ: 12 tháng)"
+              placeholder="Nhập thời gian bảo hành"
               disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -480,14 +450,14 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               Thông số kỹ thuật
             </Label>
             <Input
-              placeholder="Kích thước màn hình (inch)"
-              value={formData.specifications.screenSize}
+              placeholder="Loại driver"
+              value={formData.specifications.driverType}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    screenSize: e.target.value,
+                    driverType: e.target.value,
                   },
                 })
               }
@@ -495,14 +465,15 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="Độ phân giải"
-              value={formData.specifications.resolution}
+              placeholder="Kích thước driver (mm)"
+              type="number"
+              value={formData.specifications.driverSize || ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    resolution: e.target.value,
+                    driverSize: parseFloat(e.target.value) || 0,
                   },
                 })
               }
@@ -510,14 +481,14 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="Tần số quét (Hz)"
-              value={formData.specifications.refreshRate}
+              placeholder="Dải tần số (Hz)"
+              value={formData.specifications.frequencyRange}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    refreshRate: e.target.value,
+                    frequencyRange: e.target.value,
                   },
                 })
               }
@@ -525,14 +496,15 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="CPU"
-              value={formData.specifications.cpu}
+              placeholder="Độ nhạy (dB)"
+              type="number"
+              value={formData.specifications.sensitivity || ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    cpu: e.target.value,
+                    sensitivity: parseFloat(e.target.value) || 0,
                   },
                 })
               }
@@ -540,14 +512,15 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="GPU"
-              value={formData.specifications.gpu}
+              placeholder="Trở kháng (Ohms)"
+              type="number"
+              value={formData.specifications.impedance || ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    gpu: e.target.value,
+                    impedance: parseFloat(e.target.value) || 0,
                   },
                 })
               }
@@ -555,14 +528,14 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="RAM (GB)"
-              value={formData.specifications.ram}
+              placeholder="Công nghệ chống ồn"
+              value={formData.specifications.noiseCancellation}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    ram: e.target.value,
+                    noiseCancellation: e.target.value,
                   },
                 })
               }
@@ -570,14 +543,15 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="Bộ nhớ (GB)"
-              value={formData.specifications.storage}
+              placeholder="Thời lượng pin (giờ)"
+              type="number"
+              value={formData.specifications.batteryLife || ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    storage: e.target.value,
+                    batteryLife: parseFloat(e.target.value) || 0,
                   },
                 })
               }
@@ -585,14 +559,15 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="Pin (Wh)"
-              value={formData.specifications.battery}
+              placeholder="Thời gian sạc (giờ)"
+              type="number"
+              value={formData.specifications.chargingTime || ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    battery: e.target.value,
+                    chargingTime: parseFloat(e.target.value) || 0,
                   },
                 })
               }
@@ -600,14 +575,14 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="Hệ điều hành"
-              value={formData.specifications.os}
+              placeholder="Loại cổng sạc"
+              value={formData.specifications.chargingPort}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    os: e.target.value,
+                    chargingPort: e.target.value,
                   },
                 })
               }
@@ -615,14 +590,14 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="Bàn phím"
-              value={formData.specifications.keyboard}
+              placeholder="Loại micro"
+              value={formData.specifications.microphone}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    keyboard: e.target.value,
+                    microphone: e.target.value,
                   },
                 })
               }
@@ -630,44 +605,14 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
             <Input
-              placeholder="Cổng kết nối (phân cách bằng dấu phẩy)"
-              value={formData.specifications.ports.join(", ")}
+              placeholder="Chất lượng âm thanh"
+              value={formData.specifications.audioQuality}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   specifications: {
                     ...formData.specifications,
-                    ports: e.target.value.split(",").map((p) => p.trim()),
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Webcam"
-              value={formData.specifications.webcam}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    webcam: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Âm thanh"
-              value={formData.specifications.audio}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    audio: e.target.value,
+                    audioQuality: e.target.value,
                   },
                 })
               }
@@ -684,7 +629,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Input
                 placeholder="Chiều dài"
-                type="number"
+                type="text"
                 value={formData.dimensions.length || ""}
                 onChange={(e) =>
                   setFormData({
@@ -700,7 +645,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               />
               <Input
                 placeholder="Chiều rộng"
-                type="number"
+                type="text"
                 value={formData.dimensions.width || ""}
                 onChange={(e) =>
                   setFormData({
@@ -716,7 +661,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
               />
               <Input
                 placeholder="Chiều cao"
-                type="number"
+                type="text"
                 value={formData.dimensions.height || ""}
                 onChange={(e) =>
                   setFormData({
@@ -736,11 +681,11 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
           {/* Trọng lượng */}
           <div>
             <Label htmlFor="weight" className="text-gray-700 font-medium">
-              Trọng lượng (kg)
+              Trọng lượng (gram)
             </Label>
             <Input
               id="weight"
-              type="number"
+              type="text"
               value={formData.weight || ""}
               onChange={(e) =>
                 setFormData({
@@ -774,10 +719,14 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <div className="flex-1">
-                  {imagePreview[index] && (
+                  {(variant.existingImage || imagePreview[index]) && (
                     <Image
-                      src={imagePreview[index]}
-                      alt={variant.color || "Preview"}
+                      src={
+                        imagePreview[index]
+                          ? imagePreview[index]
+                          : variant.existingImage
+                      }
+                      alt={variant.color}
                       width={100}
                       height={100}
                       className="object-contain rounded-md"
@@ -804,7 +753,7 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
                   />
                 </div>
                 <Input
-                  type="number"
+                  type="text"
                   placeholder="Tồn kho"
                   value={variant.stock || ""}
                   onChange={(e) => {
@@ -974,17 +923,27 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
           </div>
 
           {/* Nút submit */}
-          <Button
-            onClick={handleAddLaptop}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-            disabled={isLoading}
-          >
-            {isLoading ? <Loader2 className="animate-spin" /> : "Thêm laptop"}
-          </Button>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              disabled={isLoading}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100"
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleUpdateHeadphone}
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isLoading ? "Đang cập nhật..." : "Cập nhật"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default AddLaptopForm;
+export default EditHeadphone;

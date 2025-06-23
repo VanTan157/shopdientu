@@ -12,7 +12,7 @@ const Page = async () => {
   const orders = res.data || [];
   console.log(orders);
   return (
-    <div className="bg-white min-h-screen mx-auto">
+    <div className="bg-white min-h-screen mx-auto p-8">
       <OrderTable orders={orders} />
     </div>
   );

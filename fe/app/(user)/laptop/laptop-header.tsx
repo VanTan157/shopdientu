@@ -24,7 +24,7 @@ const LaptopHeader = () => {
 
   return (
     <div
-      className="fixed top-20 left-0 z-40"
+      className="fixed top-32 left-0 z-50"
       onMouseLeave={() => setIsOpen(false)} // Ẩn khi chuột rời khỏi toàn bộ khu vực
     >
       {/* Nút trigger */}
@@ -32,25 +32,28 @@ const LaptopHeader = () => {
         <Button
           variant="outline"
           size="icon"
-          className="m-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-colors duration-200 hover:shadow-xl"
+          className="m-4 bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full shadow-xl border-0 transition-all duration-200 ring-2 ring-blue-300 hover:ring-purple-400"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-6 w-6" />
         </Button>
       </div>
 
       {/* Nội dung sidebar */}
       {isOpen && (
         <div
-          className="absolute top-14 left-4 w-48 p-4 bg-gray-50 text-gray-800 rounded-md shadow-md transition-opacity duration-200"
+          className="absolute top-16 left-6 w-60 p-6 bg-white/90 backdrop-blur-lg border border-blue-100 rounded-2xl shadow-2xl transition-all duration-300 animate-fade-in"
           onMouseEnter={() => setIsOpen(true)} // Giữ mở khi hover vào sidebar
         >
-          <h2 className="text-lg font-semibold mb-4">Danh mục</h2>
-          <nav className="space-y-2">
+          <h2 className="text-xl font-bold mb-5 text-blue-700 flex items-center gap-2">
+            <Menu className="h-5 w-5 text-blue-500" />
+            Danh mục
+          </h2>
+          <nav className="space-y-3">
             {brands.map((brand, index) => (
               <Link
                 key={index}
                 href={`/laptop/brand/${brand}`}
-                className="block py-1.5 px-3 rounded-md hover:bg-gray-200 transition-colors text-base"
+                className="block py-2 px-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 hover:scale-[1.03] transition-all duration-150 text-base font-medium text-gray-800 shadow-sm hover:shadow-md"
                 onClick={() => setIsOpen(false)} // Đóng sidebar khi click vào link
               >
                 {brand}

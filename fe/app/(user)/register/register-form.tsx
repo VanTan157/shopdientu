@@ -40,119 +40,126 @@ const RegisterForm = () => {
   const password = watch("password");
 
   return (
-    <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold text-center mb-6">Đăng ký</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Tên người dùng
-          </label>
-          <Input
-            id="name"
-            type="text"
-            placeholder="Nhập tên người dùng"
-            className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
-            {...register("name", {
-              required: "Tên người dùng là bắt buộc",
-              minLength: {
-                value: 3,
-                message: "Tên người dùng phải có ít nhất 3 ký tự",
-              },
-            })}
-          />
-          {errors.name && (
-            <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Email
-          </label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="Nhập email của bạn"
-            className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
-            {...register("email", {
-              required: "Email là bắt buộc",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Email không hợp lệ",
-              },
-            })}
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Mật khẩu
-          </label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Nhập mật khẩu"
-            className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
-            {...register("password", {
-              required: "Mật khẩu là bắt buộc",
-              minLength: {
-                value: 6,
-                message: "Mật khẩu phải có ít nhất 6 ký tự",
-              },
-            })}
-          />
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-500">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
-
-        {/* Trường Confirm Password */}
-        <div>
-          <label
-            htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Xác nhận mật khẩu
-          </label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="Xác nhận mật khẩu"
-            className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
-            {...register("confirmPassword", {
-              required: "Vui lòng xác nhận mật khẩu",
-              validate: (value) => value === password || "Mật khẩu không khớp",
-            })}
-          />
-          {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-500">
-              {errors.confirmPassword.message}
-            </p>
-          )}
-        </div>
-
-        {/* Nút Submit */}
-        <Button
-          type="submit"
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md"
-        >
+    <div className="flex items-center justify-center min-h-screen min-w-screen">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold text-center mb-6 text-cyan-700">
           Đăng ký
-        </Button>
-      </form>
+        </h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Tên người dùng
+            </label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Nhập tên người dùng"
+              className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              {...register("name", {
+                required: "Tên người dùng là bắt buộc",
+                minLength: {
+                  value: 3,
+                  message: "Tên người dùng phải có ít nhất 3 ký tự",
+                },
+              })}
+            />
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Email
+            </label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Nhập email của bạn"
+              className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              {...register("email", {
+                required: "Email là bắt buộc",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Email không hợp lệ",
+                },
+              })}
+            />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Mật khẩu
+            </label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Nhập mật khẩu"
+              className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              {...register("password", {
+                required: "Mật khẩu là bắt buộc",
+                minLength: {
+                  value: 6,
+                  message: "Mật khẩu phải có ít nhất 6 ký tự",
+                },
+              })}
+            />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
+
+          {/* Trường Confirm Password */}
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Xác nhận mật khẩu
+            </label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="Xác nhận mật khẩu"
+              className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              {...register("confirmPassword", {
+                required: "Vui lòng xác nhận mật khẩu",
+                validate: (value) =>
+                  value === password || "Mật khẩu không khớp",
+              })}
+            />
+            {errors.confirmPassword && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          {/* Nút Submit */}
+          <Button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md"
+          >
+            Đăng ký
+          </Button>
+        </form>
+      </div>
     </div>
   );
 };

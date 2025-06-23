@@ -207,7 +207,9 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
 
   return (
     <section className="p-5">
-      <h1 className="text-3xl font-bold mb-6">Giỏ hàng của bạn</h1>
+      <h1 className="text-4xl pb-6 font-extrabold bg-gradient-to-r from-cyan-400 to-blue-600 text-transparent bg-clip-text drop-shadow-lg">
+        Giỏ hàng của bạn
+      </h1>
 
       {/* Bảng danh sách sản phẩm */}
       <Table>
@@ -215,6 +217,9 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
           <TableRow>
             <TableHead>
               <Checkbox
+                className={
+                  "border-2 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                }
                 checked={selectedItems.length === carts.length}
                 onCheckedChange={(checked) => {
                   if (checked) {
@@ -225,19 +230,36 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
                 }}
               />
             </TableHead>
-            <TableHead>Sản phẩm</TableHead>
-            <TableHead>Màu sắc</TableHead>
-            <TableHead>Số lượng</TableHead>
-            <TableHead>Đơn giá</TableHead>
-            <TableHead>Tổng giá</TableHead>
-            <TableHead>Hành động</TableHead>
+            <TableHead className="text-cyan-400 font-bold text-lg">
+              Sản phẩm
+            </TableHead>
+            <TableHead className="text-cyan-400 font-bold text-lg">
+              Màu sắc
+            </TableHead>
+            <TableHead className="text-cyan-400 font-bold text-lg">
+              Số lượng
+            </TableHead>
+            <TableHead className="text-cyan-400 font-bold text-lg">
+              Đơn giá
+            </TableHead>
+            <TableHead className="text-cyan-400 font-bold text-lg">
+              Tổng giá
+            </TableHead>
+            <TableHead className="text-cyan-400 font-bold text-lg">
+              Hành động
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {carts.map((item) => (
-            <TableRow key={item._id} onClick={() => handleSelectItem(item._id)}>
+            <TableRow
+              key={item._id}
+              onClick={() => handleSelectItem(item._id)}
+              className="hover:bg-gray-900 transition-colors"
+            >
               <TableCell>
                 <Checkbox
+                  className="border-2 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
                   checked={selectedItems.includes(item._id)}
                   onCheckedChange={() => handleSelectItem(item._id)}
                 />
@@ -250,18 +272,26 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
                   height={50}
                   className="object-contain rounded-md"
                 />
-                <span>{item.product.name}</span>
+                <span className="font-semibold">{item.product.name}</span>
               </TableCell>
-              <TableCell>{item.colorVariant.color}</TableCell>
-              <TableCell>{item.quantity}</TableCell>
-              <TableCell>{item.unit_price.toLocaleString("vi-VN")} ₫</TableCell>
-              <TableCell>
+              <TableCell className="font-semibold">
+                {item.colorVariant.color}
+              </TableCell>
+              <TableCell className="font-semibold">{item.quantity}</TableCell>
+              <TableCell className="font-semibold">
+                {item.unit_price.toLocaleString("vi-VN")} ₫
+              </TableCell>
+              <TableCell className="font-semibold">
                 {item.total_price.toLocaleString("vi-VN")} ₫
               </TableCell>
-              <TableCell>
+              <TableCell className="font-semibold">
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="destructive" size="icon">
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="hover:cursor-pointer hover:scale-110 transition-transform duration-200"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
@@ -297,7 +327,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
         <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
           <DialogTrigger asChild>
             <Button
-              className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600"
+              className="cursor-pointer flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 hover:scale-105 transition-transform duration-200 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={selectedItems.length === 0}
             >
               <ShoppingBag className="w-5 h-5" />

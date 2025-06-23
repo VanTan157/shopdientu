@@ -1,9 +1,7 @@
 import { apiGet } from "@/lib/api";
-import LaptopTable from "./laptop-table";
-import { Laptop } from "@/lib/types/laptop";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import AddLaptopForm from "./add-laptop";
+import HeadphoneTable from "./headphone-table";
+import { Headphone } from "@/lib/types/headphone";
+import AddHeadphoneForm from "./add-headphone";
 
 export default async function Page({
   params,
@@ -12,10 +10,10 @@ export default async function Page({
 }) {
   const { brand } = await params;
   console.log("check", brand);
-  const res = await apiGet<Laptop[]>(
-    `/laptops/get-all-laptop-by-brand/${brand}`
+  const res = await apiGet<Headphone[]>(
+    `/headphones/get-all-headphone-by-brand/${brand}`
   );
-  const brands = await apiGet<string[]>("/laptops/get-all-brand");
+  const brands = await apiGet<string[]>("/headphones/get-all-brand");
   console.log("brands", brands);
   if (!res) return <div>Loading...</div>;
   if (!res.data) return <div>Product not found</div>;
@@ -25,9 +23,9 @@ export default async function Page({
         <h1 className="text-3xl font-bold text-gray-800">
           Quản lý Laptop - {brand}
         </h1>
-        <AddLaptopForm brands={brands.data ?? []} />
+        <AddHeadphoneForm brands={brands.data ?? []} />
       </div>
-      <LaptopTable laptops={res.data} />
+      <HeadphoneTable headphones={res.data} />
     </div>
   );
 }

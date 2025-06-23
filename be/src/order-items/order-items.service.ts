@@ -82,6 +82,8 @@ export class OrderItemsService {
       product = await this.mobilesService.findOne(product_id);
     } else if (product_type === ProductType.LAPTOP) {
       product = await this.laptopsService.findOne(product_id);
+    } else if (product_type === ProductType.HEADPHONE) {
+      product = await this.headphonesService.findOne(product_id);
     } else {
       throw new NotFoundException("Loại sản phẩm không hợp lệ");
     }
@@ -155,6 +157,8 @@ export class OrderItemsService {
       product = await this.mobilesService.findOne(product_id);
     } else if (product_type === ProductType.LAPTOP) {
       product = await this.laptopsService.findOne(product_id);
+    } else if (product_type === ProductType.HEADPHONE) {
+      product = await this.headphonesService.findOne(product_id);
     } else {
       throw new NotFoundException("Loại sản phẩm không hợp lệ");
     }

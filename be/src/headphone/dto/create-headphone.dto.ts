@@ -202,9 +202,9 @@ export class CreateHeadphoneDto {
 
   // Ngày phát hành (tùy chọn)
   @IsDate()
-  @IsNotEmpty()
+  @IsOptional()
   @Type(() => Date)
-  releaseDate: Date;
+  releaseDate?: Date;
 
   // Danh sách thẻ (tùy chọn)
   @IsArray()

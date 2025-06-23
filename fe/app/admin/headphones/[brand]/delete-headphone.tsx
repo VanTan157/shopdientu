@@ -13,27 +13,27 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-interface DeleteLaptopProps {
-  id: string; // ID của điện thoại
-  children: React.ReactNode; // Để bọc thẻ div từ MobileFilterTable
+interface DeleteHeadphoneProps {
+  id: string; // ID của tai nghe
+  children: React.ReactNode; // Để bọc thẻ div từ HeadphoneTable
 }
 
-const DeleteLaptop = ({ id, children }: DeleteLaptopProps) => {
+const DeleteHeadphone = ({ id, children }: DeleteHeadphoneProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false); // Trạng thái loading
 
-  const handleDeleteLaptop = async (laptopId: string) => {
+  const handleDeleteHeadphone = async (headphoneId: string) => {
     setLoading(true); // Bắt đầu loading
-    const res = await apiDelete(`/laptops/${laptopId}`);
+    const res = await apiDelete(`/headphones/${headphoneId}`);
 
     if (res.data) {
       router.refresh();
-      toast.success("Xóa sản phẩm thành công!");
+      toast.success("Xóa tai nghe thành công!");
     } else if (res.error) {
       toast.error(res.error);
     } else {
-      toast.error("Có lỗi khi xóa sản phẩm!");
-    } // Làm mới trang sau khi xóa
+      toast.error("Có lỗi khi xóa tai nghe!");
+    }
     setLoading(false); // Kết thúc loading
   };
 
@@ -43,19 +43,19 @@ const DeleteLaptop = ({ id, children }: DeleteLaptopProps) => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Bạn có chắc chắn muốn xóa sản phẩm này không?
+            Bạn có chắc chắn muốn xóa tai nghe này không?
           </DialogTitle>
           <DialogDescription>
             <span className="text-sm text-gray-500">
-              Nếu bạn xóa sản phẩm này, nó sẽ không còn xuất hiện trong danh
-              sách điện thoại của bạn.
+              Nếu bạn xóa tai nghe này, nó sẽ không còn xuất hiện trong danh
+              sách sản phẩm của bạn.
             </span>
             <span className="flex justify-end mt-4">
               <Button
                 disabled={loading}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                 onClick={() => {
-                  handleDeleteLaptop(id);
+                  handleDeleteHeadphone(id);
                 }}
               >
                 {loading && <Loader2 className="animate-spin" />}
@@ -69,4 +69,4 @@ const DeleteLaptop = ({ id, children }: DeleteLaptopProps) => {
   );
 };
 
-export default DeleteLaptop;
+export default DeleteHeadphone;
