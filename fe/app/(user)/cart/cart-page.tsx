@@ -34,6 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CartItem } from "@/lib/types/order-item";
+import { useCartStore } from "@/app/store/cart-store";
+import { se } from "date-fns/locale";
 
 const CartPage = ({ carts }: { carts: CartItem[] }) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -50,6 +52,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
   const [provinces, setProvinces] = useState<any[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
   const [wards, setWards] = useState<any[]>([]);
+  const { cartItemCount, setCartItemCount } = useCartStore();
 
   // Gọi API tỉnh/thành phố
   useEffect(() => {
@@ -157,6 +160,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
         throw new Error(res.error);
       }
       setSelectedItems(selectedItems.filter((id) => id !== itemId));
+      setCartItemCount(carts.length - 1);
       toast.success("Xóa sản phẩm thành công!");
       router.refresh();
     } catch (error) {
@@ -189,6 +193,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
       if (res.error) {
         throw new Error(res.error);
       }
+      setCartItemCount(cartItemCount - selectedItems.length); // Reset cart item count
       toast.success("Đặt hàng thành công!");
       router.refresh();
       setSelectedItems([]);

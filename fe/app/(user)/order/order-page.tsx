@@ -31,6 +31,8 @@ import { Order, OrderStatus } from "@/lib/types/order";
 import { apiPatch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { set } from "date-fns";
+import { se } from "date-fns/locale";
 
 const OrderPage = ({ orders }: { orders: Order[] }) => {
   const [filterStatus, setFilterStatus] = useState<OrderStatus | "Tất cả">(
@@ -62,6 +64,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
         throw new Error(res.error);
       }
       toast.success("Hủy đơn hàng thành công!");
+      setOpen(false); // Đóng dialog sau khi hủy
       router.refresh();
     } catch (error) {
       console.error("Error canceling order:", error);
@@ -81,6 +84,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
         throw new Error(res.error);
       }
       toast.success("Nhận hàng thành công!");
+      setOpen(false); // Đóng dialog sau khi hoàn thành
       router.refresh();
     } catch (error) {
       console.error("Error compelete order:", error);
@@ -286,7 +290,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                 )}
 
                 {order.status === "Đang vận chuyển" && (
-                  <Dialog>
+                  <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                       <Button
                         className="bg-green-500 hover:bg-green-600"
@@ -301,7 +305,12 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                       </DialogHeader>
                       <p>Bạn chắc chắn đã nhận được hàng?</p>
                       <div className="flex justify-end gap-2 mt-4">
-                        <Button variant="outline" onClick={() => {}}>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setOpen(false);
+                          }}
+                        >
                           Không
                         </Button>
                         <Button

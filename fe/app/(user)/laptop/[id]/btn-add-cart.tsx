@@ -19,6 +19,7 @@ import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Laptop } from "@/lib/types/laptop";
+import { useCartStore } from "@/app/store/cart-store";
 
 const BtnAddToCart = ({
   product,
@@ -30,6 +31,7 @@ const BtnAddToCart = ({
   const [quantity, setQuantity] = useState<number>(1);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { cartItemCount, setCartItemCount, refreshCart } = useCartStore();
   const router = useRouter();
 
   const handleAddToCart = async () => {
@@ -45,8 +47,10 @@ const BtnAddToCart = ({
     router.refresh(); // Refresh trang để cập nhật giỏ hàng
     if (res.data) {
       setOpen(false);
+      setCartItemCount(cartItemCount + 1); // Cập nhật số lượng sản phẩm trong giỏ hàng
       toast.success("Thêm vào giỏ hàng thành công!");
     } else {
+      refreshCart(); // Cập nhật lại giỏ hàng nếu có lỗi
       toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
     }
   };

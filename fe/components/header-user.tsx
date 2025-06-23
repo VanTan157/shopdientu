@@ -5,6 +5,7 @@ import { Input } from "./ui/input";
 import Link from "next/link";
 import { Search, ShoppingCart } from "lucide-react";
 import SearchProduct from "./search-product";
+import CartIcon from "./cart-icon";
 
 const HeaderUser = async () => {
   const cookieStore = cookies();
@@ -33,7 +34,7 @@ const HeaderUser = async () => {
             {accessToken ? (
               <>
                 <Link href="/cart" className="relative group">
-                  <ShoppingCart className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 text-white group-hover:text-blue-400 transition" />
+                  <CartIcon />
                 </Link>
                 <Notification />
                 <Avatar />

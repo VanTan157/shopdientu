@@ -167,7 +167,8 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
 
       // Bước 1: Tạo OrderItem
       const orderItemData = {
-        mobile_id: product._id,
+        product_id: product._id,
+        product_type: "mobile",
         quantity: quantity, // Số lượng từ form
         colorVariant: {
           _id: product.colorVariants[index]._id,
