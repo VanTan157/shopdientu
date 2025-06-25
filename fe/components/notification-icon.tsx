@@ -36,29 +36,17 @@ const NotificationIcon = ({
 
   // Lắng nghe thông báo mới từ WebSocket
   useEffect(() => {
-    socket.emit("join", userId); // Thay "USER_ID" bằng userId thực tế, lấy từ context hoặc token
+    //gửi userId để tham gia room
+    socket.emit("join", userId);
 
-    socket.on(
-      "newNotification",
-      (data: { message: string; timestamp: string }) => {
-        // Thêm thông báo mới vào danh sách
-        if (!userId) return;
-        setNotifications((prev) => [
-          {
-            _id: Date.now().toString(),
-            message: data.message,
-            createdAt: data.timestamp,
-            isRead: false,
-            user_id: userId,
-            updatedAt: data.timestamp,
-            __v: 0,
-          },
-          ...prev,
-        ]);
-        // Tăng số lượng thông báo chưa đọc
-        setCount(count + 1);
-      }
-    );
+    // Lắng nghe sự kiện newNotification
+    socket.on("newNotification", (notification: Notification) => {
+      // Thêm thông báo mới vào danh sách
+      if (!userId) return;
+      setNotifications((prev) => [notification, ...prev]);
+      // Tăng số lượng thông báo chưa đọc
+      setCount(count + 1);
+    });
 
     // Cleanup khi unmount
     return () => {

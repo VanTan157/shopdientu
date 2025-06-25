@@ -22,8 +22,13 @@ export class NotificationsService {
 
     // Gửi thông báo qua WebSocket
     this.notificationsGateway.sendNotification(userId, {
+      _id: (notification._id as Types.ObjectId).toString(),
+      user_id: userId,
       message,
-      timestamp: new Date(),
+      isRead: false,
+      createdAt: notification.createdAt.toISOString(),
+      updatedAt: notification.updatedAt.toISOString(),
+      __v: notification.__v,
     });
     return notification;
   }
