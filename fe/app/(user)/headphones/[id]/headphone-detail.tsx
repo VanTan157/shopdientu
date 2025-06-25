@@ -13,7 +13,7 @@ const HeadphoneDetail = ({ product }: { product: Headphone }) => {
   );
 
   return (
-    <section className="container mx-auto p-5 my-10 bg-blue-900s rounded-lg shadow-lg">
+    <section className="container mx-auto p-5 my-10 rounded-lg shadow-lg">
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Hình ảnh sản phẩm */}

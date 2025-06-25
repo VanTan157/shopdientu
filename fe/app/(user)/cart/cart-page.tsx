@@ -211,7 +211,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
   }
 
   return (
-    <section className="p-5">
+    <section className="px-5 py-8">
       <h1 className="text-4xl pb-6 font-extrabold bg-gradient-to-r from-cyan-400 to-blue-600 text-transparent bg-clip-text drop-shadow-lg">
         Giỏ hàng của bạn
       </h1>

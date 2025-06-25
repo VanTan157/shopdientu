@@ -1,6 +1,4 @@
-// app/mobiles/layout.tsx
-
-import LaptopHeader from "./headphone-header";
+import HeadphoneHeader from "./headphone-header";
 
 export default function MobileLayout({
   children,
@@ -9,7 +7,7 @@ export default function MobileLayout({
 }>) {
   return (
     <div className="flex">
-      <LaptopHeader />
+      <HeadphoneHeader />
       <div className="ml-16 flex-1">{children}</div>
     </div>
   );

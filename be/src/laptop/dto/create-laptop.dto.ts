@@ -185,7 +185,7 @@ export class CreateLaptopDto {
   @IsOptional()
   totalStock: number;
 
-  // Trạng thái sẵn có (bắt buộc)
+  // Trạng thái sẵn có
   @IsBoolean()
   @IsOptional()
   isAvailable: boolean;

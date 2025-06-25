@@ -59,21 +59,30 @@ const HeaderUser = async () => {
         </div>
       </div>
       <nav className="flex justify-center flex-wrap gap-x-2 xs:gap-x-3 sm:gap-x-4 md:gap-x-6 lg:gap-x-8 gap-y-2 text-xs xs:text-sm sm:text-base font-medium text-gray-300">
-        <Link href="/mobiles" className="hover:text-blue-400 transition">
+        <Link
+          href="/mobiles"
+          className="hover:text-blue-400 cursor-pointer transition"
+        >
           Điện thoại
         </Link>
-        <Link href="/headphones" className="hover:text-blue-400 transition">
+        <Link
+          href="/headphones"
+          className="hover:text-blue-400 cursor-pointer transition"
+        >
           Tai nghe
         </Link>
-        <Link href="/laptop" className="hover:text-blue-400 transition">
+        <Link
+          href="/laptops"
+          className="hover:text-blue-400 cursor-pointer transition"
+        >
           Laptop
         </Link>
-        <span className="hover:text-blue-400 cursor-pointer transition">
+        <Link
+          href="/tablets"
+          className="hover:text-blue-400 cursor-pointer transition"
+        >
           Máy tính bảng
-        </span>
-        <span className="hover:text-blue-400 cursor-pointer transition">
-          Máy tính
-        </span>
+        </Link>
       </nav>
     </header>
   );

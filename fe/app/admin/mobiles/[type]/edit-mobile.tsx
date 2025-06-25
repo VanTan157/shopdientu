@@ -18,15 +18,14 @@ import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 
 interface EditMobileProps {
-  mobile: Mobile; // Thông tin điện thoại
-  children: React.ReactNode; // Để bọc thẻ div từ MobileFilterTable
+  mobile: Mobile;
+  children: React.ReactNode;
 }
 
 const EditMobile = ({ mobile, children }: EditMobileProps) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  console.log(mobile);
   const [formData, setFormData] = useState({
     name: mobile.name,
     StartingPrice: mobile.StartingPrice,
@@ -44,9 +43,9 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
     },
     colorVariants: mobile.colorVariants.map((variant) => ({
       color: variant.color,
-      image: null as File | null, // File mới nếu người dùng upload
+      image: null as File | null,
       stock: variant.stock,
-      existingImage: variant.image || "", // Ảnh hiện tại từ server
+      existingImage: variant.image || "",
     })),
     camera: {
       rear: mobile.camera.rear || "",
@@ -55,26 +54,31 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
     weight: mobile.weight || 0,
     tags: mobile.tags || [],
   });
-  const [imagePreview, setImagePreview] = useState([] as string[]);
+  const [imagePreview, setImagePreview] = useState<string[]>(
+    mobile.colorVariants.map((variant) =>
+      variant.image
+        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}${variant.image}`
+        : ""
+    )
+  );
   const [tagInput, setTagInput] = useState("");
+
   useEffect(() => {
     return () => {
-      imagePreview.forEach((url) => URL.revokeObjectURL(url));
+      imagePreview.forEach((url) => {
+        if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
+      });
     };
   }, [imagePreview]);
 
   const handleUpdateMobile = async () => {
     setIsLoading(true);
 
-    // Validate dữ liệu
-    // Validate tên
     if (!formData.name.trim()) {
       toast.error("Tên điện thoại không được để trống!");
       setIsLoading(false);
       return;
     }
-
-    // Validate giá gốc
     if (
       typeof formData.StartingPrice !== "number" ||
       isNaN(formData.StartingPrice) ||
@@ -84,8 +88,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       setIsLoading(false);
       return;
     }
-
-    // Validate khuyến mãi
     if (
       typeof formData.promotion !== "number" ||
       isNaN(formData.promotion) ||
@@ -96,22 +98,16 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       setIsLoading(false);
       return;
     }
-
-    // Validate mô tả
     if (!formData.description.trim()) {
       toast.error("Mô tả không được để trống!");
       setIsLoading(false);
       return;
     }
-
-    // Validate loại điện thoại
     if (!formData.mobile_type_id) {
       toast.error("Loại điện thoại không được để trống!");
       setIsLoading(false);
       return;
     }
-
-    // Validate thông số kỹ thuật
     const specs = formData.specifications;
     if (
       !specs.screenSize.trim() ||
@@ -126,8 +122,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       setIsLoading(false);
       return;
     }
-
-    // Validate biến thể màu
     if (
       !formData.colorVariants.length ||
       formData.colorVariants.some(
@@ -145,15 +139,11 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       setIsLoading(false);
       return;
     }
-
-    // Validate camera
     if (!formData.camera.rear.trim() || !formData.camera.front.trim()) {
       toast.error("Vui lòng nhập đầy đủ thông tin camera!");
       setIsLoading(false);
       return;
     }
-
-    // Validate trọng lượng
     if (
       typeof formData.weight !== "number" ||
       isNaN(formData.weight) ||
@@ -163,8 +153,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       setIsLoading(false);
       return;
     }
-
-    // Validate tags (không bắt buộc, nhưng nếu có thì phải là chuỗi)
     if (formData.tags.some((tag) => typeof tag !== "string" || !tag.trim())) {
       toast.error("Tag không hợp lệ!");
       setIsLoading(false);
@@ -197,9 +185,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
           variant.existingImage
         );
         if (variant.image) {
-          // Gửi file vào trường "images" với index để backend ánh xạ
           formDataToSend.append("images", variant.image);
-          // Lưu index của biến thể để backend biết file này thuộc biến thể nào
           formDataToSend.append(`colorVariants[${index}][hasNewImage]`, "true");
         }
       });
@@ -212,7 +198,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       if (response.error) throw new Error(response.error);
 
       toast.success("Cập nhật điện thoại thành công!");
-      router.refresh(); // Làm mới trang
+      router.refresh();
       setIsOpen(false);
     } catch (error) {
       toast.error("Có lỗi khi cập nhật điện thoại!");
@@ -229,6 +215,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
         { color: "", image: null, stock: 0, existingImage: "" },
       ],
     });
+    setImagePreview((prev) => [...prev, ""]);
   };
 
   const removeColorVariant = (index: number) => {
@@ -236,6 +223,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       ...formData,
       colorVariants: formData.colorVariants.filter((_, i) => i !== index),
     });
+    setImagePreview((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleAddTag = () => {
@@ -248,14 +236,18 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="w-[90%] !max-w-[90%] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Chỉnh sửa điện thoại: {mobile.name}</DialogTitle>
+      <DialogContent className="w-[90%] !max-w-[90%] max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl">
+        <DialogHeader className="border-b pb-4">
+          <DialogTitle className="text-2xl font-bold text-gray-800">
+            Chỉnh sửa điện thoại: {mobile.name}
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-6">
+        <div className="space-y-6 p-6">
           {/* Tên */}
           <div>
-            <Label htmlFor="name">Tên điện thoại</Label>
+            <Label htmlFor="name" className="text-gray-700 font-medium mb-2">
+              Tên điện thoại
+            </Label>
             <Input
               id="name"
               value={formData.name}
@@ -264,12 +256,18 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
               }
               placeholder="Nhập tên điện thoại"
               disabled={isLoading}
+              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* Giá gốc */}
           <div>
-            <Label htmlFor="startingPrice">Giá gốc (VNĐ)</Label>
+            <Label
+              htmlFor="startingPrice"
+              className="text-gray-700 font-medium mb-2"
+            >
+              Giá gốc (VNĐ)
+            </Label>
             <Input
               id="startingPrice"
               type="text"
@@ -282,12 +280,18 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
               }
               placeholder="Nhập giá gốc"
               disabled={isLoading}
+              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* Khuyến mãi */}
           <div>
-            <Label htmlFor="promotion">Khuyến mãi (%)</Label>
+            <Label
+              htmlFor="promotion"
+              className="text-gray-700 font-medium mb-2"
+            >
+              Khuyến mãi (%)
+            </Label>
             <Input
               id="promotion"
               type="text"
@@ -300,12 +304,18 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
               }
               placeholder="Nhập % khuyến mãi (nếu có)"
               disabled={isLoading}
+              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* Mô tả */}
           <div>
-            <Label htmlFor="description">Mô tả</Label>
+            <Label
+              htmlFor="description"
+              className="text-gray-700 font-medium mb-2"
+            >
+              Mô tả
+            </Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -314,117 +324,161 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
               }
               placeholder="Nhập mô tả"
               disabled={isLoading}
+              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* Thông số kỹ thuật */}
-          <div className="space-y-2">
-            <Label>Thông số kỹ thuật</Label>
-            <Input
-              placeholder="Kích thước màn hình"
-              value={formData.specifications.screenSize}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    screenSize: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-            />
-            <Input
-              placeholder="Độ phân giải"
-              value={formData.specifications.resolution}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    resolution: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-            />
-            <Input
-              placeholder="CPU"
-              value={formData.specifications.cpu}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    cpu: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-            />
-            <Input
-              placeholder="RAM"
-              value={formData.specifications.ram}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    ram: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-            />
-            <Input
-              placeholder="Bộ nhớ"
-              value={formData.specifications.storage}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    storage: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-            />
-            <Input
-              placeholder="Pin"
-              value={formData.specifications.battery}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    battery: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-            />
-            <Input
-              placeholder="Hệ điều hành"
-              value={formData.specifications.os}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    os: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-            />
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+            <Label className="text-gray-900 font-semibold mb-2">
+              Thông số kỹ thuật
+            </Label>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Kích thước màn hình
+              </Label>
+              <Input
+                placeholder="Kích thước màn hình"
+                value={formData.specifications.screenSize}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      screenSize: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Độ phân giải
+              </Label>
+              <Input
+                placeholder="Độ phân giải"
+                value={formData.specifications.resolution}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      resolution: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">CPU</Label>
+              <Input
+                placeholder="CPU"
+                value={formData.specifications.cpu}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      cpu: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">RAM</Label>
+              <Input
+                placeholder="RAM"
+                value={formData.specifications.ram}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      ram: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Bộ nhớ
+              </Label>
+              <Input
+                placeholder="Bộ nhớ"
+                value={formData.specifications.storage}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      storage: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">Pin</Label>
+              <Input
+                placeholder="Pin"
+                value={formData.specifications.battery}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      battery: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Hệ điều hành
+              </Label>
+              <Input
+                placeholder="Hệ điều hành"
+                value={formData.specifications.os}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      os: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
           </div>
 
           {/* Biến thể màu */}
-          <div className="space-y-2">
-            <Label>Biến thể màu</Label>
+          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+            <Label className="text-gray-900 font-semibold mb-2">
+              Biến thể màu
+            </Label>
             {formData.colorVariants.map((variant, index) => (
-              <div key={index} className="flex items-center gap-2">
+              <div
+                key={index}
+                className="flex items-center gap-4 bg-white p-3 rounded-md shadow-sm"
+              >
                 <Input
                   placeholder="Tên màu"
                   value={variant.color}
@@ -434,9 +488,9 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <div className="flex-2">
+                <div className="flex-1">
                   {(variant.existingImage || imagePreview[index]) && (
                     <Image
                       src={
@@ -447,7 +501,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                       alt={variant.color}
                       width={100}
                       height={100}
-                      className="object-cover"
+                      className="object-contain rounded-md"
                     />
                   )}
                   <Input
@@ -467,6 +521,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                       }
                     }}
                     disabled={isLoading}
+                    className="mt-2"
                   />
                 </div>
                 <Input
@@ -479,7 +534,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {formData.colorVariants.length > 1 && (
                   <Button
@@ -487,6 +542,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     size="icon"
                     onClick={() => removeColorVariant(index)}
                     disabled={isLoading}
+                    className="bg-red-600 hover:bg-red-700"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -497,7 +553,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
               variant="outline"
               onClick={addColorVariant}
               disabled={isLoading}
-              className="mt-2"
+              className="mt-2 border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               <Plus className="w-4 h-4 mr-2" />
               Thêm màu
@@ -505,35 +561,49 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
           </div>
 
           {/* Camera */}
-          <div className="space-y-2">
-            <Label>Camera</Label>
-            <Input
-              placeholder="Camera sau"
-              value={formData.camera.rear}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  camera: { ...formData.camera, rear: e.target.value },
-                })
-              }
-              disabled={isLoading}
-            />
-            <Input
-              placeholder="Camera trước"
-              value={formData.camera.front}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  camera: { ...formData.camera, front: e.target.value },
-                })
-              }
-              disabled={isLoading}
-            />
+          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+            <Label className="text-gray-900 font-semibold mb-2">Camera</Label>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Camera sau
+              </Label>
+              <Input
+                placeholder="Camera sau"
+                value={formData.camera.rear}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    camera: { ...formData.camera, rear: e.target.value },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Camera trước
+              </Label>
+              <Input
+                placeholder="Camera trước"
+                value={formData.camera.front}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    camera: { ...formData.camera, front: e.target.value },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
           </div>
 
           {/* Trọng lượng */}
-          <div>
-            <Label htmlFor="weight">Trọng lượng (g)</Label>
+          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+            <Label htmlFor="weight" className="text-gray-700 font-medium mb-2">
+              Trọng lượng (g)
+            </Label>
             <Input
               id="weight"
               type="text"
@@ -546,21 +616,27 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
               }
               placeholder="Nhập trọng lượng"
               disabled={isLoading}
+              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* Tags */}
-          <div>
-            <Label>Tags</Label>
+          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+            <Label className="text-gray-900 font-semibold mb-2">Tags</Label>
             <div className="flex gap-2">
               <Input
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                placeholder="Nhập tag và nhấn Enter"
+                placeholder="Nhập tag và nhấn Thêm"
                 onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
                 disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
-              <Button onClick={handleAddTag} disabled={isLoading}>
+              <Button
+                onClick={handleAddTag}
+                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 Thêm
               </Button>
             </div>
@@ -594,13 +670,14 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
               variant="outline"
               onClick={() => setIsOpen(false)}
               disabled={isLoading}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               Hủy
             </Button>
             <Button
               onClick={handleUpdateMobile}
-              className="bg-blue-600 hover:bg-blue-700"
               disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700"
             >
               {isLoading ? "Đang cập nhật..." : "Cập nhật"}
             </Button>

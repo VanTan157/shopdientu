@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   House,
   User,
+  Tablet,
 } from "lucide-react";
 
 import {
@@ -33,9 +34,10 @@ import Link from "next/link";
 import { apiGet } from "@/lib/api";
 import { MobileType } from "@/lib/types/mobile";
 import { Button } from "@/components/ui/button";
-import AddMobileForm from "./mobiles/[type]/AddMobileForm";
+import AddMobileForm from "./mobiles/[type]/add-mobile";
 import AddLaptopForm from "./laptops/[brand]/add-laptop";
 import AddHeadphoneForm from "./headphones/[brand]/add-headphone";
+import AddTabletForm from "./tablet/[brand]/add-tablet";
 
 // Menu items.
 const items = [
@@ -62,9 +64,10 @@ const items = [
     hasSubmenu: true, // Thêm thuộc tính để nhận biết có submenu
   },
   {
-    title: "PC",
+    title: "Máy tính bảng",
     url: "#",
-    icon: Monitor,
+    icon: Tablet,
+    hasSubmenu: true, // Thêm thuộc tính để nhận biết có submenu
   },
   {
     title: "Laptop",
@@ -95,6 +98,9 @@ export async function AppSidebar() {
     "/headphones/get-all-brand"
   );
   const brands_headphone = resBrandsHeadphone.data || [];
+
+  const resBrandsTablet = await apiGet<string[]>("/tablets/get-all-brand");
+  const brands_tablet = resBrandsTablet.data || [];
 
   return (
     <Sidebar className="pt-6 bg-white shadow-lg">
@@ -179,6 +185,26 @@ export async function AppSidebar() {
                                 <SidebarMenuSubItem key={index}>
                                   <SidebarMenuSubButton asChild>
                                     <Link href={`/admin/headphones/${brand}`}>
+                                      <span>{brand}</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              ))
+                            ))}
+
+                          {item.title === "Máy tính bảng" &&
+                            (brands_tablet.length === 0 ? (
+                              <div>
+                                <p className="text-gray-500 text-sm mb-2">
+                                  Hiện tại chưa có sản phẩm nào
+                                </p>
+                                <AddTabletForm />
+                              </div>
+                            ) : (
+                              brands_tablet.map((brand, index) => (
+                                <SidebarMenuSubItem key={index}>
+                                  <SidebarMenuSubButton asChild>
+                                    <Link href={`/admin/tablet/${brand}`}>
                                       <span>{brand}</span>
                                     </Link>
                                   </SidebarMenuSubButton>

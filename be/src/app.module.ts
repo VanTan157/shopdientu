@@ -13,6 +13,7 @@ import { NotificationsGateway } from "./notifications.gateway";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { LaptopModule } from './laptop/laptop.module';
 import { HeadphoneModule } from './headphone/headphone.module';
+import { TabletModule } from './tablet/tablet.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,6 +31,7 @@ import { HeadphoneModule } from './headphone/headphone.module';
     NotificationsModule,
     LaptopModule,
     HeadphoneModule,
+    TabletModule,
   ],
   controllers: [AppController],
   providers: [AppService, NotificationsGateway],

@@ -47,8 +47,8 @@ const DeleteLaptop = ({ id, children }: DeleteLaptopProps) => {
           </DialogTitle>
           <DialogDescription>
             <span className="text-sm text-gray-500">
-              Nếu bạn xóa sản phẩm này, nó sẽ không còn xuất hiện trong danh
-              sách điện thoại của bạn.
+              Nếu bạn xóa sản phẩm này, nó sẽ không còn xuất hiện trong danh sản
+              phẩm thoại của bạn.
             </span>
             <span className="flex justify-end mt-4">
               <Button

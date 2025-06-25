@@ -9,7 +9,6 @@ import { Laptop } from "./entities/laptop.entity";
 import { CreateLaptopDto } from "./dto/create-laptop.dto";
 import { UpdateLaptopDto } from "./dto/update-laptop.dto";
 import * as fs from "fs";
-import * as path from "path";
 import { promisify } from "util";
 
 const unlinkAsync = promisify(fs.unlink);
@@ -236,10 +235,10 @@ export class LaptopService {
 
   async getAllBrand(): Promise<string[]> {
     const laptops = await this.laptopModel.find().exec();
-    const brands = new Set<string>();
+    const brands = new Array<string>();
     laptops.forEach((laptop) => {
       if (laptop.brand) {
-        brands.add(laptop.brand);
+        brands.push(laptop.brand);
       }
     });
     return Array.from(brands);

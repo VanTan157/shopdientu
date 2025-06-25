@@ -237,10 +237,10 @@ export class HeadphoneService {
 
   async getAllBrand(): Promise<string[]> {
     const headphones = await this.headphoneModel.find().exec();
-    const brands = new Set<string>();
+    const brands = new Array<string>();
     headphones.forEach((headphone) => {
       if (headphone.brand) {
-        brands.add(headphone.brand);
+        brands.push(headphone.brand);
       }
     });
     return Array.from(brands);

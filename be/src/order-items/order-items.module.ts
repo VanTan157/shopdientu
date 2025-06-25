@@ -7,6 +7,7 @@ import { OrderModule } from "src/order/order.module";
 import { MobilesModule } from "src/mobiles/mobiles.module";
 import { LaptopModule } from "src/laptop/laptop.module";
 import { HeadphoneModule } from "src/headphone/headphone.module";
+import { TabletModule } from "src/tablet/tablet.module";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { HeadphoneModule } from "src/headphone/headphone.module";
     MobilesModule,
     LaptopModule,
     HeadphoneModule,
+    TabletModule,
     forwardRef(() => OrderModule),
   ],
   controllers: [OrderItemsController],

@@ -548,255 +548,255 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
           </div>
 
           {/* Thông số kỹ thuật */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
             <Label className="text-gray-900 font-semibold">
               Thông số kỹ thuật
             </Label>
-            <Input
-              placeholder="Kích thước màn hình (inch)"
-              value={formData.specifications.screenSize}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    screenSize: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Độ phân giải"
-              value={formData.specifications.resolution}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    resolution: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Tần số quét (Hz)"
-              value={formData.specifications.refreshRate}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    refreshRate: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="CPU"
-              value={formData.specifications.cpu}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    cpu: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="GPU"
-              value={formData.specifications.gpu}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    gpu: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="RAM (GB)"
-              value={formData.specifications.ram}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    ram: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Bộ nhớ (GB)"
-              value={formData.specifications.storage}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    storage: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Pin (Wh)"
-              value={formData.specifications.battery}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    battery: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Hệ điều hành"
-              value={formData.specifications.os}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    os: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Bàn phím"
-              value={formData.specifications.keyboard}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    keyboard: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Cổng kết nối (phân cách bằng dấu phẩy)"
-              value={formData.specifications.ports.join(", ")}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    ports: e.target.value.split(",").map((p) => p.trim()),
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Webcam"
-              value={formData.specifications.webcam}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    webcam: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <Input
-              placeholder="Âm thanh"
-              value={formData.specifications.audio}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  specifications: {
-                    ...formData.specifications,
-                    audio: e.target.value,
-                  },
-                })
-              }
-              disabled={isLoading}
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Kích thước */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">
-              Kích thước (cm)
-            </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Kích thước màn hình (inch)
+              </Label>
               <Input
-                placeholder="Chiều dài"
-                type="text"
-                value={formData.dimensions.length || ""}
+                placeholder="Kích thước màn hình (inch)"
+                value={formData.specifications.screenSize}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    dimensions: {
-                      ...formData.dimensions,
-                      length: parseFloat(e.target.value) || 0,
+                    specifications: {
+                      ...formData.specifications,
+                      screenSize: e.target.value,
                     },
                   })
                 }
                 disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Độ phân giải
+              </Label>
               <Input
-                placeholder="Chiều rộng"
-                type="text"
-                value={formData.dimensions.width || ""}
+                placeholder="Độ phân giải"
+                value={formData.specifications.resolution}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    dimensions: {
-                      ...formData.dimensions,
-                      width: parseFloat(e.target.value) || 0,
+                    specifications: {
+                      ...formData.specifications,
+                      resolution: e.target.value,
                     },
                   })
                 }
                 disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Tần số quét (Hz)
+              </Label>
               <Input
-                placeholder="Chiều cao"
-                type="text"
-                value={formData.dimensions.height || ""}
+                placeholder="Tần số quét (Hz)"
+                value={formData.specifications.refreshRate}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    dimensions: {
-                      ...formData.dimensions,
-                      height: parseFloat(e.target.value) || 0,
+                    specifications: {
+                      ...formData.specifications,
+                      refreshRate: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">CPU</Label>
+              <Input
+                placeholder="CPU"
+                value={formData.specifications.cpu}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      cpu: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">GPU</Label>
+              <Input
+                placeholder="GPU"
+                value={formData.specifications.gpu}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      gpu: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">RAM</Label>
+              <Input
+                placeholder="RAM (GB)"
+                value={formData.specifications.ram}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      ram: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Bộ nhớ
+              </Label>
+              <Input
+                placeholder="Bộ nhớ (GB)"
+                value={formData.specifications.storage}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      storage: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">Pin</Label>
+              <Input
+                placeholder="Pin (Wh)"
+                value={formData.specifications.battery}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      battery: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Hệ điều hành
+              </Label>
+              <Input
+                placeholder="Hệ điều hành"
+                value={formData.specifications.os}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      os: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Cổng kết nối
+              </Label>
+              <Input
+                placeholder="Bàn phím"
+                value={formData.specifications.keyboard}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      keyboard: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Cổng kết nối
+              </Label>
+              <Input
+                placeholder="Cổng kết nối (phân cách bằng dấu phẩy)"
+                value={formData.specifications.ports.join(", ")}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      ports: e.target.value.split(",").map((p) => p.trim()),
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Webcam
+              </Label>
+              <Input
+                placeholder="Webcam"
+                value={formData.specifications.webcam}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      webcam: e.target.value,
+                    },
+                  })
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Âm thanh
+              </Label>
+              <Input
+                placeholder="Âm thanh"
+                value={formData.specifications.audio}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    specifications: {
+                      ...formData.specifications,
+                      audio: e.target.value,
                     },
                   })
                 }
@@ -806,8 +806,80 @@ const AddLaptopForm = ({ children, brands = [] }: AddLaptopFormProps) => {
             </div>
           </div>
 
+          {/* Kích thước */}
+          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+            <Label className="text-gray-900 font-semibold mb-4">
+              Kích thước (cm)
+            </Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Chiều dài
+                </Label>
+                <Input
+                  placeholder="Chiều dài"
+                  type="text"
+                  value={formData.dimensions.length || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        length: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  disabled={isLoading}
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Chiều rộng
+                </Label>
+                <Input
+                  placeholder="Chiều rộng"
+                  type="text"
+                  value={formData.dimensions.width || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        width: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  disabled={isLoading}
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Chiều cao
+                </Label>
+                <Input
+                  placeholder="Chiều cao"
+                  type="text"
+                  value={formData.dimensions.height || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        height: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  disabled={isLoading}
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Trọng lượng */}
-          <div>
+          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
             <Label htmlFor="weight" className="text-gray-700 font-medium">
               Trọng lượng (kg)
             </Label>

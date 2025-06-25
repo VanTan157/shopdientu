@@ -3,9 +3,9 @@ import Image from "next/image";
 import { useState } from "react";
 import BtnBuyNow from "./btn-buy-now";
 import BtnAddToCart from "./btn-add-cart";
-import { Laptop } from "@/lib/types/laptop";
+import { Tablet } from "@/lib/types/tablet";
 
-const LaptopDetail = ({ product }: { product: Laptop }) => {
+const TabletDetail = ({ product }: { product: Tablet }) => {
   const [colorVariant, setColorVariant] = useState(0);
   const totalStock = product.colorVariants.reduce(
     (sum, variant) => sum + variant.stock,
@@ -13,7 +13,7 @@ const LaptopDetail = ({ product }: { product: Laptop }) => {
   );
 
   return (
-    <section className="container mx-auto p-5 my-10 bg-blue-900s rounded-lg shadow-lg">
+    <section className="container mx-auto p-5 my-10 rounded-lg shadow-lg">
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Hình ảnh sản phẩm */}
@@ -102,7 +102,7 @@ const LaptopDetail = ({ product }: { product: Laptop }) => {
           </div>
         </div>
 
-        {/* Thông số kỹ thuật */}
+        {/* Thông tin chi tiết */}
         <div className="mt-6">
           <p className="text-white mb-4 whitespace-pre-wrap text-sm md:text-base">
             {product.description}
@@ -130,13 +130,8 @@ const LaptopDetail = ({ product }: { product: Laptop }) => {
                 <strong>Bộ nhớ:</strong> {product.specifications.storage}GB
               </li>
               <li>
-                <strong>Tần số quét: </strong>
+                <strong>Tần số quét:</strong>{" "}
                 {product.specifications.refreshRate}
-              </li>
-              <li>
-                <strong>Kích thước: </strong>
-                {product.dimensions.length} x {product.dimensions.height} x
-                {product.dimensions.width} cm
               </li>
             </div>
             <div className="flex flex-col gap-2">
@@ -148,25 +143,40 @@ const LaptopDetail = ({ product }: { product: Laptop }) => {
               </li>
               <li>
                 <strong>Cổng kết nối:</strong>{" "}
-                {product.specifications.ports.join(", ")}
+                {product.specifications.ports?.join(", ")}
               </li>
               <li>
-                <strong>Webcam:</strong> {product.specifications.webcam}
+                <strong>Âm thanh:</strong> {product.specifications.audio}
               </li>
               <li>
                 <strong>Trọng lượng:</strong> {product.weight}kg
               </li>
               <li>
-                <strong>Âm thanh:</strong> {product.specifications.audio}
+                <strong>Kích thước:</strong> {product.dimensions.length} x{" "}
+                {product.dimensions.height} x {product.dimensions.width} cm
               </li>
             </div>
-            <div className="flex flex-col gap-2"></div>
           </ul>
 
-          {/* Thông tin bổ sung */}
-          <hr className="my-6" />
+          {/* Camera */}
           <div className="mt-4">
-            <h3 className="text-2xl font-semibold mb-2 text-indigo-400 uppercase pt-4 ">
+            <h3 className="text-2xl font-semibold mb-2 text-indigo-400 uppercase pt-4">
+              Camera:
+            </h3>
+            <ul className="text-white list-none grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm md:text-base">
+              <li>
+                <strong>Camera sau:</strong> {product.specifications.cameraRear}
+              </li>
+              <li>
+                <strong>Camera trước:</strong>{" "}
+                {product.specifications.cameraFront}
+              </li>
+            </ul>
+          </div>
+
+          {/* Thông tin bổ sung */}
+          <div className="mt-4">
+            <h3 className="text-2xl font-semibold mb-2 text-indigo-400 uppercase pt-4">
               Thông tin khác:
             </h3>
             <ul className="text-white list-none grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm md:text-base">
@@ -177,13 +187,24 @@ const LaptopDetail = ({ product }: { product: Laptop }) => {
                 <strong>Thương hiệu:</strong> {product.brand}
               </li>
               <li>
-                <strong>Danh mục:</strong> {product.category}
+                <strong>Loại máy tính bảng:</strong> {product.category}
               </li>
               <li>
                 <strong>Kết nối:</strong> {product.connectivity.join(", ")}
               </li>
               <li>
                 <strong>Bảo hành:</strong> {product.warranty}
+              </li>
+              <li>
+                <strong>Hỗ trợ SIM:</strong>{" "}
+                {product.specifications.simSupport ? "Có" : "Không"}
+              </li>
+              <li>
+                <strong>Hỗ trợ bút cảm ứng:</strong>{" "}
+                {product.specifications.stylusSupport ? "Có" : "Không"}
+              </li>
+              <li>
+                <strong>Tags:</strong> {product.tags.join(", ")}
               </li>
             </ul>
           </div>
@@ -193,4 +214,4 @@ const LaptopDetail = ({ product }: { product: Laptop }) => {
   );
 };
 
-export default LaptopDetail;
+export default TabletDetail;

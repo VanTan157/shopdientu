@@ -15,6 +15,7 @@ import { MobilesService } from "src/mobiles/mobiles.service";
 import { LaptopService } from "src/laptop/laptop.service";
 import { HeadphoneService } from "src/headphone/headphone.service";
 import e from "express";
+import { TabletService } from "src/tablet/tablet.service";
 
 @Injectable()
 export class OrderService {
@@ -24,11 +25,11 @@ export class OrderService {
     private orderItemsService: OrderItemsService,
     private mobilesService: MobilesService,
     private laptopsService: LaptopService,
-    private headphonesService: HeadphoneService
+    private headphonesService: HeadphoneService,
+    private tabletService: TabletService
   ) {}
 
   async populateOrderItem(orderItem: any) {
-    // Sử dụng any vì orderItem đã là plain object
     let product;
     if (orderItem.product_type === ProductType.MOBILE) {
       product = await this.mobilesService.findOne(
@@ -40,6 +41,10 @@ export class OrderService {
       );
     } else if (orderItem.product_type === ProductType.HEADPHONE) {
       product = await this.headphonesService.findOne(
+        orderItem.product_id.toString()
+      );
+    } else if (orderItem.product_type === ProductType.TABLET) {
+      product = await this.tabletService.findOne(
         orderItem.product_id.toString()
       );
     } else {

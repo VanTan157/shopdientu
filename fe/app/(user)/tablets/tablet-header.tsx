@@ -7,19 +7,19 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button"; // Từ shadcn/ui
 import { Menu } from "lucide-react";
 
-const LaptopHeader = () => {
+const TabletHeader = () => {
   const [brands, setBrands] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   // Fetch dữ liệu từ API
   useEffect(() => {
-    const fetchMobileTypes = async () => {
-      const res = await apiGet("/laptops/get-all-brand");
+    const fetchHeadphoneBrands = async () => {
+      const res = await apiGet("/tablets/get-all-brand");
       const data: string[] = Array.isArray(res.data) ? res.data : [];
       console.log(data);
       setBrands(data);
     };
-    fetchMobileTypes();
+    fetchHeadphoneBrands();
   }, []);
 
   return (
@@ -52,7 +52,7 @@ const LaptopHeader = () => {
             {brands.map((brand, index) => (
               <Link
                 key={index}
-                href={`/laptop/brand/${brand}`}
+                href={`/tablets/brand/${brand}`}
                 className="block py-2 px-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 hover:scale-[1.03] transition-all duration-150 text-base font-medium text-gray-800 shadow-sm hover:shadow-md"
                 onClick={() => setIsOpen(false)} // Đóng sidebar khi click vào link
               >
@@ -66,4 +66,4 @@ const LaptopHeader = () => {
   );
 };
 
-export default LaptopHeader;
+export default TabletHeader;

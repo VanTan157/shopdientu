@@ -3,6 +3,7 @@
 import { Headphone } from "@/lib/types/headphone";
 import { Laptop } from "@/lib/types/laptop";
 import { Mobile } from "@/lib/types/mobile";
+import { Tablet } from "@/lib/types/tablet";
 import Image from "next/image";
 import Link from "next/link";
 import "swiper/css";
@@ -14,7 +15,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 const Banner = ({
   hotDeals,
 }: {
-  hotDeals: (Mobile | Laptop | Headphone)[];
+  hotDeals: (Mobile | Laptop | Headphone | Tablet)[];
 }) => {
   return (
     <section className="w-full h-80 xs:h-80 sm:h-80 md:h-[20rem]  bg-gradient-to-tr from-[#0f2027] via-[#2c5364] to-[#24243e] rounded-2xl xs:rounded-3xl shadow-2xl p-4 xs:p-5 sm:p-6 flex items-center justify-center relative overflow-hidden">

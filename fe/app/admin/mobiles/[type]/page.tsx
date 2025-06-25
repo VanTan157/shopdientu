@@ -3,8 +3,8 @@ import { Mobile, MobileType } from "@/lib/types/mobile";
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import MobileFilterTable from "./MobileFilterTable";
-import AddMobileForm from "./AddMobileForm";
+import MobileFilterTable from "./mobile-table";
+import AddMobileForm from "./add-mobile";
 
 const AdminMobilePage = async ({
   params,

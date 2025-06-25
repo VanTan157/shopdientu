@@ -5,6 +5,7 @@ export enum ProductType {
   LAPTOP = "laptop",
   MOBILE = "mobile",
   HEADPHONE = "headphone",
+  TABLET = "tablet",
 }
 @Schema({ timestamps: true })
 export class OrderItem extends Document {

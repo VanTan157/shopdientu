@@ -13,6 +13,8 @@ import { OrderService } from "src/order/order.service";
 import { MobilesService } from "src/mobiles/mobiles.service";
 import { LaptopService } from "src/laptop/laptop.service";
 import { HeadphoneService } from "src/headphone/headphone.service";
+import { TabletService } from "src/tablet/tablet.service";
+import e from "express";
 
 @Injectable()
 export class OrderItemsService {
@@ -21,6 +23,7 @@ export class OrderItemsService {
     private mobilesService: MobilesService,
     private laptopsService: LaptopService,
     private headphonesService: HeadphoneService,
+    private tabletService: TabletService,
     @Inject(forwardRef(() => OrderService))
     private orderService: OrderService
   ) {}
@@ -37,6 +40,10 @@ export class OrderItemsService {
       );
     } else if (orderItem.product_type === ProductType.HEADPHONE) {
       product = await this.headphonesService.findOne(
+        orderItem.product_id.toString()
+      );
+    } else if (orderItem.product_type === ProductType.TABLET) {
+      product = await this.tabletService.findOne(
         orderItem.product_id.toString()
       );
     } else {
@@ -84,6 +91,8 @@ export class OrderItemsService {
       product = await this.laptopsService.findOne(product_id);
     } else if (product_type === ProductType.HEADPHONE) {
       product = await this.headphonesService.findOne(product_id);
+    } else if (product_type === ProductType.TABLET) {
+      product = await this.tabletService.findOne(product_id);
     } else {
       throw new NotFoundException("Loại sản phẩm không hợp lệ");
     }
@@ -159,6 +168,8 @@ export class OrderItemsService {
       product = await this.laptopsService.findOne(product_id);
     } else if (product_type === ProductType.HEADPHONE) {
       product = await this.headphonesService.findOne(product_id);
+    } else if (product_type === ProductType.TABLET) {
+      product = await this.tabletService.findOne(product_id);
     } else {
       throw new NotFoundException("Loại sản phẩm không hợp lệ");
     }

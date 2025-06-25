@@ -1,6 +1,4 @@
 import { apiGet } from "@/lib/api";
-import { Mobile } from "@/lib/types/mobile";
-import MobileList from "../mobiles/mobile-list";
 import { Laptop } from "@/lib/types/laptop";
 import LaptopList from "./laptop-list";
 
