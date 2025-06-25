@@ -18,7 +18,7 @@ export class NotificationsController {
   @Get("get-all")
   async getAllNotifications(@Req() req): Promise<any> {
     console.log(req);
-    const userId = req.user.userId; // Giả sử bạn có middleware auth để lấy user
+    const userId = req.user.userId;
     console.log(userId);
     const notifications = await this.notificationsService.getUserNotifications(
       userId
@@ -42,12 +42,16 @@ export class NotificationsController {
   async createNotification(
     @Body() { userId, message }: { userId: string; message: string }
   ) {
-    await this.notificationsService.create(userId, message);
+    const notification = await this.notificationsService.create(
+      userId,
+      message
+    );
+    return { message: "Notification created successfully", notification };
   }
 
   @Patch("mark-as-read")
   async markAsRead(@Body() body: { id: string }) {
-    const { id } = body;
-    await this.notificationsService.markAsRead(id);
+    const notification = await this.notificationsService.markAsRead(body.id);
+    return { message: "Notification marked as read", notification };
   }
 }

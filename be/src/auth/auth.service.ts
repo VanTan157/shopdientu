@@ -172,6 +172,11 @@ export class AuthService {
 
   async getMe(userId: string) {
     const user = await this.usersService.findOne(userId);
-    return { email: user.email, name: user.name, type: user.type };
+    return {
+      email: user.email,
+      name: user.name,
+      type: user.type,
+      userId: user._id,
+    };
   }
 }

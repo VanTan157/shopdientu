@@ -38,6 +38,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
   const [filterStatus, setFilterStatus] = useState<OrderStatus | "Tất cả">(
     "Tất cả"
   );
+  const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -95,10 +96,12 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
   if (orders.length === 0)
     return <div className="text-center py-10">Chưa có đơn hàng nào!</div>;
 
-  const ordersToDisplay =
-    filterStatus === "Tất cả"
-      ? orders
-      : orders.filter((order) => order.status === filterStatus);
+  // Lọc theo trạng thái và tìm kiếm theo mã đơn hàng
+  const ordersToDisplay = orders.filter(
+    (order) =>
+      (filterStatus === "Tất cả" || order.status === filterStatus) &&
+      order._id.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <section className="px-5 py-8">
@@ -107,7 +110,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
       </h1>
 
       {/* Lọc theo trạng thái */}
-      <div className="my-6">
+      <div className="my-6 flex items-center gap-12">
         <Select
           onValueChange={(value) =>
             setFilterStatus(value as OrderStatus | "Tất cả")
@@ -124,6 +127,16 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
             ))}
           </SelectContent>
         </Select>
+        {/* Tìm kiếm theo mã đơn hàng */}
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo mã đơn hàng..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border border-cyan-300 bg-white text-gray-800 px-4 py-1.5 rounded-md w-full max-w-md focus:ring-2 focus:ring-cyan-500"
+          />
+        </div>
       </div>
 
       {/* Bảng danh sách đơn hàng */}

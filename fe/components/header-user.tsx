@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import Avatar from "./avatar";
 import Notification from "./notification";
-import { Input } from "./ui/input";
 import Link from "next/link";
-import { Search, ShoppingCart } from "lucide-react";
 import SearchProduct from "./search-product";
 import CartIcon from "./cart-icon";
+import { apiGet } from "@/lib/api";
+import { User } from "next-auth";
 
 const HeaderUser = async () => {
   const cookieStore = cookies();

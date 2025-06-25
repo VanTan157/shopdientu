@@ -21,7 +21,7 @@ const MobileHeader = () => {
 
   return (
     <div
-      className="fixed top-32 left-0 z-50"
+      className="fixed top-22 left-0 z-50"
       onMouseLeave={() => setIsOpen(false)}
     >
       {/* Trigger Button */}
@@ -38,19 +38,19 @@ const MobileHeader = () => {
       {/* Sidebar */}
       {isOpen && (
         <div
-          className="absolute top-16 left-6 w-60 p-6 bg-white/90 backdrop-blur-lg border border-blue-100 rounded-2xl shadow-2xl transition-all duration-300 animate-fade-in"
+          className="absolute top-5 h-[50vh] left-16 min-w-60 w max-w-[80vw] p-6 bg-white/90 backdrop-blur-lg border border-blue-100 rounded-2xl shadow-2xl transition-all duration-300 animate-fade-in"
           onMouseEnter={() => setIsOpen(true)}
         >
           <h2 className="text-xl font-bold mb-5 text-blue-700 flex items-center gap-2">
             <Menu className="h-5 w-5 text-blue-500" />
             Danh mục
           </h2>
-          <nav className="space-y-3">
+          <nav className="grid grid-rows-4 grid-flow-col gap-3 max-h-[calc(50vh-8rem)]">
             {mobileTypes.map((type) => (
               <Link
                 key={type._id}
                 href={`/mobiles/type/${type._id}`}
-                className="block py-2 px-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 hover:scale-[1.03] transition-all duration-150 text-base font-medium text-gray-800 shadow-sm hover:shadow-md"
+                className="py-2 px-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 hover:scale-[1.03] transition-all duration-150 text-base font-medium text-gray-800 shadow-sm hover:shadow-md"
                 onClick={() => setIsOpen(false)}
               >
                 {type.type}

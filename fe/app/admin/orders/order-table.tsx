@@ -23,16 +23,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 
 const OrderTable = ({ orders }: { orders: Order[] }) => {
   console.log(orders);
   const router = useRouter();
   const [orderStatus, setOrderStatus] = useState<string>("Tất cả");
-  const [product_type, setProductType] = useState<string>("Tất cả");
+  const [search, setSearch] = useState<string>("");
   console.log(orderStatus);
+  // Lọc đơn hàng theo trạng thái và tìm kiếm theo mã đơn hàng
   const ordersByStatus = orders.filter((order) => {
-    if (orderStatus === "Tất cả") return true; // Hiển TableHeadị tất cả đơn hàng
-    return order.status === orderStatus; // Hiển TableHeadị đơn hàng TableHeadeo trạng TableHeadái đã chọn
+    const matchStatus =
+      orderStatus === "Tất cả" || order.status === orderStatus;
+    const matchSearch =
+      search.trim() === "" ||
+      order._id.toLowerCase().includes(search.trim().toLowerCase());
+    return matchStatus && matchSearch;
   });
 
   const UpdateStatus = async ({
@@ -49,16 +55,16 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
     });
     console.log(res);
     if (res.data) {
-      toast.success("Cập nhật trạng TableHeadái đơn hàng TableHeadành công!");
+      toast.success("Cập nhật trạng thái đơn hàng thành công!");
       await apiPost("/notifications", {
         userId,
-        message: `Đơn hàng ${orderId} của bạn đã chuyển sang trạng TableHeadái ${status}!`,
+        message: `Đơn hàng ${orderId} của bạn đã chuyển sang trạng thái ${status}!`,
       });
       router.refresh();
     } else if (res.error) toast.error(res.error);
     else
       toast.error(
-        "Có lỗi xảy ra trong quá trình cập nhật trạng TableHeadái đơn hàng!"
+        "Có lỗi xảy ra trong quá trình cập nhật trạng thái đơn hàng!"
       );
   };
   return (
@@ -66,25 +72,32 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
       <h1 className="text-xl font-bold text-gray-900 mb-6">
         Danh sách đơn hàng
       </h1>
-      <Select
-        value={orderStatus}
-        onValueChange={setOrderStatus}
-        defaultValue="Tất cả"
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Trạng TableHeadái đơn hàng" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Tất cả">Tất cả</SelectItem>
-          <SelectItem value="Đang chờ xác nhận">Đang chờ xác nhận</SelectItem>
-          <SelectItem value="Đã xác nhận">Đã xác nhận</SelectItem>
-          <SelectItem value="Đang vận chuyển">Đang vận chuyển</SelectItem>
-          <SelectItem value="Hoàn TableHeadành">
-            Đã hoàn TableHeadành
-          </SelectItem>
-          <SelectItem value="Đã hủy">Đã hủy</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="flex items-center gap-4 mb-4">
+        <Select
+          value={orderStatus}
+          onValueChange={setOrderStatus}
+          defaultValue="Tất cả"
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Trạng TableHeadái đơn hàng" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Tất cả">Tất cả</SelectItem>
+            <SelectItem value="Đang chờ xác nhận">Đang chờ xác nhận</SelectItem>
+            <SelectItem value="Đã xác nhận">Đã xác nhận</SelectItem>
+            <SelectItem value="Đang vận chuyển">Đang vận chuyển</SelectItem>
+            <SelectItem value="Hoàn thành">Đã hoàn thành</SelectItem>
+            <SelectItem value="Đã hủy">Đã hủy</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input
+          type="text"
+          placeholder="Tìm kiếm theo mã đơn hàng..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="ml-4 w-[300px] text-sm"
+        />
+      </div>
       <div className="p-4 shadow-md rounded-lg bg-white mt-8 w-full">
         <Table className="w-full table-fixed text-xs">
           <TableHeader className="bg-gray-100 text-gray-700">

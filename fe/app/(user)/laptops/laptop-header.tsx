@@ -24,7 +24,7 @@ const LaptopHeader = () => {
 
   return (
     <div
-      className="fixed top-32 left-0 z-50"
+      className="fixed top-22 left-0 z-50"
       onMouseLeave={() => setIsOpen(false)} // Ẩn khi chuột rời khỏi toàn bộ khu vực
     >
       {/* Nút trigger */}
@@ -41,14 +41,14 @@ const LaptopHeader = () => {
       {/* Nội dung sidebar */}
       {isOpen && (
         <div
-          className="absolute top-16 left-6 w-60 p-6 bg-white/90 backdrop-blur-lg border border-blue-100 rounded-2xl shadow-2xl transition-all duration-300 animate-fade-in"
+          className="absolute top-16 left-6 min-w-60 max-w-[80vw] p-6 bg-white/90 backdrop-blur-lg border border-blue-100 rounded-2xl shadow-2xl transition-all duration-300 animate-fade-in"
           onMouseEnter={() => setIsOpen(true)} // Giữ mở khi hover vào sidebar
         >
           <h2 className="text-xl font-bold mb-5 text-blue-700 flex items-center gap-2">
             <Menu className="h-5 w-5 text-blue-500" />
             Danh mục
           </h2>
-          <nav className="space-y-3">
+          <nav className="grid grid-rows-4 grid-flow-col gap-3 max-h-[calc(50vh-8rem)]">
             {brands.map((brand, index) => (
               <Link
                 key={index}

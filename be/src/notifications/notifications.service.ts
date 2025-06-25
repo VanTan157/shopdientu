@@ -37,12 +37,18 @@ export class NotificationsService {
 
   async markAsRead(id: string) {
     if (!Types.ObjectId.isValid(id)) {
+      console.error("Invalid ID format:", id);
       throw new NotFoundException("ID không hợp lệ");
     }
     console.log(id);
     const notification = await this.notificationModel
       .findByIdAndUpdate({ _id: id }, { isRead: true }, { new: true })
       .exec();
+
+    if (!notification) {
+      throw new NotFoundException("Không tìm thấy thông báo");
+    }
+
     return notification;
   }
 }

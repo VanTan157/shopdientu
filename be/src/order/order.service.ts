@@ -54,8 +54,6 @@ export class OrderService {
     if (!product) {
       throw new NotFoundException("Không tìm thấy sản phẩm");
     }
-
-    // Không cần gọi toObject vì orderItem đã là plain object
     orderItem.product = product;
     return orderItem;
   }
@@ -104,47 +102,6 @@ export class OrderService {
       orderitem_ids: populatedOrderItems,
     };
   }
-
-  // async createBuyNow(
-  //   userId: string,
-  //   product_id: string,
-  //   quantity: number,
-  //   phone_number: string,
-  //   address: string
-  // ): Promise<Order> {
-  //   const mobile = await this.productsService.findOne(product_id);
-  //   if (!mobile) {
-  //     throw new NotFoundException(`mobile not found: ${product_id}`);
-  //   }
-
-  //   const total_price = mobile.price * quantity;
-  //   const tempOrderItem = new this.orderItemModel({
-  //     user_id: userId,
-  //     product_id,
-  //     quantity,
-  //     unit_price: mobile.price,
-  //     total_price,
-  //   });
-
-  //   // Định kiểu rõ ràng cho savedOrderItem
-  //   const savedOrderItem: OrderItem = await tempOrderItem.save();
-
-  //   const order = new this.orderModel({
-  //     user_id: userId,
-  //     orderitem_ids: [(savedOrderItem as any)._id],
-  //     total_amount: total_price,
-  //     phone_number,
-  //     address,
-  //     status: "Đang chờ xác nhận",
-  //   });
-
-  //   const savedOrder = await order.save();
-
-  //   // Bây giờ TypeScript biết savedOrderItem._id là Types.ObjectId
-  //   await this.orderItemsService.remove(savedOrderItem._id.toString());
-
-  //   return savedOrder;
-  // }
 
   async findAll() {
     const orders = await this.orderModel
