@@ -12,6 +12,7 @@ export class NotificationsGateway {
 
   @SubscribeMessage("join")
   handleJoin(client: Socket, userId: string) {
+    console.log(`Client ${client.id} joined room ${userId}`);
     client.join(userId); // Tham gia room
   }
 

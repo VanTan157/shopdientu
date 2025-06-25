@@ -15,6 +15,7 @@ const Notification = async () => {
   const res = await apiGet<Notification[]>("/notifications/get-all", {
     Cookie: `accessToken=${accessToken}`,
   });
+  console.log("user", user);
 
   const notifications = res.data || [];
 

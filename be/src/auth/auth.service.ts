@@ -176,7 +176,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       type: user.type,
-      userId: user._id,
+      id: user._id,
     };
   }
 }

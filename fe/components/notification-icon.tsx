@@ -20,9 +20,10 @@ const NotificationIcon = ({
   notifications: initialNotifications,
   userId,
 }: {
-  userId?: string;
   notifications: Notification[];
+  userId?: string;
 }) => {
+  console.log("userId", userId);
   const router = useRouter();
   const { count, setCount } = useNotificationStore();
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -39,18 +40,18 @@ const NotificationIcon = ({
 
     socket.on(
       "newNotification",
-      (data: { message: string; timestamp: Date }) => {
+      (data: { message: string; timestamp: string }) => {
         // Thêm thông báo mới vào danh sách
         if (!userId) return;
         setNotifications((prev) => [
           {
-            _id: Date.now().toString(), // ID tạm thời, lý tưởng là lấy từ backend
+            _id: Date.now().toString(),
             message: data.message,
-            createdAt: data.timestamp.toISOString(),
+            createdAt: data.timestamp,
             isRead: false,
-            user_id: userId, // Đảm bảo userId luôn là string
-            updatedAt: data.timestamp.toISOString(), // Hoặc giá trị phù hợp từ backend
-            __v: 0, // Hoặc giá trị phù hợp từ backend
+            user_id: userId,
+            updatedAt: data.timestamp,
+            __v: 0,
           },
           ...prev,
         ]);
