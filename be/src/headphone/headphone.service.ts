@@ -84,7 +84,6 @@ export class HeadphoneService {
   // Lấy thông tin một headphone theo ID
   async findOne(id: string): Promise<Headphone> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
-    console.log("ID", id);
     const headphone = await this.headphoneModel.findById({ _id: id }).exec();
     if (!headphone) {
       throw new BadRequestException("Không tìm thấy headphone");

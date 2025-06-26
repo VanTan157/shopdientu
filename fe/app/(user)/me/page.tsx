@@ -1,20 +1,18 @@
 import { apiGet } from "@/lib/api";
 import { cookies } from "next/headers";
 import { User } from "@/lib/types/user";
-import BtnEditProfile from "./btn-edit-profile";
-import BtnChangPassWord from "./btn-change-password";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { BtnEditProfile } from "./btn-edit-profile";
+import { BtnChangPassWord } from "./btn-change-password";
 
 const ProfilePage = async () => {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value || null;
-  console.log("accessToken", accessToken);
 
   const res = await apiGet<User>("/auth/get-me", {
     Cookie: `accessToken=${accessToken}`,
   });
-  console.log(res);
 
   if (!res.data) {
     return (
@@ -27,7 +25,6 @@ const ProfilePage = async () => {
   }
 
   const user = res.data;
-  console.log("check", user);
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -63,8 +60,8 @@ const ProfilePage = async () => {
               </Button>
             </Link>
           )}
-          <BtnEditProfile />
-          <BtnChangPassWord />
+          <BtnEditProfile user={user} />
+          <BtnChangPassWord user={user} />
         </div>
       </div>
     </div>

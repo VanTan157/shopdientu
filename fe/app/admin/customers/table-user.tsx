@@ -26,7 +26,6 @@ import { EditUser } from "./edit-customer";
 export function TableUser({ users }: { users: User[] }) {
   const [userSearch, setUserSearch] = useState<string>();
   const [userSelected, setUserSelected] = useState<string>("tatca");
-  console.log(users);
 
   if (!users || users.length === 0) {
     return (
@@ -84,14 +83,13 @@ export function TableUser({ users }: { users: User[] }) {
               <TableCell className="flex gap-2">
                 <EditUser user={user}>
                   <Button className="text-white hover:bg-blue-700 cursor-pointer bg-blue-600">
-                    Edit
+                    Sửa
                   </Button>
                 </EditUser>
                 <Button className="bg-red-600 hover:bg-red-700 text-white cursor-pointer">
-                  Delete
+                  Xóa
                 </Button>
               </TableCell>
-              s
             </TableRow>
           ))}
         </TableBody>

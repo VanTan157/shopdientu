@@ -7,7 +7,7 @@ import { LoginFormInputs, LoginResponse } from "@/lib/types/auth";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Circle, Facebook } from "lucide-react";
+import { Circle, Eye, EyeOff, Facebook } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const LoginPage = () => {
@@ -17,6 +17,7 @@ const LoginPage = () => {
     formState: { errors },
   } = useForm<LoginFormInputs>();
   const [loading, setLoading] = useState<boolean>();
+  const [showPass, setShowPass] = useState<boolean>(false);
   const router = useRouter();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
@@ -97,7 +98,7 @@ const LoginPage = () => {
               </p>
             )}
           </div>
-          <div>
+          <div className="relative">
             <label
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
@@ -106,17 +107,29 @@ const LoginPage = () => {
             </label>
             <Input
               id="password"
-              type="password"
+              type={showPass ? "text" : "password"}
               placeholder="Nhập mật khẩu"
               className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
               {...register("password", {
                 required: "Mật khẩu là bắt buộc",
                 minLength: {
-                  value: 6,
+                  value: 3,
                   message: "Mật khẩu phải có ít nhất 6 ký tự",
                 },
               })}
             />
+            <button
+              type="button"
+              onClick={() => setShowPass((prev) => !prev)}
+              className="absolute top-7 right-3 p-1 bg-transparent z-10"
+              tabIndex={-1}
+            >
+              {!showPass ? (
+                <EyeOff className="size-5 text-gray-700 cursor-pointer hover:text-black" />
+              ) : (
+                <Eye className="size-5 text-gray-700 cursor-pointer hover:text-black" />
+              )}
+            </button>
             {errors.password && (
               <p className="mt-1 text-sm text-red-500">
                 {errors.password.message}
@@ -130,6 +143,7 @@ const LoginPage = () => {
                 id="remember"
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                {...register("remember")}
               />
               <label
                 htmlFor="remember"

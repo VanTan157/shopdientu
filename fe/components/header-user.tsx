@@ -42,16 +42,16 @@ const HeaderUser = async () => {
             ) : (
               <div className="flex items-center space-x-1 xs:space-x-2 sm:space-x-3">
                 <Link
-                  href="/register"
-                  className="px-2 py-1 xs:px-3 xs:py-1.5 sm:px-4 sm:py-2 text-xs xs:text-sm sm:text-base rounded-full font-bold bg-green-400 hover:bg-green-500 hover:text-white transition"
-                >
-                  Đăng ký
-                </Link>
-                <Link
                   href="/login"
                   className="px-2 py-1 xs:px-3 xs:py-1.5 sm:px-4 sm:py-2 text-xs xs:text-sm sm:text-base rounded-full bg-blue-400 text-white hover:bg-blue-500 transition font-medium"
                 >
                   Đăng nhập
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-2 py-1 xs:px-3 xs:py-1.5 sm:px-4 sm:py-2 text-xs xs:text-sm sm:text-base rounded-full font-bold bg-green-400 hover:bg-green-500 hover:text-white transition"
+                >
+                  Đăng ký
                 </Link>
               </div>
             )}

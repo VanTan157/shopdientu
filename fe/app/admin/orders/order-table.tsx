@@ -26,11 +26,9 @@ import {
 import { Input } from "@/components/ui/input";
 
 const OrderTable = ({ orders }: { orders: Order[] }) => {
-  console.log(orders);
   const router = useRouter();
   const [orderStatus, setOrderStatus] = useState<string>("Tất cả");
   const [search, setSearch] = useState<string>("");
-  console.log(orderStatus);
   // Lọc đơn hàng theo trạng thái và tìm kiếm theo mã đơn hàng
   const ordersByStatus = orders.filter((order) => {
     const matchStatus =
@@ -53,7 +51,6 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
     const res = await apiPatch<Order, { status: string }>(`/order/${orderId}`, {
       status: status,
     });
-    console.log(res);
     if (res.data) {
       toast.success("Cập nhật trạng thái đơn hàng thành công!");
       await apiPost("/notifications", {

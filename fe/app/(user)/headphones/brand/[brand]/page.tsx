@@ -12,9 +12,7 @@ export default async function Page({
   const res = await apiGet<Headphone[]>(
     `/headphones/get-all-headphone-by-brand/${brand}`
   );
-  console.log(res);
   if (!res) return <div>Loading...</div>;
-  console.log(res);
   if (!res.data) return <div>Product not found</div>;
   return <HeadphoneList headphones={res.data} />;
 }

@@ -16,7 +16,6 @@ const LaptopHeader = () => {
     const fetchMobileTypes = async () => {
       const res = await apiGet("/laptops/get-all-brand");
       const data: string[] = Array.isArray(res.data) ? res.data : [];
-      console.log(data);
       setBrands(data);
     };
     fetchMobileTypes();

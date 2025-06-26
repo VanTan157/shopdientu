@@ -59,4 +59,12 @@ export class UsersController {
   remove(@Param("id") id: string) {
     return this.usersService.remove(id);
   }
+
+  @Patch("change-password/:id")
+  changPassword(
+    @Param("id") id: string,
+    @Body() { oldPass, newPass }: { newPass: string; oldPass: string }
+  ) {
+    return this.usersService.changPassword(id, { oldPass, newPass });
+  }
 }

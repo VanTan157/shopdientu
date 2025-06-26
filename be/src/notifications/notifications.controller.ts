@@ -17,9 +17,7 @@ export class NotificationsController {
 
   @Get("get-all")
   async getAllNotifications(@Req() req): Promise<any> {
-    console.log(req);
     const userId = req.user.userId;
-    console.log(userId);
     const notifications = await this.notificationsService.getUserNotifications(
       userId
     );
@@ -29,7 +27,6 @@ export class NotificationsController {
   @Get("")
   async getNotifications(@Req() req): Promise<any> {
     const userId = req.user.userId;
-    console.log(userId);
     const notifications = await this.notificationsService.getUserNotifications(
       userId
     );

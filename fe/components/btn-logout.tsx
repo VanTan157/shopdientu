@@ -8,7 +8,6 @@ const BtnLogout = () => {
   const router = useRouter();
   const handleLogout = async () => {
     const res = await apiPost(`/auth/logout`, {});
-    console.log(res);
     if (res.data) {
       toast.success("Đăng xuất thành công");
       router.push("/");

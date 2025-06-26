@@ -10,6 +10,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { User } from "./entities/user.entity";
 import { Model, Types } from "mongoose";
 import * as bcrypt from "bcrypt";
+import { error } from "console";
 
 @Injectable()
 export class UsersService {
@@ -20,7 +21,9 @@ export class UsersService {
       .findOne({
         $or: [
           { email: createUserDto.email },
-          ...(createUserDto.googleId !== undefined ? [{ googleId: createUserDto.googleId }] : []),
+          ...(createUserDto.googleId !== undefined
+            ? [{ googleId: createUserDto.googleId }]
+            : []),
         ],
       })
       .exec();
@@ -84,7 +87,6 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<User> {
-    console.log("findOne", id);
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException("Invalid user ID11");
     }
@@ -136,6 +138,30 @@ export class UsersService {
     if (!isMatch) {
       throw new UnauthorizedException("Sai mật khẩu");
     }
+    return user;
+  }
+
+  async changPassword(
+    id: string,
+    { oldPass, newPass }: { oldPass: string; newPass: string }
+  ): Promise<{} | null> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException("Invalid user ID");
+    }
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    const isMatch = await bcrypt.compare(oldPass, user.password);
+    if (!isMatch) {
+      throw new UnauthorizedException("Mật khẩu cũ không đúng");
+    }
+    const hashedNewPass = await bcrypt.hash(newPass, 10);
+    await this.userModel.findByIdAndUpdate(
+      id,
+      { $set: { password: hashedNewPass } },
+      { new: true }
+    );
     return user;
   }
 }

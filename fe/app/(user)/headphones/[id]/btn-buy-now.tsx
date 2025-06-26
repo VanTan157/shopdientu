@@ -67,7 +67,6 @@ const BtnBuyNow = ({
           throw new Error("Failed to fetch provinces");
         }
         const data = await response.json();
-        console.log("check", data);
         setProvinces(data.results);
       } catch (error) {
         console.error("Error fetching provinces:", error);

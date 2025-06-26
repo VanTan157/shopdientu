@@ -16,7 +16,6 @@ const TabletHeader = () => {
     const fetchHeadphoneBrands = async () => {
       const res = await apiGet("/tablets/get-all-brand");
       const data: string[] = Array.isArray(res.data) ? res.data : [];
-      console.log(data);
       setBrands(data);
     };
     fetchHeadphoneBrands();

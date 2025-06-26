@@ -83,7 +83,6 @@ export class TabletService {
   // Lấy thông tin một tablet theo ID
   async findOne(id: string): Promise<Tablet> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
-    console.log("ID", id);
     const tablet = await this.tabletModel.findById({ _id: id }).exec();
     if (!tablet) {
       throw new BadRequestException("Không tìm thấy tablet");

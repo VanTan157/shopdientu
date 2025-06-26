@@ -45,7 +45,6 @@ export class NotificationsService {
       console.error("Invalid ID format:", id);
       throw new NotFoundException("ID không hợp lệ");
     }
-    console.log(id);
     const notification = await this.notificationModel
       .findByIdAndUpdate({ _id: id }, { isRead: true }, { new: true })
       .exec();

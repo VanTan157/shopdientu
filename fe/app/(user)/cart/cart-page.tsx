@@ -67,7 +67,6 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
           throw new Error("Failed to fetch provinces");
         }
         const data = await response.json();
-        console.log("check", data);
         setProvinces(data.results);
       } catch (error) {
         console.error("Error fetching provinces:", error);
@@ -174,7 +173,6 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
   };
   // Xác nhận mua các sản phẩm được chọn
   const handleCheckout = async () => {
-    console.log("Selected items:", selectedItems);
     if (!phoneNumber || !street || !province || !district || !ward) {
       toast.error("Vui lòng điền đầy đủ thông tin!");
       return;
@@ -189,7 +187,6 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
         phone_number: phoneNumber,
         address: getFullAddress(),
       };
-      console.log("Order data:", orderData);
       const res = await apiPost<any, typeof orderData>("/order", orderData);
       if (res.error) {
         throw new Error(res.error);

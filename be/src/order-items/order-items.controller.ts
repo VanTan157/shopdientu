@@ -58,7 +58,6 @@ export class OrderItemsController {
   @Get("find-by-user")
   findByUserId(@Req() req: Request) {
     const userId = (req.user as User).userId;
-    console.log(userId);
     return this.orderItemsService.findByUserId(userId);
   }
 

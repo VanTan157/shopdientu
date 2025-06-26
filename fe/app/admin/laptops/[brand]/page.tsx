@@ -11,12 +11,10 @@ export default async function Page({
   params: Promise<{ brand: string }>;
 }) {
   const { brand } = await params;
-  console.log("check", brand);
   const res = await apiGet<Laptop[]>(
     `/laptops/get-all-laptop-by-brand/${brand}`
   );
   const brands = await apiGet<string[]>("/laptops/get-all-brand");
-  console.log("brands", brands);
   if (!res) return <div>Loading...</div>;
   if (!res.data) return <div>Product not found</div>;
   return (

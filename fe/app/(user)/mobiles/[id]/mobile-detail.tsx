@@ -5,7 +5,6 @@ import { useState } from "react";
 import BtnBuyNow from "./btn-buy-now";
 import BtnAddToCart from "./btn-add-cart";
 const MobileDetail = ({ product }: { product: Mobile }) => {
-  console.log(product);
   const [colorVariant, setColorVariant] = useState(0);
   const totalStock = product.colorVariants.reduce(
     (sum, variant) => sum + variant.stock,

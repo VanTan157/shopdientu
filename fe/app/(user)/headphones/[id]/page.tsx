@@ -10,7 +10,6 @@ export default async function Page({
   const { id } = await params;
   const res = await apiGet<Headphone>(`/headphones/${id}`);
   if (!res) return <div>Loading...</div>;
-  console.log(res);
   if (!res.data) return <div>Product not found</div>;
   return <HeadphoneDetail product={res.data} />;
 }

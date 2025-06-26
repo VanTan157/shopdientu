@@ -42,7 +42,6 @@ const BtnAddToCart = ({
       quantity,
       colorVariant: product.colorVariants[index],
     });
-    console.log(res);
     setLoading(false);
     router.refresh(); // Refresh trang để cập nhật giỏ hàng
     if (res.data) {

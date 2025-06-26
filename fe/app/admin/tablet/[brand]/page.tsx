@@ -11,7 +11,6 @@ export default async function Page({
   params: Promise<{ brand: string }>;
 }) {
   const { brand } = await params;
-  console.log("check", brand);
   const res = await apiGet<Tablet[]>(
     `/tablets/get-all-tablet-by-brand/${brand}`
   );

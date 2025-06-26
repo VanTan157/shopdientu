@@ -10,12 +10,10 @@ const Notification = async () => {
   const user = await apiGet<User>("/auth/get-me", {
     Cookie: `accessToken=${accessToken}`,
   });
-  console.log(user);
 
   const res = await apiGet<Notification[]>("/notifications/get-all", {
     Cookie: `accessToken=${accessToken}`,
   });
-  console.log("user", user);
 
   const notifications = res.data || [];
 

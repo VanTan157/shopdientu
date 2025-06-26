@@ -9,12 +9,10 @@ export default async function Page({
   params: Promise<{ brand: string }>;
 }) {
   const { brand } = await params;
-  console.log("check", brand);
   const res = await apiGet<Headphone[]>(
     `/headphones/get-all-headphone-by-brand/${brand}`
   );
   const brands = await apiGet<string[]>("/headphones/get-all-brand");
-  console.log("brands", brands);
   if (!res) return <div>Loading...</div>;
   if (!res.data) return <div>Product not found</div>;
   return (

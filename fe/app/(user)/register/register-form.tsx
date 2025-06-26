@@ -8,6 +8,8 @@ import { apiPost } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { RegisterFormInputs, RegisterResponse } from "@/lib/types/auth";
 import { toast } from "sonner";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 const RegisterForm = () => {
   const {
@@ -16,6 +18,8 @@ const RegisterForm = () => {
     watch,
     formState: { errors },
   } = useForm<RegisterFormInputs>();
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const router = useRouter();
 
   // Hàm xử lý submit form
@@ -25,8 +29,6 @@ const RegisterForm = () => {
       "/users",
       registerData
     );
-
-    console.log(response);
 
     if (response.error) {
       toast.error(response.error);
@@ -98,7 +100,7 @@ const RegisterForm = () => {
             )}
           </div>
 
-          <div>
+          <div className="relative">
             <label
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
@@ -107,7 +109,7 @@ const RegisterForm = () => {
             </label>
             <Input
               id="password"
-              type="password"
+              type={showPass ? "text" : "password"}
               placeholder="Nhập mật khẩu"
               className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
               {...register("password", {
@@ -118,6 +120,18 @@ const RegisterForm = () => {
                 },
               })}
             />
+            <button
+              type="button"
+              onClick={() => setShowPass((prev) => !prev)}
+              className="absolute top-7 right-3 p-1 bg-transparent z-10"
+              tabIndex={-1}
+            >
+              {!showPass ? (
+                <EyeOff className="size-5 text-gray-700 cursor-pointer hover:text-black" />
+              ) : (
+                <Eye className="size-5 text-gray-700 cursor-pointer hover:text-black" />
+              )}
+            </button>
             {errors.password && (
               <p className="mt-1 text-sm text-red-500">
                 {errors.password.message}
@@ -126,7 +140,7 @@ const RegisterForm = () => {
           </div>
 
           {/* Trường Confirm Password */}
-          <div>
+          <div className="relative">
             <label
               htmlFor="confirmPassword"
               className="block text-sm font-medium text-gray-700"
@@ -135,7 +149,7 @@ const RegisterForm = () => {
             </label>
             <Input
               id="confirmPassword"
-              type="password"
+              type={showConfirmPass ? "text" : "password"}
               placeholder="Xác nhận mật khẩu"
               className="mt-1 w-full bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
               {...register("confirmPassword", {
@@ -144,13 +158,24 @@ const RegisterForm = () => {
                   value === password || "Mật khẩu không khớp",
               })}
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPass((prev) => !prev)}
+              className="absolute top-7 right-3 p-1 bg-transparent z-10"
+              tabIndex={-1}
+            >
+              {!showConfirmPass ? (
+                <EyeOff className="size-5 text-gray-700 cursor-pointer hover:text-black" />
+              ) : (
+                <Eye className="size-5 text-gray-700 cursor-pointer hover:text-black" />
+              )}
+            </button>
             {errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-500">
                 {errors.confirmPassword.message}
               </p>
             )}
           </div>
-
           {/* Nút Submit */}
           <Button
             type="submit"

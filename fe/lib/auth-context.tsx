@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       //     throw new Error("Failed to refresh token");
       //   }
       setIsAuthenticated(true);
-      console.log("Token refreshed successfully");
     } catch (error) {
       console.error("Error refreshing token:", error);
       setIsAuthenticated(false);

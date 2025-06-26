@@ -82,7 +82,6 @@ export class LaptopService {
   // Lấy thông tin một laptop theo ID
   async findOne(id: string): Promise<Laptop> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
-    console.log("ID", id);
     const laptop = await this.laptopModel.findById({ _id: id }).exec();
     if (!laptop) {
       throw new BadRequestException("Không tìm thấy laptop");

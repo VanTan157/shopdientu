@@ -14,7 +14,7 @@ export class AuthService {
   ) {}
 
   async login(loginUserDto: LoginUserDto, res: Response) {
-    const { email, password } = loginUserDto;
+    const { email, password, remember } = loginUserDto;
     const user = await this.usersService.validateUser(email, password);
 
     if (!user) {
@@ -22,21 +22,35 @@ export class AuthService {
     }
 
     const payload = { email: user.email, userId: user._id, type: user.type };
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" });
+    const accessTokenExpiresIn = remember ? "7d" : undefined;
+    const refreshTokenExpiresIn = remember ? "30d" : "7d";
+    const accessTokenMaxAge = remember
+      ? 7 * 24 * 60 * 60 * 1000
+      : 15 * 60 * 1000;
+    const refreshTokenMaxAge = remember
+      ? 30 * 24 * 60 * 60 * 1000
+      : 7 * 24 * 60 * 60 * 1000;
+
+    const accessToken = this.jwtService.sign(
+      payload,
+      accessTokenExpiresIn ? { expiresIn: accessTokenExpiresIn } : undefined
+    );
+    const refreshToken = this.jwtService.sign(payload, {
+      expiresIn: refreshTokenExpiresIn,
+    });
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 15 * 60 * 1000,
+      maxAge: accessTokenMaxAge,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: refreshTokenMaxAge,
     });
 
     return {
@@ -176,7 +190,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       type: user.type,
-      id: user._id,
+      _id: user._id,
     };
   }
 }

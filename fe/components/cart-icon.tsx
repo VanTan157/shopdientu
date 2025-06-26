@@ -20,7 +20,6 @@ const CartIcon = () => {
           return;
         }
         setCartItemCount(res.data.length);
-        console.log(cartItemCount, "cartItemCount");
       } catch (error) {
         console.error("Error fetching cart item count:", error);
       }

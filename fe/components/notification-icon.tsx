@@ -23,7 +23,6 @@ const NotificationIcon = ({
   notifications: Notification[];
   userId?: string;
 }) => {
-  console.log("userId", userId);
   const router = useRouter();
   const { count, setCount } = useNotificationStore();
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -97,7 +96,6 @@ const NotificationIcon = ({
                         )
                       );
                       router.refresh();
-                      console.log("Notification marked as read:", res);
                     } catch (error) {
                       console.error(
                         "Error marking notification as read:",

@@ -114,7 +114,6 @@ export async function apiPost<T, U>(
   body: U | FormData,
   headers?: HeadersInit
 ): Promise<ApiResponse<T>> {
-  console.log(BASE_URL);
   try {
     const isFormData = body instanceof FormData;
     const response = await fetch(`${BASE_URL}${endpoint}`, {

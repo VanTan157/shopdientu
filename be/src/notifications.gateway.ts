@@ -12,7 +12,6 @@ export class NotificationsGateway {
 
   @SubscribeMessage("join")
   handleJoin(client: Socket, userId: string) {
-    console.log(`Client ${client.id} joined room ${userId}`);
     client.join(userId); // Tham gia room
   }
 
@@ -28,7 +27,6 @@ export class NotificationsGateway {
       __v: number;
     }
   ) {
-    console.log(`Sending notification to user ${userId}:`, data);
     this.server.to(userId).emit("newNotification", data);
   }
 }
