@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   UnauthorizedException,
+  BadRequestException,
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -10,11 +11,15 @@ import { InjectModel } from "@nestjs/mongoose";
 import { User } from "./entities/user.entity";
 import { Model, Types } from "mongoose";
 import * as bcrypt from "bcrypt";
+import { MailService } from "src/mail/mail.service";
 import { error } from "console";
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private readonly mailService: MailService
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userModel
@@ -36,11 +41,72 @@ export class UsersService {
       ? await bcrypt.hash(createUserDto.password, saltRounds)
       : undefined;
 
+    let code: string | undefined;
+    let expireAt: Date | undefined;
+    let isActive = false;
+
+    // Nếu đăng ký bằng Google, kích hoạt tài khoản ngay
+    if (createUserDto.googleId) {
+      isActive = true;
+    } else {
+      // Nếu đăng ký thông thường, tạo mã xác nhận và gửi email
+      code = Math.floor(100000 + Math.random() * 900000).toString();
+      expireAt = new Date();
+      expireAt.setMinutes(expireAt.getMinutes() + 15);
+    }
+
     const newUser = new this.userModel({
       ...createUserDto,
       password: hashedPassword,
+      code,
+      expireAt,
+      isActive: isActive,
     });
+    if (!createUserDto.googleId) {
+      await this.mailService.sendConfirmationCode(
+        createUserDto.email,
+        code as string
+      );
+    }
     return newUser.save();
+  }
+
+  async verifyCode(email: string, code: string): Promise<User> {
+    const user = await this.userModel.findOne({ email }).exec();
+    if (!user) {
+      throw new BadRequestException("Email không tồn tại");
+    }
+    if (code !== user?.code) {
+      throw new BadRequestException("Mã xác thực không chính xác");
+    }
+
+    const now = new Date();
+    if (!user.expireAt || user.expireAt < now) {
+      throw new BadRequestException("Mã xác nhận đã hết hạn");
+    }
+
+    // Kích hoạt tài khoản
+    user.isActive = true;
+    user.code = ""; // Xóa mã sau khi xác nhận
+    user.expireAt = undefined; // Xóa thời gian hết hạn
+    await user.save();
+
+    return user;
+  }
+
+  async sendConfirmationCode(email: string, code: string) {
+    const expireAt = new Date();
+    expireAt.setMinutes(expireAt.getMinutes() + 15);
+    const user = await this.userModel
+      .findOneAndUpdate({ email }, { expireAt, code })
+      .exec();
+    if (!user) {
+      throw new NotFoundException("Người dùng với email trên không tồn tại");
+    }
+    if (user.isActive) {
+      throw new ConflictException("Tài khoản đã được kích hoạt");
+    }
+    await this.mailService.sendConfirmationCode(email, code);
   }
 
   async paginationSearch(
@@ -133,6 +199,9 @@ export class UsersService {
     const user = await this.userModel.findOne({ email }).exec();
     if (!user || !user.password) {
       throw new UnauthorizedException("Tài khoản không tồn tại");
+    }
+    if (!user.isActive) {
+      throw new UnauthorizedException("Tài khoản chưa được kích hoạt");
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {

@@ -20,6 +20,15 @@ export class User extends Document {
 
   @Prop({ unique: true, sparse: true })
   facebookId: string;
+
+  @Prop({ default: false })
+  isActive: boolean;
+
+  @Prop({ expires: "15m" })
+  code: string;
+
+  @Prop()
+  expireAt?: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

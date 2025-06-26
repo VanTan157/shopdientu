@@ -21,8 +21,18 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const user = await this.usersService.create(createUserDto);
+    return {
+      message: "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.",
+      user,
+    };
+  }
+
+  @Post("verify")
+  async verifyCode(@Body() body: { email: string; code: string }) {
+    const user = await this.usersService.verifyCode(body.email, body.code);
+    return { message: "Tài khoản đã được kích hoạt!", user };
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -66,5 +76,12 @@ export class UsersController {
     @Body() { oldPass, newPass }: { newPass: string; oldPass: string }
   ) {
     return this.usersService.changPassword(id, { oldPass, newPass });
+  }
+  @Post("send-code-again")
+  async sendCode(@Body("email") email: string) {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    await this.usersService.sendConfirmationCode(email, code);
+    // Lưu code vào DB hoặc cache nếu cần xác thực sau
+    return { message: "Đã gửi lại mã xác nhận đến email!" };
   }
 }
