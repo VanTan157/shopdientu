@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/select";
 import { CartItem } from "@/lib/types/order-item";
 import { useCartStore } from "@/app/store/cart-store";
-import { se } from "date-fns/locale";
 
 const CartPage = ({ carts }: { carts: CartItem[] }) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -78,6 +77,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
     fetchProvinces();
   }, [province]);
 
+  //lấy danh sách phường/xã khi chọn quận/huyện
   useEffect(() => {
     if (district) {
       const fetchWards = async () => {
@@ -103,6 +103,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
     }
   }, [district]);
 
+  //lấy danh sách quận/huyện khi chọn tỉnh/thành phố
   useEffect(() => {
     if (province) {
       const fetchDistricts = async () => {

@@ -4,7 +4,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoginFormInputs, LoginResponse } from "@/lib/types/auth";
-import { apiGet, apiPost } from "@/lib/api";
+import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Circle, Facebook } from "lucide-react";
@@ -56,7 +56,7 @@ const LoginPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="flex items-center justify-center min-w-[100vw] min-h-screen bg-white">
         <div className="flex items-center gap-4 justify-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-lg font-medium text-gray-700">Đang tải...</p>
