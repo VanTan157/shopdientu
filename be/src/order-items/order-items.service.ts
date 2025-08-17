@@ -60,8 +60,9 @@ export class OrderItemsService {
     return orderItemObject;
   }
 
-  async getOrderNotInCart(userId: string) {
+  async getOrderNotInOrder(userId: string) {
     const order = await this.orderService.getByUser(userId);
+    console.log("Order:", order);
     if (!order) {
       return [];
     }

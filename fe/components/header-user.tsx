@@ -4,8 +4,6 @@ import Notification from "./notification";
 import Link from "next/link";
 import SearchProduct from "./search-product";
 import CartIcon from "./cart-icon";
-import { apiGet } from "@/lib/api";
-import { User } from "next-auth";
 
 const HeaderUser = async () => {
   const cookieStore = cookies();

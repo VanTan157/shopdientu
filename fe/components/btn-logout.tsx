@@ -1,12 +1,15 @@
 "use client";
 
+import { loadingStore } from "@/app/store/loading.store";
 import { apiPost } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const BtnLogout = () => {
   const router = useRouter();
+  const { start, stop } = loadingStore();
   const handleLogout = async () => {
+    start();
     const res = await apiPost(`/auth/logout`, {});
     if (res.data) {
       toast.success("Đăng xuất thành công");
@@ -18,6 +21,7 @@ const BtnLogout = () => {
       router.push("/");
       router.refresh();
     }
+    stop();
   };
   return <div onClick={handleLogout}>Đăng xuất</div>;
 };

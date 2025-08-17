@@ -32,8 +32,8 @@ export class OrderItemsController {
   @Get("cart-count")
   async getCartCount(@Req() req: Request) {
     const userId = (req.user as User).userId;
-    const cartItems = await this.orderItemsService.getOrderNotInCart(userId);
-    return { count: cartItems.length }; // Trả về số lượng
+    const cartItems = await this.orderItemsService.getOrderNotInOrder(userId);
+    return { count: cartItems.length };
   }
 
   @Post()
@@ -49,10 +49,10 @@ export class OrderItemsController {
     return this.orderItemsService.findAll();
   }
 
-  @Get("get-order-not-in-cart")
-  getOrderNotInCart(@Req() req: Request) {
+  @Get("get-order-item-not-in-order")
+  getOrderNotInOrder(@Req() req: Request) {
     const userId = (req.user as User).userId;
-    return this.orderItemsService.getOrderNotInCart(userId);
+    return this.orderItemsService.getOrderNotInOrder(userId);
   }
 
   @Get("find-by-user")

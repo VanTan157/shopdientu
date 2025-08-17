@@ -35,109 +35,30 @@ import {
 } from "@/components/ui/select";
 import { CartItem } from "@/lib/types/order-item";
 import { useCartStore } from "@/app/store/cart-store";
+import { useAddress } from "@/hooks/useAddress";
 
 const CartPage = ({ carts }: { carts: CartItem[] }) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [address, setAddress] = useState("");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const router = useRouter();
-
   const [isLoading, setIsLoading] = useState(false);
-  const [province, setProvince] = useState("");
-  const [district, setDistrict] = useState("");
-  const [ward, setWard] = useState("");
-  const [street, setStreet] = useState("");
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [districts, setDistricts] = useState<any[]>([]);
-  const [wards, setWards] = useState<any[]>([]);
   const { cartItemCount, setCartItemCount } = useCartStore();
 
-  // Gọi API tỉnh/thành phố
-  useEffect(() => {
-    const fetchProvinces = async () => {
-      try {
-        const response = await fetch("/api/provinces", {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-          // cache: "force-cache"
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch provinces");
-        }
-        const data = await response.json();
-        setProvinces(data.results);
-      } catch (error) {
-        console.error("Error fetching provinces:", error);
-        toast.error("Không thể tải danh sách tỉnh/thành phố!");
-      }
-    };
-    fetchProvinces();
-  }, [province]);
-
-  //lấy danh sách phường/xã khi chọn quận/huyện
-  useEffect(() => {
-    if (district) {
-      const fetchWards = async () => {
-        try {
-          const response = await fetch(`/api/wards/${district}`, {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-          });
-          if (!response.ok) {
-            throw new Error("Failed to fetch wards");
-          }
-          const data = await response.json();
-          setWards(data.results);
-          setWard("");
-        } catch (error) {
-          console.error("Error fetching wards:", error);
-          toast.error("Không thể tải danh sách phường/xã!");
-        }
-      };
-      fetchWards();
-    }
-  }, [district]);
-
-  //lấy danh sách quận/huyện khi chọn tỉnh/thành phố
-  useEffect(() => {
-    if (province) {
-      const fetchDistricts = async () => {
-        try {
-          const response = await fetch(`/api/districts/${province}`, {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-          });
-          if (!response.ok) {
-            throw new Error("Failed to fetch districts");
-          }
-          const data = await response.json();
-          setDistricts(data.results);
-          setDistrict("");
-          setWards([]);
-        } catch (error) {
-          console.error("Error fetching districts:", error);
-          toast.error("Không thể tải danh sách quận/huyện!");
-        }
-      };
-      fetchDistricts();
-    }
-  }, [province]);
-
-  const getFullAddress = () => {
-    const provinceName =
-      provinces.find((p) => p.province_id === province)?.province_name || "";
-    const districtName =
-      districts.find((d) => d.district_id === district)?.district_name || "";
-    const wardName = wards.find((w) => w.ward_id === ward)?.ward_name || "";
-    return `${street}, ${wardName}, ${districtName}, ${provinceName}`;
-  };
+  const {
+    provinces,
+    districts,
+    wards,
+    province,
+    setProvince,
+    district,
+    setDistrict,
+    ward,
+    setWard,
+    street,
+    setStreet,
+    getFullAddress,
+  } = useAddress();
 
   // Xử lý chọn/bỏ chọn sản phẩm
   const handleSelectItem = (itemId: string) => {
@@ -197,7 +118,6 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
       router.refresh();
       setSelectedItems([]);
       setPhoneNumber("");
-      setAddress("");
       setIsCheckoutOpen(false);
     } catch (error) {
       console.error("Error during checkout:", error);

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 
 import { Headphone } from "@/lib/types/headphone";
+import { useAddress } from "@/hooks/useAddress";
 
 const BtnBuyNow = ({
   product,
@@ -37,13 +38,21 @@ const BtnBuyNow = ({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [province, setProvince] = useState("");
-  const [district, setDistrict] = useState("");
-  const [ward, setWard] = useState("");
-  const [street, setStreet] = useState("");
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [districts, setDistricts] = useState<any[]>([]);
-  const [wards, setWards] = useState<any[]>([]);
+
+  const {
+    provinces,
+    districts,
+    wards,
+    province,
+    setProvince,
+    district,
+    setDistrict,
+    ward,
+    setWard,
+    street,
+    setStreet,
+    getFullAddress,
+  } = useAddress();
 
   const handleBuyNow = async () => {
     setIsOpen(true);
@@ -51,88 +60,6 @@ const BtnBuyNow = ({
 
   const isVietnamesePhoneNumber = (number: string) => {
     return /(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})\b/.test(number);
-  };
-  useEffect(() => {
-    const fetchProvinces = async () => {
-      try {
-        const response = await fetch("/api/provinces", {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch provinces");
-        }
-        const data = await response.json();
-        setProvinces(data.results);
-      } catch (error) {
-        console.error("Error fetching provinces:", error);
-        toast.error("Không thể tải danh sách tỉnh/thành phố!");
-      } finally {
-      }
-    };
-    fetchProvinces();
-  }, []); // Chỉ gọi 1 lần khi component mount
-
-  useEffect(() => {
-    if (district) {
-      const fetchWards = async () => {
-        try {
-          const response = await fetch(`/api/wards/${district}`, {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-          });
-          if (!response.ok) {
-            throw new Error("Failed to fetch wards");
-          }
-          const data = await response.json();
-          setWards(data.results);
-          setWard("");
-        } catch (error) {
-          console.error("Error fetching wards:", error);
-          toast.error("Không thể tải danh sách phường/xã!");
-        }
-      };
-      fetchWards();
-    }
-  }, [district]);
-
-  useEffect(() => {
-    if (province) {
-      const fetchDistricts = async () => {
-        try {
-          const response = await fetch(`/api/districts/${province}`, {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-          });
-          if (!response.ok) {
-            throw new Error("Failed to fetch districts");
-          }
-          const data = await response.json();
-          setDistricts(data.results);
-          setDistrict("");
-          setWards([]);
-        } catch (error) {
-          console.error("Error fetching districts:", error);
-          toast.error("Không thể tải danh sách quận/huyện!");
-        }
-      };
-      fetchDistricts();
-    }
-  }, [province]);
-
-  const getFullAddress = () => {
-    const provinceName =
-      provinces.find((p) => p.province_id === province)?.province_name || "";
-    const districtName =
-      districts.find((d) => d.district_id === district)?.district_name || "";
-    const wardName = wards.find((w) => w.ward_id === ward)?.ward_name || "";
-    return `${street}, ${wardName}, ${districtName}, ${provinceName}`;
   };
 
   const handleConfirmBuy = async () => {
@@ -270,7 +197,7 @@ const BtnBuyNow = ({
               <Select
                 value={province}
                 onValueChange={setProvince}
-                disabled={isLoading }
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={"Chọn tỉnh/thành phố"} />

@@ -11,6 +11,7 @@ import { Circle, Eye, EyeOff, Facebook } from "lucide-react";
 import { useEffect, useState } from "react";
 import ActiveAccount from "./active-account";
 import { useUserStore } from "@/app/store/user-store";
+import { loadingStore } from "@/app/store/loading.store";
 
 const LoginPage = () => {
   const {
@@ -18,13 +19,14 @@ const LoginPage = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormInputs>();
-  const [loading, setLoading] = useState<boolean>();
   const [showPass, setShowPass] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
   const { setUser } = useUserStore();
   const router = useRouter();
+  const { start, stop } = loadingStore();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
+    start();
     const response = await apiPost<LoginResponse, LoginFormInputs>(
       "/auth/login",
       data,
@@ -40,36 +42,27 @@ const LoginPage = () => {
       router.push("/");
       router.refresh();
     }
+    stop();
   };
 
   const handleGoogleLogin = () => {
-    setLoading(true);
+    start();
     window.location.href = "http://localhost:8080/auth/google";
   };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "google_auth") {
-      setLoading(true);
+      start();
       toast.success("Đăng nhập Google thành công");
       router.push("/");
-      setLoading(false);
+      stop();
       router.refresh();
     } else if (params.get("error")) {
       toast.error("Đăng nhập Google thất bại");
     }
   }, [router]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-w-[100vw] min-h-screen bg-white">
-        <div className="flex items-center gap-4 justify-center">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-lg font-medium text-gray-700">Đang tải...</p>
-        </div>
-      </div>
-    );
-  }
   return (
     <div>
       <div className="min-h-screen min-w-screen flex items-center justify-center">

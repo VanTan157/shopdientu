@@ -30,7 +30,7 @@ const BtnAddToCart = ({
   const [quantity, setQuantity] = useState<number>(1);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { cartItemCount, setCartItemCount, refreshCart } = useCartStore();
+  const { setCartItemCount, cartItemCount } = useCartStore();
   const router = useRouter();
 
   const handleAddToCart = async () => {
@@ -42,13 +42,12 @@ const BtnAddToCart = ({
       colorVariant: product.colorVariants[index],
     });
     setLoading(false);
-    router.refresh(); // Refresh trang để cập nhật giỏ hàng
+    router.refresh();
     if (res.data) {
       setOpen(false);
-      setCartItemCount(cartItemCount + 1); // Cập nhật số lượng sản phẩm trong giỏ hàng
+      setCartItemCount(cartItemCount + 1);
       toast.success("Thêm vào giỏ hàng thành công!");
     } else {
-      refreshCart(); // Cập nhật lại giỏ hàng nếu có lỗi
       toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
     }
   };

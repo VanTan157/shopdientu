@@ -1,10 +1,9 @@
 // components/BtnAddToCart.tsx
 "use client";
 
-import { Mobile } from "@/lib/types/mobile";
 import { ShoppingCart } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button"; // Từ shadcn/ui
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,14 +11,15 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
-} from "@/components/ui/dialog"; // Từ shadcn/ui
-import { Input } from "@/components/ui/input"; // Từ shadcn/ui
-import { Label } from "@/components/ui/label"; // Từ shadcn/ui
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Laptop } from "@/lib/types/laptop";
 import { useCartStore } from "@/app/store/cart-store";
+import { loadingStore } from "@/app/store/loading.store";
 
 const BtnAddToCart = ({
   product,
@@ -30,28 +30,27 @@ const BtnAddToCart = ({
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { cartItemCount, setCartItemCount, refreshCart } = useCartStore();
+  const { cartItemCount, setCartItemCount } = useCartStore();
   const router = useRouter();
+  const { start, stop } = loadingStore();
 
   const handleAddToCart = async () => {
-    setLoading(true);
+    start();
     const res = await apiPost("/order-items", {
       product_id: product._id,
       product_type: "laptop",
       quantity,
       colorVariant: product.colorVariants[index],
     });
-    setLoading(false);
     router.refresh(); // Refresh trang để cập nhật giỏ hàng
     if (res.data) {
       setOpen(false);
       setCartItemCount(cartItemCount + 1); // Cập nhật số lượng sản phẩm trong giỏ hàng
       toast.success("Thêm vào giỏ hàng thành công!");
     } else {
-      refreshCart(); // Cập nhật lại giỏ hàng nếu có lỗi
       toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
     }
+    stop();
   };
 
   return (
@@ -87,7 +86,6 @@ const BtnAddToCart = ({
               min={1}
               max={product.colorVariants[index].stock}
               className="col-span-3"
-              disabled={loading}
             />
           </div>
           <p className="text-sm text-gray-500">
@@ -95,16 +93,10 @@ const BtnAddToCart = ({
           </p>
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={() => setOpen(false)}>
             Hủy
           </Button>
-          <Button onClick={handleAddToCart} disabled={loading}>
-            {loading ? "Đang thêm..." : "Xác nhận"}
-          </Button>
+          <Button onClick={handleAddToCart}>"Xác nhận"</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

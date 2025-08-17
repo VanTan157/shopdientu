@@ -15,6 +15,9 @@ const detectTagsFromEndpoint = (endpoint: string): string[] => {
   if (endpoint.includes("/tablet")) tags.push("tablets");
   if (endpoint.includes("/headphone")) tags.push("headphones");
   if (endpoint.includes("/order")) tags.push("orders");
+  if (endpoint.includes("/cart")) tags.push("carts");
+  if (endpoint.includes("/")) tags.push("carts");
+
   if (endpoint.includes("/user") || endpoint.includes("/customer"))
     tags.push("users");
   return tags.length > 0 ? tags : ["general"];
@@ -34,13 +37,11 @@ const callRevalidateAPI = async (tags: string[]): Promise<void> => {
   }
 };
 
-// Hàm helper để thêm headers mặc định
 const getDefaultHeaders = (customHeaders?: HeadersInit): HeadersInit => ({
   "Content-Type": "application/json",
   ...customHeaders,
 });
 
-// Hàm làm mới token
 const refreshToken = async (): Promise<boolean> => {
   try {
     const response = await fetch(`${BASE_URL}/auth/refresh`, {
@@ -108,19 +109,27 @@ const requestWithRefresh = async <T>(
 export async function apiGet<T>(
   endpoint: string,
   headers?: HeadersInit,
-  tags?: string[]
+  tags?: string[],
+  forceRefresh?: boolean
 ): Promise<ApiResponse<T>> {
   try {
     const autoTags = detectTagsFromEndpoint(endpoint);
     const cacheTags = tags || autoTags;
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const fetchOptions: RequestInit = {
       method: "GET",
       headers: getDefaultHeaders(headers),
       credentials: "include",
-      cache: "force-cache",
-      next: { tags: cacheTags },
-    });
+    };
+
+    if (forceRefresh) {
+      fetchOptions.cache = "no-store";
+    } else {
+      fetchOptions.cache = "force-cache";
+      fetchOptions.next = { tags: cacheTags };
+    }
+
+    const response = await fetch(`${BASE_URL}${endpoint}`, fetchOptions);
 
     const data = await response.json();
     return {

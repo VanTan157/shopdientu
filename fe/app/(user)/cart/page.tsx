@@ -6,9 +6,12 @@ import { CartItem } from "@/lib/types/order-item";
 const Cart = async () => {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value || null;
-  const res = await apiGet<CartItem[]>("/order-items/get-order-not-in-cart", {
-    Cookie: `accessToken=${accessToken}`,
-  });
+  const res = await apiGet<CartItem[]>(
+    "/order-items/get-order-item-not-in-order",
+    {
+      Cookie: `accessToken=${accessToken}`,
+    }
+  );
   const cartItems = res.data || [];
   return <CartPage carts={cartItems} />;
 };

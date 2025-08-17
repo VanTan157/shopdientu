@@ -4,17 +4,20 @@ import { useCartStore } from "@/app/store/cart-store";
 import { apiGet } from "@/lib/api";
 import { CartItem } from "@/lib/types/order-item";
 import { ShoppingCart } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const CartIcon = () => {
-  const { cartItemCount, setCartItemCount } = useCartStore();
+  const { setCartItemCount, cartItemCount } = useCartStore();
   useEffect(() => {
-    const fetchCartItemCount = async () => {
+    const fetchCartItem = async () => {
       try {
         const res = await apiGet<CartItem[]>(
-          "/order-items/get-order-not-in-cart"
+          "/order-items/get-order-item-not-in-order",
+          undefined,
+          ["carts"],
+          true
         );
+        console.log("Cart items:", res);
         if (!res || !res.data) {
           console.error("No data received from API");
           return;
@@ -24,7 +27,7 @@ const CartIcon = () => {
         console.error("Error fetching cart item count:", error);
       }
     };
-    fetchCartItemCount();
+    fetchCartItem();
   }, [setCartItemCount]);
 
   return (

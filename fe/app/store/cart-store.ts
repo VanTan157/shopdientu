@@ -1,13 +1,11 @@
 import { create } from "zustand";
 
-interface CartState {
+interface CartStore {
   cartItemCount: number;
   setCartItemCount: (count: number) => void;
-  refreshCart: () => void;
 }
 
-export const useCartStore = create<CartState>((set) => ({
+export const useCartStore = create<CartStore>((set) => ({
   cartItemCount: 0,
   setCartItemCount: (count: number) => set({ cartItemCount: count }),
-  refreshCart: () => set((state) => ({ cartItemCount: state.cartItemCount })),
 }));

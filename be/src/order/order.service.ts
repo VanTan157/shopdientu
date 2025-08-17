@@ -216,6 +216,8 @@ export class OrderService {
       .sort({ createdAt: -1 })
       .exec();
 
+    console.log("Orders:", orders);
+
     // Populate thông tin OrderItem cho từng Order
     return Promise.all(
       orders.map(async (order) => {

@@ -22,22 +22,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Laptop } from "@/lib/types/laptop";
+import { useAddress } from "@/hooks/useAddress";
+import { loadingStore } from "@/app/store/loading.store";
 
 const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
   const router = useRouter();
-
-  // State cho form
   const [isOpen, setIsOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [province, setProvince] = useState("");
-  const [district, setDistrict] = useState("");
-  const [ward, setWard] = useState("");
-  const [street, setStreet] = useState("");
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [districts, setDistricts] = useState<any[]>([]);
-  const [wards, setWards] = useState<any[]>([]);
+  const { stop, start } = loadingStore();
+
+  const {
+    provinces,
+    districts,
+    wards,
+    province,
+    setProvince,
+    district,
+    setDistrict,
+    ward,
+    setWard,
+    street,
+    setStreet,
+    getFullAddress,
+  } = useAddress();
 
   const handleBuyNow = async () => {
     setIsOpen(true);
@@ -46,91 +54,9 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
   const isVietnamesePhoneNumber = (number: string) => {
     return /(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})\b/.test(number);
   };
-  // Gọi API tỉnh/thành phố
-  useEffect(() => {
-    const fetchProvinces = async () => {
-      try {
-        const response = await fetch("/api/provinces", {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch provinces");
-        }
-        const data = await response.json();
-        setProvinces(data.results);
-      } catch (error) {
-        console.error("Error fetching provinces:", error);
-        toast.error("Không thể tải danh sách tỉnh/thành phố!");
-      }
-    };
-    fetchProvinces();
-  }, [province]);
-
-  useEffect(() => {
-    if (district) {
-      const fetchWards = async () => {
-        try {
-          const response = await fetch(`/api/wards/${district}`, {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-          });
-          if (!response.ok) {
-            throw new Error("Failed to fetch wards");
-          }
-          const data = await response.json();
-          setWards(data.results);
-          setWard("");
-        } catch (error) {
-          console.error("Error fetching wards:", error);
-          toast.error("Không thể tải danh sách phường/xã!");
-        }
-      };
-      fetchWards();
-    }
-  }, [district]);
-
-  useEffect(() => {
-    if (province) {
-      const fetchDistricts = async () => {
-        try {
-          const response = await fetch(`/api/districts/${province}`, {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-            },
-          });
-          if (!response.ok) {
-            throw new Error("Failed to fetch districts");
-          }
-          const data = await response.json();
-          setDistricts(data.results);
-          setDistrict("");
-          setWards([]);
-        } catch (error) {
-          console.error("Error fetching districts:", error);
-          toast.error("Không thể tải danh sách quận/huyện!");
-        }
-      };
-      fetchDistricts();
-    }
-  }, [province]);
-
-  const getFullAddress = () => {
-    const provinceName =
-      provinces.find((p) => p.province_id === province)?.province_name || "";
-    const districtName =
-      districts.find((d) => d.district_id === district)?.district_name || "";
-    const wardName = wards.find((w) => w.ward_id === ward)?.ward_name || "";
-    return `${street}, ${wardName}, ${districtName}, ${provinceName}`;
-  };
 
   const handleConfirmBuy = async () => {
-    setIsLoading(true);
+    start();
     try {
       // Kiểm tra tính hợp lệ
       if (!product.isAvailable || product.colorVariants[index].stock === 0) {
@@ -142,7 +68,7 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
         toast.error(
           `Số lượng vượt quá tồn kho (${product.colorVariants[index].stock})!`
         );
-        setIsLoading(false);
+        stop();
         return;
       }
       if (
@@ -154,7 +80,7 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
         !ward
       ) {
         toast.error("Vui lòng điền đầy đủ thông tin!");
-        setIsLoading(false);
+        stop();
         return;
       }
       if (!isVietnamesePhoneNumber(phoneNumber)) {
@@ -222,7 +148,7 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
         handleConfirmBuy(); // Thử lại
       }
     } finally {
-      setIsLoading(false);
+      stop();
     }
   };
 
@@ -254,18 +180,13 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="Nhập số điện thoại"
-                disabled={isLoading}
               />
             </div>
             <div>
               <Label htmlFor="province" className="mb-2">
                 Tỉnh/Thành phố
               </Label>
-              <Select
-                value={province}
-                onValueChange={setProvince}
-                disabled={isLoading}
-              >
+              <Select value={province} onValueChange={setProvince}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn tỉnh/thành phố" />
                 </SelectTrigger>
@@ -285,7 +206,7 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
               <Select
                 value={district}
                 onValueChange={setDistrict}
-                disabled={isLoading || !province}
+                disabled={!province}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn quận/huyện" />
@@ -303,11 +224,7 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
               <Label htmlFor="ward" className="mb-2">
                 Phường/Xã
               </Label>
-              <Select
-                value={ward}
-                onValueChange={setWard}
-                disabled={isLoading || !district}
-              >
+              <Select value={ward} onValueChange={setWard} disabled={!district}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn phường/xã" />
                 </SelectTrigger>
@@ -329,7 +246,6 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
                 placeholder="Nhập đường, số nhà"
-                disabled={isLoading}
               />
             </div>
             <div>
@@ -347,23 +263,16 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
                 min={1}
                 max={product.colorVariants[index].stock}
                 placeholder="Nhập số lượng"
-                disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-1">
                 Tồn kho: {product.colorVariants[index].stock}
               </p>
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-                disabled={isLoading}
-              >
+              <Button variant="outline" onClick={() => setIsOpen(false)}>
                 Hủy
               </Button>
-              <Button onClick={handleConfirmBuy} disabled={isLoading}>
-                {isLoading ? "Đang xử lý..." : "Xác nhận"}
-              </Button>
+              <Button onClick={handleConfirmBuy}>Xác nhận</Button>
             </div>
           </div>
         </DialogContent>
