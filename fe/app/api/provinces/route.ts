@@ -8,6 +8,8 @@ export async function GET() {
       headers: {
         Accept: "application/json",
       },
+      cache: "force-cache", // Cache lâu dài vì danh sách tỉnh ít thay đổi
+      next: { revalidate: 86400 }, // Revalidate mỗi 24 giờ
     });
 
     if (!response.ok) {
@@ -15,7 +17,11 @@ export async function GET() {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    // Set cache headers cho client (browser)
+    const res = NextResponse.json(data);
+    res.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=3600');
+    return res;
   } catch (error) {
     console.error("Error fetching provinces:", error);
     return NextResponse.json(

@@ -79,6 +79,10 @@ export class LaptopService {
     return await this.laptopModel.find().exec();
   }
 
+  async findByPromotion() {
+    return await this.laptopModel.find({ isPromotion: true });
+  }
+
   // Lấy thông tin một laptop theo ID
   async findOne(id: string): Promise<Laptop> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");

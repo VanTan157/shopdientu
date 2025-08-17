@@ -21,7 +21,12 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
 
-    const payload = { email: user.email, userId: user._id, type: user.type };
+    const payload = {
+      email: user.email,
+      userId: user._id,
+      type: user.type,
+      name: user.name,
+    };
     const accessTokenExpiresIn = remember ? "7d" : undefined;
     const refreshTokenExpiresIn = remember ? "30d" : "7d";
     const accessTokenMaxAge = remember
@@ -55,7 +60,12 @@ export class AuthService {
 
     return {
       message: "Login successful",
-      user: { email: user.email, name: user.name, type: user.type },
+      user: {
+        email: user.email,
+        name: user.name,
+        type: user.type,
+        userId: user._id,
+      },
     };
   }
 
@@ -78,6 +88,7 @@ export class AuthService {
       email: dbUser.email,
       userId: dbUser._id,
       type: dbUser.type,
+      name: dbUser.name,
     };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" });
@@ -97,7 +108,12 @@ export class AuthService {
     });
 
     return {
-      user: { email: dbUser.email, name: dbUser.name, type: dbUser.type },
+      user: {
+        email: dbUser.email,
+        name: dbUser.name,
+        type: dbUser.type,
+        userId: dbUser._id,
+      },
     };
   }
 
@@ -119,6 +135,7 @@ export class AuthService {
         email: user.email,
         userId: user._id,
         type: user.type,
+        name: user.name,
       };
       const newAccessToken = this.jwtService.sign(newPayload);
 

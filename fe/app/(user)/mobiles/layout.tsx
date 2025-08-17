@@ -10,7 +10,7 @@ export default function MobileLayout({
   return (
     <div className="flex">
       <MobileHeader />
-      <div className="ml-16 flex-1">{children}</div>
+      <div className="ml-16 flex-1 ">{children}</div>
     </div>
   );
 }

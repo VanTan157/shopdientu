@@ -80,6 +80,10 @@ export class TabletService {
     return await this.tabletModel.find().exec();
   }
 
+  async findByPromotion() {
+    return await this.tabletModel.find({ isPromotion: true }).exec();
+  }
+
   // Lấy thông tin một tablet theo ID
   async findOne(id: string): Promise<Tablet> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");

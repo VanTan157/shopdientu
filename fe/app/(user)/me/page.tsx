@@ -5,16 +5,18 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { BtnEditProfile } from "./btn-edit-profile";
 import { BtnChangPassWord } from "./btn-change-password";
+import { verify } from "jsonwebtoken";
 
 const ProfilePage = async () => {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value || null;
+  let user: User | null = null;
 
-  const res = await apiGet<User>("/auth/get-me", {
-    Cookie: `accessToken=${accessToken}`,
-  });
+  if (accessToken !== null) {
+    user = verify(accessToken, process.env.JWT_SECRET as string) as User;
+  }
 
-  if (!res.data) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <p className="text-lg text-gray-600 font-medium">
@@ -23,8 +25,6 @@ const ProfilePage = async () => {
       </div>
     );
   }
-
-  const user = res.data;
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">

@@ -1,5 +1,4 @@
 import Banner from "@/components/banner";
-import { HydrateMobileStore } from "@/components/HydrateMobileStore";
 import { apiGet } from "@/lib/api";
 import { Mobile } from "@/lib/types/mobile";
 import MobileList from "./mobiles/mobile-list";
@@ -8,35 +7,26 @@ import LaptopList from "./laptops/laptop-list";
 import { Headphone } from "@/lib/types/headphone";
 import HeadphoneList from "./headphones/headphone-list";
 import { Tablet } from "@/lib/types/tablet";
-import { Table } from "lucide-react";
 import TabletList from "./tablets/tablet-list";
 
 const Page = async () => {
-  const resMobile = await apiGet<Mobile[]>("/mobiles");
+  const resMobile = await apiGet<Mobile[]>("/mobiles/get-by-promotion");
   const mobiles = resMobile.data || [];
-  const hotDealsMobile = mobiles.filter((p) => p.IsPromotion);
 
-  const resLaptop = await apiGet<Laptop[]>("/laptops");
+  const resLaptop = await apiGet<Laptop[]>("/laptops/get-by-promotion");
   const laptops = resLaptop.data || [];
-  const hotDealsLaptop = laptops.filter((p) => p.isPromotion);
 
-  const resHeadphone = await apiGet<Headphone[]>("/headphones");
+  const resHeadphone = await apiGet<Headphone[]>(
+    "/headphones/get-by-promotion"
+  );
   const headphones = resHeadphone.data || [];
-  const hotDealsHeadphone = headphones.filter((p) => p.isPromotion);
 
-  const resTablet = await apiGet<Tablet[]>("/tablets");
+  const resTablet = await apiGet<Tablet[]>("/tablets/get-by-promotion");
   const tablets = resTablet.data || [];
-  const hotDealsTablet = tablets.filter((p) => p.isPromotion);
 
-  const hotDeals = [
-    ...hotDealsMobile,
-    ...hotDealsLaptop,
-    ...hotDealsHeadphone,
-    ...hotDealsTablet,
-  ];
+  const hotDeals = [...mobiles, ...laptops, ...headphones, ...tablets];
   return (
     <div className="p-8">
-      <HydrateMobileStore mobiles={mobiles} />
       <Banner hotDeals={hotDeals} />
       <MobileList mobiles={mobiles} />
       <LaptopList laptops={laptops} />

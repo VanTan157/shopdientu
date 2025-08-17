@@ -75,7 +75,7 @@ const LaptopDetail = ({ product }: { product: Laptop }) => {
                   <div
                     onClick={() => setColorVariant(index)}
                     key={variant._id}
-                    className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors duration-200
+                    className={`cursor-pointer flex flex-col px-2 py-2 w-[30%] items-center rounded-lg border-2 transition-colors duration-200
                       ${
                         colorVariant === index
                           ? "border-blue-500 bg-blue-900 text-cyan-300 shadow-lg"

@@ -9,5 +9,5 @@ interface CartState {
 export const useCartStore = create<CartState>((set) => ({
   cartItemCount: 0,
   setCartItemCount: (count: number) => set({ cartItemCount: count }),
-  refreshCart: () => set((state) => ({ cartItemCount: state.cartItemCount })), // This can be used to trigger a refresh if needed
+  refreshCart: () => set((state) => ({ cartItemCount: state.cartItemCount })),
 }));

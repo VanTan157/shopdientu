@@ -62,6 +62,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
           headers: {
             Accept: "application/json",
           },
+          // cache: "force-cache"
         });
         if (!response.ok) {
           throw new Error("Failed to fetch provinces");

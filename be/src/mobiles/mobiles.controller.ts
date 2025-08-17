@@ -61,6 +61,11 @@ export class MobilesController {
     return this.mobilesService.findAll();
   }
 
+  @Get("get-by-promotion")
+  getByPromotion() {
+    return this.mobilesService.findByPromotion();
+  }
+
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.mobilesService.findOne(id);

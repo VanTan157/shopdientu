@@ -6,18 +6,18 @@ const MobileList = ({ mobiles }: { mobiles: Mobile[] }) => {
   return (
     <section className="mt-4 xs:mt-6 sm:mt-8">
       <h2 className="text-xl xs:text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 pb-2 xs:pb-3 sm:pb-4">
-        Danh sách điện thoại
+        Điện thoại
       </h2>
       <div className="grid grid-cols-3 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 xs:gap-3 sm:gap-4 md:gap-5 lg:gap-6">
         {mobiles.map((mobile) => (
           <div
             key={mobile._id}
-            className="relative border rounded-lg p-2 xs:p-3 sm:p-4 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-to-b from-zinc-600 to-zinc-800 text-white"
+            className="relative rounded-lg p-2 xs:p-3 sm:p-4 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-to-b from-zinc-600 to-zinc-800 text-white"
           >
             <Link href={`/mobiles/${mobile._id}`}>
               {/* Phần trăm khuyến mãi ở góc trên bên trái */}
               {mobile.promotion > 0 && (
-                <span className="absolute top-1 xs:top-2 left-1 xs:left-2 bg-red-500 text-white text-[10px] xs:text-xs font-medium px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full">
+                <span className="absolute z-1 top-1 xs:top-2 left-1 xs:left-2 bg-red-500 text-white text-[10px] xs:text-xs font-medium px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full">
                   -{mobile.promotion}%
                 </span>
               )}

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { Circle, Eye, EyeOff, Facebook } from "lucide-react";
 import { useEffect, useState } from "react";
 import ActiveAccount from "./active-account";
+import { useUserStore } from "@/app/store/user-store";
 
 const LoginPage = () => {
   const {
@@ -20,6 +21,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState<boolean>();
   const [showPass, setShowPass] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
+  const { setUser } = useUserStore();
   const router = useRouter();
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
@@ -33,6 +35,8 @@ const LoginPage = () => {
     }
     if (response.data) {
       toast.success("Đăng nhập thành công");
+      console.log("Login response:", response.data.user);
+      setUser(response.data.user);
       router.push("/");
       router.refresh();
     }
@@ -50,7 +54,7 @@ const LoginPage = () => {
       toast.success("Đăng nhập Google thành công");
       router.push("/");
       setLoading(false);
-      router.refresh(); // Làm mới trang để cập nhật Server Component
+      router.refresh();
     } else if (params.get("error")) {
       toast.error("Đăng nhập Google thất bại");
     }

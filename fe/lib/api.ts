@@ -5,10 +5,34 @@ interface ApiResponse<T> {
   status: number;
 }
 
-// Cấu hình cơ bản
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"; // Đặt trong .env
+const detectTagsFromEndpoint = (endpoint: string): string[] => {
+  const tags: string[] = [];
+
+  if (endpoint.includes("/laptop")) tags.push("laptops");
+  if (endpoint.includes("/mobile")) tags.push("mobiles");
+  if (endpoint.includes("/tablet")) tags.push("tablets");
+  if (endpoint.includes("/headphone")) tags.push("headphones");
+  if (endpoint.includes("/order")) tags.push("orders");
+  if (endpoint.includes("/user") || endpoint.includes("/customer"))
+    tags.push("users");
+  return tags.length > 0 ? tags : ["general"];
+};
+
+const callRevalidateAPI = async (tags: string[]): Promise<void> => {
+  try {
+    await fetch("/api/revalidate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tags }),
+    });
+  } catch (error) {
+    console.error("Failed to revalidate cache:", error);
+  }
+};
 
 // Hàm helper để thêm headers mặc định
 const getDefaultHeaders = (customHeaders?: HeadersInit): HeadersInit => ({
@@ -83,14 +107,19 @@ const requestWithRefresh = async <T>(
 // GET
 export async function apiGet<T>(
   endpoint: string,
-  headers?: HeadersInit
+  headers?: HeadersInit,
+  tags?: string[]
 ): Promise<ApiResponse<T>> {
   try {
+    const autoTags = detectTagsFromEndpoint(endpoint);
+    const cacheTags = tags || autoTags;
+
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: "GET",
       headers: getDefaultHeaders(headers),
       credentials: "include",
-      cache: "no-store",
+      cache: "force-cache",
+      next: { tags: cacheTags },
     });
 
     const data = await response.json();
@@ -112,7 +141,8 @@ export async function apiGet<T>(
 export async function apiPost<T, U>(
   endpoint: string,
   body: U | FormData,
-  headers?: HeadersInit
+  headers?: HeadersInit,
+  tags?: string[]
 ): Promise<ApiResponse<T>> {
   try {
     const isFormData = body instanceof FormData;
@@ -124,6 +154,14 @@ export async function apiPost<T, U>(
     });
 
     const data = await response.json();
+
+    // Revalidate cache nếu request thành công
+    if (response.ok) {
+      const autoTags = detectTagsFromEndpoint(endpoint);
+      const revalidateTags = tags || autoTags;
+      await callRevalidateAPI(revalidateTags);
+    }
+
     return {
       data: response.ok ? data : null,
       error: response.ok ? null : data.message || "Lỗi không xác định",
@@ -142,7 +180,8 @@ export async function apiPost<T, U>(
 export async function apiPatch<T, U>(
   endpoint: string,
   body: U | FormData,
-  headers?: HeadersInit
+  headers?: HeadersInit,
+  tags?: string[]
 ): Promise<ApiResponse<T>> {
   try {
     const isFormData = body instanceof FormData;
@@ -154,6 +193,14 @@ export async function apiPatch<T, U>(
     });
 
     const data = await response.json();
+
+    // Revalidate cache nếu request thành công
+    if (response.ok) {
+      const autoTags = detectTagsFromEndpoint(endpoint);
+      const revalidateTags = tags || autoTags;
+      await callRevalidateAPI(revalidateTags);
+    }
+
     return {
       data: response.ok ? data : null,
       error: response.ok ? null : data.message || "Lỗi không xác định",
@@ -172,7 +219,8 @@ export async function apiPatch<T, U>(
 export async function apiPut<T, U>(
   endpoint: string,
   body: U,
-  headers?: HeadersInit
+  headers?: HeadersInit,
+  tags?: string[]
 ): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -183,6 +231,14 @@ export async function apiPut<T, U>(
     });
 
     const data = await response.json();
+
+    // Revalidate cache nếu request thành công
+    if (response.ok) {
+      const autoTags = detectTagsFromEndpoint(endpoint);
+      const revalidateTags = tags || autoTags;
+      await callRevalidateAPI(revalidateTags);
+    }
+
     return {
       data: response.ok ? data : null,
       error: response.ok ? null : data.message || "Lỗi không xác định",
@@ -200,7 +256,8 @@ export async function apiPut<T, U>(
 // DELETE
 export async function apiDelete<T>(
   endpoint: string,
-  headers?: HeadersInit
+  headers?: HeadersInit,
+  tags?: string[]
 ): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -210,6 +267,14 @@ export async function apiDelete<T>(
     });
 
     const data = await response.json();
+
+    // Revalidate cache nếu request thành công
+    if (response.ok) {
+      const autoTags = detectTagsFromEndpoint(endpoint);
+      const revalidateTags = tags || autoTags;
+      await callRevalidateAPI(revalidateTags);
+    }
+
     return {
       data: response.ok ? data : null,
       error: response.ok ? null : data.message || "Lỗi không xác định",
@@ -223,3 +288,15 @@ export async function apiDelete<T>(
     };
   }
 }
+
+// Hàm tiện ích để revalidate cache theo yêu cầu
+export const revalidateCache = async (tags: string | string[]) => {
+  const tagArray = Array.isArray(tags) ? tags : [tags];
+  await callRevalidateAPI(tagArray);
+};
+
+// Hàm tiện ích để revalidate tất cả cache của sản phẩm
+export const revalidateAllProducts = async () => {
+  const productTags = ["laptops", "mobiles", "tablets", "headphones"];
+  await callRevalidateAPI(productTags);
+};

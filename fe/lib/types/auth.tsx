@@ -1,28 +1,30 @@
-export type LoginFormInputs = {
+export interface LoginFormInputs {
   email: string;
   password: string;
   remember?: boolean;
-};
+}
 
-export type LoginResponse = {
+export interface LoginResponse {
   message: string;
   user: {
+    userId: string;
     email: string;
     name: string;
+    type: "ADMIN" | "USER";
   };
-};
+}
 
-export type RegisterFormInputs = {
+export interface RegisterFormInputs {
   name: string;
   email: string;
   password: string;
   confirmPassword: string;
-};
+}
 
-export type RegisterResponse = {
+export interface RegisterResponse {
   name: string;
   email: string;
   password: string;
   type: string;
   _id: string;
-};
+}

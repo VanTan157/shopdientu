@@ -92,6 +92,10 @@ export class MobilesService {
     return this.mobileModel.find().populate("mobile_type_id").exec();
   }
 
+  async findByPromotion(): Promise<Mobile[]> {
+    return this.mobileModel.find({ IsPromotion: true }).exec();
+  }
+
   async findOne(id: string): Promise<Mobile> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
     const mobile = await this.mobileModel

@@ -15,6 +15,7 @@ export async function GET(
         headers: {
           Accept: "application/json",
         },
+        cache: "force-cache", // Cache lâu dài vì danh sách phường/xã ít thay đổi
       }
     );
 
@@ -23,7 +24,11 @@ export async function GET(
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    // Set cache headers cho client (browser)
+    const res = NextResponse.json(data);
+    res.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=3600');
+    return res;
   } catch (error) {
     console.error("Error fetching wards:", error);
     return NextResponse.json(

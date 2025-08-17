@@ -20,11 +20,11 @@ export interface ColorVariant {
   _id: string;
 }
 
-export type MobileType = {
+export interface MobileType {
   _id: string;
   type: string;
   __v: number;
-};
+}
 
 export interface Mobile {
   _id: string;

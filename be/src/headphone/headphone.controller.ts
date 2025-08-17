@@ -71,18 +71,21 @@ export class HeadphoneController {
     return this.headphoneService.getAllBrand();
   }
 
+  @Get("get-by-promotion")
+  getByPromotion() {
+    return this.headphoneService.findByPromotion();
+  }
+
   @Get("get-all-headphone-by-brand/:brand")
   getAllheadphoneByBrand(@Param("brand") brand: string) {
     return this.headphoneService.getAllheadphoneByBrand(brand);
   }
 
-  // Endpoint lấy thông tin một headphone theo ID
   @Get(":id")
   findOne(@Param("id") id: string): Promise<Headphone> {
     return this.headphoneService.findOne(id);
   }
 
-  // Endpoint cập nhật headphone
   @UseGuards(AuthGuard, RolesGuard)
   @Roles("ADMIN")
   @Patch(":id")

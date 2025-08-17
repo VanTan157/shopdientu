@@ -66,6 +66,11 @@ export class TabletController {
     return this.tabletService.findAll();
   }
 
+  @Get("get-by-promotion")
+  getByPromotion() {
+    return this.tabletService.findByPromotion();
+  }
+
   @Get("get-all-brand")
   getAllBranch() {
     return this.tabletService.getAllBrand();

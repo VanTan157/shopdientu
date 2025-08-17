@@ -4,7 +4,7 @@
 import { Mobile } from "@/lib/types/mobile";
 import { ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button"; // Từ shadcn/ui
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,9 +12,9 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
-} from "@/components/ui/dialog"; // Từ shadcn/ui
-import { Input } from "@/components/ui/input"; // Từ shadcn/ui
-import { Label } from "@/components/ui/label"; // Từ shadcn/ui
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";

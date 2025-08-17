@@ -81,6 +81,10 @@ export class HeadphoneService {
     return await this.headphoneModel.find().exec();
   }
 
+  async findByPromotion() {
+    return await this.headphoneModel.find({ isPromotion: true });
+  }
+
   // Lấy thông tin một headphone theo ID
   async findOne(id: string): Promise<Headphone> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");

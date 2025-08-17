@@ -33,7 +33,6 @@ const BtnBuyNow = ({
 }) => {
   const router = useRouter();
 
-  // State cho form
   const [isOpen, setIsOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -53,7 +52,6 @@ const BtnBuyNow = ({
   const isVietnamesePhoneNumber = (number: string) => {
     return /(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})\b/.test(number);
   };
-  // Gọi API tỉnh/thành phố
   useEffect(() => {
     const fetchProvinces = async () => {
       try {
@@ -71,10 +69,11 @@ const BtnBuyNow = ({
       } catch (error) {
         console.error("Error fetching provinces:", error);
         toast.error("Không thể tải danh sách tỉnh/thành phố!");
+      } finally {
       }
     };
     fetchProvinces();
-  }, [province]);
+  }, []); // Chỉ gọi 1 lần khi component mount
 
   useEffect(() => {
     if (district) {
@@ -271,10 +270,10 @@ const BtnBuyNow = ({
               <Select
                 value={province}
                 onValueChange={setProvince}
-                disabled={isLoading}
+                disabled={isLoading }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn tỉnh/thành phố" />
+                  <SelectValue placeholder={"Chọn tỉnh/thành phố"} />
                 </SelectTrigger>
                 <SelectContent>
                   {provinces.map((p) => (

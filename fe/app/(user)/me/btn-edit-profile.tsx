@@ -24,7 +24,7 @@ export function BtnEditProfile({ user }: { user: User }) {
   const router = useRouter();
   const handleSubmit = async () => {
     try {
-      const res = await apiPatch<User, {}>(`/users/${user._id}`, {
+      const res = await apiPatch<User, {}>(`auth/update-profile`, {
         name,
       });
       if (!res.data) {

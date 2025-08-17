@@ -1,9 +1,9 @@
-export type ColorVariant = {
+export interface ColorVariant {
   color: string;
   image: string;
   stock: number;
   _id: string;
-};
+}
 
 export interface Camera {
   rear: string;

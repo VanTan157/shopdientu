@@ -30,7 +30,7 @@ export function BtnChangPassWord({ user }: { user: User }) {
   const router = useRouter();
   const handleSubmit = async () => {
     try {
-      const res = await apiPatch(`/users/change-password/${user._id}`, {
+      const res = await apiPatch(`/auth/change-password`, {
         oldPass,
         newPass,
       });

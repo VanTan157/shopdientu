@@ -110,13 +110,13 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
     }
     const specs = formData.specifications;
     if (
-      !specs.screenSize.trim() ||
-      !specs.resolution.trim() ||
-      !specs.cpu.trim() ||
-      !specs.ram.trim() ||
-      !specs.storage.trim() ||
-      !specs.battery.trim() ||
-      !specs.os.trim()
+      !specs.screenSize ||
+      !specs.resolution ||
+      !specs.cpu ||
+      !specs.ram ||
+      !specs.storage ||
+      !specs.battery ||
+      !specs.os
     ) {
       toast.error("Vui lòng nhập đầy đủ thông số kỹ thuật!");
       setIsLoading(false);

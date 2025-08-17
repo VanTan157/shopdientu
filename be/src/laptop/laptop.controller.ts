@@ -76,6 +76,11 @@ export class LaptopController {
     return this.laptopService.getAllLaptopByBrand(brand);
   }
 
+  @Get("get-by-promotion")
+  getByPromotion() {
+    return this.laptopService.findByPromotion();
+  }
+
   // Endpoint lấy thông tin một laptop theo ID
   @Get(":id")
   findOne(@Param("id") id: string): Promise<Laptop> {

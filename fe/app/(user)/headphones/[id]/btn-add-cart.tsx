@@ -1,4 +1,3 @@
-// components/BtnAddToCart.tsx
 "use client";
 
 import { Mobile } from "@/lib/types/mobile";

@@ -24,7 +24,6 @@ const MobileHeader = () => {
       className="fixed top-22 left-0 z-50"
       onMouseLeave={() => setIsOpen(false)}
     >
-      {/* Trigger Button */}
       <div onMouseEnter={() => setIsOpen(true)}>
         <Button
           variant="outline"
