@@ -20,12 +20,6 @@ export interface ColorVariant {
   _id: string;
 }
 
-export interface MobileType {
-  _id: string;
-  type: string;
-  __v: number;
-}
-
 export interface Mobile {
   _id: string;
   name: string;
@@ -34,7 +28,7 @@ export interface Mobile {
   IsPromotion: boolean;
   finalPrice: number;
   description: string;
-  mobile_type_id: MobileType;
+  brand: string;
   specifications: MobileSpecifications;
   colorVariants: ColorVariant[];
   isAvailable: boolean;

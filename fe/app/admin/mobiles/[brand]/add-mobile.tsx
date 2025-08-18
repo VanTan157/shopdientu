@@ -1,7 +1,7 @@
 "use client";
 
 import { apiPost } from "@/lib/api";
-import { Mobile, MobileType } from "@/lib/types/mobile";
+import { Mobile } from "@/lib/types/mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,30 +12,25 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
+import { loadingStore } from "@/app/store/loading.store";
 
-interface AddMobileFormProps {
-  type?: string;
-  mobileTypes?: MobileType[];
-}
-
-const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
+const AddMobileForm = ({ brands }: { brands?: string[] }) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [mobileType, setMobileType] = useState<boolean>(false);
-  const [newMobileType, setNewMobileType] = useState<string>("");
+  const { start, stop } = loadingStore();
+  const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     StartingPrice: 0,
     promotion: 0,
     description: "",
-    mobile_type_id: "",
+    brand: "",
     specifications: {
       screenSize: "",
       resolution: "",
@@ -53,25 +48,23 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
   const [tagInput, setTagInput] = useState("");
   const [imagePreview, setImagePreview] = useState([] as string[]);
 
-  const handleAddMobileType = async () => {};
-
   const handleAddMobile = async () => {
-    setIsLoading(true);
+    start();
 
     // Validate dữ liệu
     if (!formData.name.trim()) {
       toast.error("Tên điện thoại không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (isNaN(Number(formData.StartingPrice))) {
       toast.error("Giá gốc phải là một số hợp lệ!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (formData.StartingPrice <= 0) {
       toast.error("Giá gốc phải lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -80,22 +73,17 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
       formData.promotion > 100
     ) {
       toast.error("Khuyến mãi phải là số từ 0 đến 100!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.description.trim()) {
       toast.error("Mô tả không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
-    if (!formData.mobile_type_id && !mobileType) {
-      toast.error("Vui lòng chọn loại điện thoại!");
-      setIsLoading(false);
-      return;
-    }
-    if (mobileType && !newMobileType.trim()) {
-      toast.error("Vui lòng nhập loại điện thoại mới!");
-      setIsLoading(false);
+    if (!formData.brand.trim()) {
+      toast.error("Vui lòng chọn thương hiệu!");
+      stop();
       return;
     }
     const specs = formData.specifications;
@@ -109,7 +97,7 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
       !specs.os.trim()
     ) {
       toast.error("Vui lòng nhập đầy đủ thông số kỹ thuật!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -121,40 +109,27 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
       toast.error(
         "Mỗi biến thể màu phải có tên, ảnh và số lượng tồn kho hợp lệ!"
       );
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.camera.rear.trim() || !formData.camera.front.trim()) {
       toast.error("Vui lòng nhập thông tin camera trước và sau!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (isNaN(Number(formData.weight)) || formData.weight <= 0) {
       toast.error("Trọng lượng phải là số lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
 
     try {
-      let mobileTypeId;
-      if (mobileType) {
-        const res = await apiPost<MobileType, {}>("/mobile-types", {
-          type: newMobileType,
-        });
-        if (!res.data) {
-          throw new Error("Không nhận được dữ liệu loại điện thoại mới!");
-        }
-        mobileTypeId = res.data._id;
-        toast.success("Thêm loại điện thoại mới thành công!");
-      }
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("StartingPrice", formData.StartingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
-      mobileType && mobileTypeId
-        ? formDataToSend.append("mobile_type_id", mobileTypeId)
-        : formDataToSend.append("mobile_type_id", formData.mobile_type_id);
+      formDataToSend.append("brand", formData.brand);
       formDataToSend.append(
         "specifications",
         JSON.stringify(formData.specifications)
@@ -176,7 +151,9 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
 
       const response = await apiPost<Mobile, FormData>(
         "/mobiles",
-        formDataToSend
+        formDataToSend,
+        undefined,
+        ["mobiles"]
       );
 
       if (response.error) throw new Error(response.error);
@@ -189,7 +166,7 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
         StartingPrice: 0,
         promotion: 0,
         description: "",
-        mobile_type_id: "",
+        brand: "",
         specifications: {
           screenSize: "",
           resolution: "",
@@ -206,12 +183,11 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
       });
       setTagInput("");
       setImagePreview([]);
-      setMobileType(false);
-      setNewMobileType("");
+      setIsAddingNewBrand(false);
     } catch (error) {
       toast.error("Có lỗi khi thêm điện thoại!");
     } finally {
-      setIsLoading(false);
+      stop();
     }
   };
 
@@ -267,7 +243,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="Nhập tên điện thoại"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -291,7 +266,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                 })
               }
               placeholder="Nhập giá gốc"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -315,7 +289,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                 })
               }
               placeholder="Nhập % khuyến mãi (nếu có)"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -335,41 +308,35 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Nhập mô tả"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* Mobile Type ID (Select) */}
-          {!mobileType ? (
+          {!isAddingNewBrand ? (
             <div>
-              <Label
-                htmlFor="mobile_type_id"
-                className="text-gray-700 font-medium mb-2"
-              >
+              <Label htmlFor="brand" className="text-gray-700 font-medium mb-2">
                 Loại điện thoại
               </Label>
               <div className="flex gap-2">
                 <select
-                  id="mobile_type_id"
-                  value={formData.mobile_type_id}
+                  id="brand"
+                  value={formData.brand}
                   onChange={(e) =>
-                    setFormData({ ...formData, mobile_type_id: e.target.value })
+                    setFormData({ ...formData, brand: e.target.value })
                   }
-                  disabled={isLoading}
                   className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Chọn loại điện thoại</option>
-                  {mobileTypes?.map((mt) => (
-                    <option key={mt._id} value={mt._id}>
-                      {mt.type} {mt.type === type && "(Hiện tại)"}
+                  {brands?.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
                     </option>
                   ))}
                 </select>
                 <Button
                   variant="outline"
-                  onClick={() => setMobileType(true)}
-                  disabled={isLoading}
+                  onClick={() => setIsAddingNewBrand(true)}
                   className="border-gray-300 text-gray-700 hover:bg-gray-100"
                 >
                   Tạo type mới
@@ -378,28 +345,25 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
             </div>
           ) : (
             <div>
-              <Label
-                htmlFor="mobile_type_id"
-                className="text-gray-700 font-medium mb-2"
-              >
+              <Label htmlFor="brand" className="text-gray-700 font-medium mb-2">
                 Loại điện thoại
               </Label>
               <div className="flex gap-2">
                 <Input
-                  id="mobile_type_id"
-                  value={newMobileType}
-                  onChange={(e) => setNewMobileType(e.target.value)}
+                  id="brand"
+                  value={formData.brand}
+                  onChange={(e) =>
+                    setFormData({ ...formData, brand: e.target.value })
+                  }
                   placeholder="Nhập loại điện thoại"
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <Button
                   variant="destructive"
                   onClick={() => {
-                    setMobileType(false);
-                    setNewMobileType("");
+                    setIsAddingNewBrand(false);
+                    setFormData({ ...formData, brand: "" });
                   }}
-                  disabled={isLoading}
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   Hủy
@@ -429,7 +393,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -449,7 +412,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -467,7 +429,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -485,7 +446,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -505,7 +465,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -523,7 +482,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -543,7 +501,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -567,7 +524,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     newVariants[index].color = e.target.value;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <div className="flex-1">
@@ -596,7 +552,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                         });
                       }
                     }}
-                    disabled={isLoading}
                     className="mt-2"
                   />
                 </div>
@@ -609,7 +564,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     newVariants[index].stock = parseInt(e.target.value) || 0;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {formData.colorVariants.length > 1 && (
@@ -617,7 +571,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     variant="destructive"
                     size="icon"
                     onClick={() => removeColorVariant(index)}
-                    disabled={isLoading}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -628,7 +581,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
             <Button
               variant="outline"
               onClick={addColorVariant}
-              disabled={isLoading}
               className="mt-2 border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -652,7 +604,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     camera: { ...formData.camera, rear: e.target.value },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -669,7 +620,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                     camera: { ...formData.camera, front: e.target.value },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -691,7 +641,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                 })
               }
               placeholder="Nhập trọng lượng"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -705,12 +654,10 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Nhập tag và nhấn Thêm"
                 onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddTag}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -731,7 +678,6 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -744,13 +690,8 @@ const AddMobileForm = ({ type, mobileTypes }: AddMobileFormProps) => {
           <Button
             onClick={handleAddMobile}
             className="w-full bg-blue-600 hover:bg-blue-700"
-            disabled={isLoading}
           >
-            {isLoading ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              "Thêm điện thoại"
-            )}
+            Thêm điện thoại
           </Button>
         </div>
       </DialogContent>

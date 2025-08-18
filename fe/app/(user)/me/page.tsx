@@ -61,7 +61,7 @@ const ProfilePage = async () => {
             </Link>
           )}
           <BtnEditProfile user={user} />
-          <BtnChangPassWord user={user} />
+          <BtnChangPassWord />
         </div>
       </div>
     </div>

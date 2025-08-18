@@ -24,12 +24,13 @@ import {
 import { Laptop } from "@/lib/types/laptop";
 import { useAddress } from "@/hooks/useAddress";
 import { loadingStore } from "@/app/store/loading.store";
+import { EProductType } from "@/lib/types/order";
 
 const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [quantity, setQuantity] = useState<number>(1);
   const { stop, start } = loadingStore();
 
   const {
@@ -47,10 +48,6 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
     getFullAddress,
   } = useAddress();
 
-  const handleBuyNow = async () => {
-    setIsOpen(true);
-  };
-
   const isVietnamesePhoneNumber = (number: string) => {
     return /(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})\b/.test(number);
   };
@@ -58,7 +55,6 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
   const handleConfirmBuy = async () => {
     start();
     try {
-      // Kiểm tra tính hợp lệ
       if (!product.isAvailable || product.colorVariants[index].stock === 0) {
         toast.error("Sản phẩm không khả dụng hoặc hết hàng!");
         setIsOpen(false);
@@ -88,11 +84,10 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
         return;
       }
 
-      // Bước 1: Tạo OrderItem
       const orderItemData = {
         product_id: product._id,
-        product_type: "laptop",
-        quantity: quantity, // Số lượng từ form
+        product_type: EProductType.LAPTOP,
+        quantity: quantity,
         colorVariant: {
           _id: product.colorVariants[index]._id,
           color: product.colorVariants[index].color,
@@ -111,41 +106,26 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
 
       const orderItemId = orderItemResponse.data._id;
 
-      // Bước 2: Tạo Order
       const orderData = {
         orderitem_ids: [orderItemId],
         phone_number: phoneNumber,
         address: getFullAddress(),
       };
-
       const orderResponse = await apiPost<any, typeof orderData>(
         "/order",
         orderData
       );
-
       if (orderResponse.error) {
         throw new Error(orderResponse.error);
       }
-
       toast.success("Đơn hàng đã được tạo thành công!");
       setIsOpen(false);
-      router.refresh(); // Refresh trang để cập nhật giỏ hàng
+      router.refresh();
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        console.error("Error creating order:", error);
         toast.error("Có lỗi khi tạo đơn hàng!");
-      }
-
-      // Thử refresh token nếu lỗi do token
-      if (
-        error instanceof Error &&
-        (error.message.includes("Unauthorized") ||
-          error.message.includes("Failed to refresh token"))
-      ) {
-        toast.info("Đang thử lại sau khi làm mới token...");
-        handleConfirmBuy(); // Thử lại
       }
     } finally {
       stop();
@@ -159,7 +139,7 @@ const BtnBuyNow = ({ product, index }: { product: Laptop; index: number }) => {
         disabled={
           !product.isAvailable || product.colorVariants[index].stock === 0
         }
-        onClick={handleBuyNow}
+        onClick={() => setIsOpen(true)}
       >
         <ShoppingBag className="w-5 h-5" />
         Mua ngay

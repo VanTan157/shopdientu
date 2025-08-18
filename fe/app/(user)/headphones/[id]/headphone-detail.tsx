@@ -6,7 +6,7 @@ import BtnAddToCart from "./btn-add-cart";
 import { Headphone } from "@/lib/types/headphone";
 
 const HeadphoneDetail = ({ product }: { product: Headphone }) => {
-  const [colorVariant, setColorVariant] = useState(0);
+  const [colorVariant, setColorVariant] = useState<number>(0);
   const totalStock = product.colorVariants.reduce(
     (sum, variant) => sum + variant.stock,
     0
@@ -16,7 +16,6 @@ const HeadphoneDetail = ({ product }: { product: Headphone }) => {
     <section className="container mx-auto p-5 my-10 rounded-lg shadow-lg">
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Hình ảnh sản phẩm */}
           <div className="relative w-full h-40 md:h-96 rounded-lg overflow-hidden shadow-lg">
             <Image
               src={
@@ -35,13 +34,11 @@ const HeadphoneDetail = ({ product }: { product: Headphone }) => {
             )}
           </div>
 
-          {/* Thông tin sản phẩm */}
           <div>
             <h1 className="text-xl md:text-4xl font-bold mb-4 text-cyan-300">
               {product.name}
             </h1>
 
-            {/* Giá */}
             <div className="mb-4 flex items-center">
               <span className="text-gray-500 line-through text-xs md:text-lg">
                 {product.startingPrice.toLocaleString("vi-VN")} ₫
@@ -51,7 +48,6 @@ const HeadphoneDetail = ({ product }: { product: Headphone }) => {
               </span>
             </div>
 
-            {/* Tình trạng */}
             <p className="mb-4">
               <span className="font-semibold text-base md:text-xl">
                 Tình trạng:{" "}
@@ -67,7 +63,6 @@ const HeadphoneDetail = ({ product }: { product: Headphone }) => {
               )}
             </p>
 
-            {/* Màu sắc */}
             <div className="mb-4">
               <p className="font-semibold text-base md:text-xl">Màu sắc:</p>
               <div className="flex gap-2 mt-2">
@@ -94,14 +89,13 @@ const HeadphoneDetail = ({ product }: { product: Headphone }) => {
               </div>
             </div>
 
-            {/* Nút hành động */}
             <div className="md:flex gap-4 pt-4 space-y-2">
               <BtnBuyNow product={product} index={colorVariant} />
               <BtnAddToCart product={product} index={colorVariant} />
             </div>
           </div>
         </div>
-        {/* Thông số kỹ thuật */}
+
         <div className="mt-6">
           <p className="text-white mb-4 whitespace-pre-wrap text-sm md:text-base">
             {product.description}
@@ -166,7 +160,6 @@ const HeadphoneDetail = ({ product }: { product: Headphone }) => {
             </div>
           </ul>
 
-          {/* Thông tin bổ sung */}
           <hr className="my-6" />
           <div className="mt-4">
             <h3 className="text-2xl font-semibold mb-2 text-indigo-400 uppercase pt-4">

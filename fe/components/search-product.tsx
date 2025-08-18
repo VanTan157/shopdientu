@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { set } from "date-fns";
 
 const SearchProduct = () => {
   const [search, setSearch] = useState("");

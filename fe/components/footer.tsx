@@ -1,4 +1,3 @@
-// components/Footer.tsx
 import { Facebook, Instagram, Youtube, Phone, Mail } from "lucide-react"; // Icon từ lucide-react
 import Link from "next/link";
 

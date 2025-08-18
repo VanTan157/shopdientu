@@ -28,7 +28,6 @@ const LaptopTable = ({ tablets }: { tablets: Tablet[] }) => {
   const [filterStatus, setFilterStatus] = useState<string>("Tất cả");
   const [filterPromotion, setFilterPromotion] = useState<string>("Tất cả");
 
-  // Logic tìm kiếm và lọc
   const filteredTablets = tablets.filter((tablet) => {
     const matchesSearch = tablet.name
       .toLowerCase()

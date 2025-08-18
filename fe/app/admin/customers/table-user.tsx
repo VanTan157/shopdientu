@@ -75,8 +75,8 @@ export function TableUser({ users }: { users: User[] }) {
         </TableHeader>
         <TableBody>
           {filteredUsers.map((user) => (
-            <TableRow key={user._id}>
-              <TableCell>{user._id}</TableCell>
+            <TableRow key={user.userId}>
+              <TableCell>{user.userId}</TableCell>
               <TableCell>{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>{user.type}</TableCell>

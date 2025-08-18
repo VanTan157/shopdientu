@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
+import { loadingStore } from "@/app/store/loading.store";
 
 export default function ActiveAccount({
   open,
@@ -21,53 +22,66 @@ export default function ActiveAccount({
 }) {
   const [email, setEmail] = useState<string>("");
   const [sent, setSent] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
+  const { start, stop } = loadingStore();
   const [code, setCode] = useState<string>("");
 
   const handleSendAgain = async () => {
-    setLoading(true);
-    const res = await apiPost("/users/send-code-again", {
-      email,
-    });
-    if (res.error) {
-      toast.error(res.error);
-      return;
+    start();
+    try {
+      const res = await apiPost("/users/send-code-again", {
+        email,
+      });
+      if (res.error) {
+        toast.error(res.error);
+        stop();
+        return;
+      }
+      toast.success("Chúng tôi đã gửi lại mã xác thực đến email của bạn");
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
     }
-    toast.success("Chúng tôi đã gửi lại mã xác thực đến email của bạn");
-    setLoading(false);
+    stop();
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
+    start();
     try {
       const res = await apiPost(`/users/send-code-again`, {
         email,
       });
       if (res.error) {
         toast.error(res.error);
-        setLoading(false);
+        stop();
         return;
       }
       toast.success("Chúng tôi đã gửi mã xác thực đến email của bạn");
       setSent(true);
-    } catch (error) {}
-    setLoading(false);
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+    }
+    stop();
   };
 
   const handleVerify = async () => {
-    setLoading(true);
-    const res = await apiPost("/users/verify", {
-      email,
-      code,
-    });
-    console.log(res);
-    if (res.error) {
-      toast.error(res.error);
-      return;
+    start();
+    try {
+      const res = await apiPost("/users/verify", {
+        email,
+        code,
+      });
+      console.log(res);
+      if (res.error) {
+        stop();
+        toast.error(res.error);
+        return;
+      }
+      toast.success("Kích hoạt tài khoản thành công");
+      stop();
+      setOpen(false);
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
     }
-    toast.success("Kích hoạt tài khoản thành công");
-    setLoading(false);
-    setOpen(false);
+    stop();
   };
 
   return (
@@ -89,12 +103,8 @@ export default function ActiveAccount({
                 required
               />
               <DialogFooter>
-                <Button type="button" onClick={handleSubmit} disabled={loading}>
-                  {loading ? (
-                    <span className="inline-block w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
-                  ) : (
-                    <span>Gửi</span>
-                  )}
+                <Button type="button" onClick={handleSubmit}>
+                  Gửi
                 </Button>
               </DialogFooter>
             </form>
@@ -108,23 +118,11 @@ export default function ActiveAccount({
                 autoFocus
               />
               <DialogFooter>
-                <Button
-                  type="button"
-                  onClick={handleSendAgain}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span className="inline-block w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
-                  ) : (
-                    <span>Gửi lại mã</span>
-                  )}
+                <Button type="button" onClick={handleSendAgain}>
+                  Gửi lại mã
                 </Button>
-                <Button type="button" onClick={handleVerify} disabled={loading}>
-                  {loading ? (
-                    <span className="inline-block w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
-                  ) : (
-                    <span>Xác nhận</span>
-                  )}
+                <Button type="button" onClick={handleVerify}>
+                  Xác nhận
                 </Button>
               </DialogFooter>
             </form>

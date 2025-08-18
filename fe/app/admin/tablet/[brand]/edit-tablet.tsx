@@ -17,16 +17,18 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { loadingStore } from "@/app/store/loading.store";
 
-interface EditTabletProps {
+const EditTablet = ({
+  tablet,
+  children,
+}: {
   tablet: Tablet;
   children: React.ReactNode;
-}
-
-const EditTablet = ({ tablet, children }: EditTabletProps) => {
+}) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { start, stop } = loadingStore();
   const [formData, setFormData] = useState({
     name: tablet.name || "",
     brand: tablet.brand || "",
@@ -89,27 +91,27 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
   }, [imagePreview]);
 
   const handleUpdateTablet = async () => {
-    setIsLoading(true);
+    start();
 
     // Validation dữ liệu
     if (!formData.name.trim()) {
       toast.error("Tên máy tính bảng không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.brand.trim()) {
       toast.error("Thương hiệu không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.category.trim()) {
       toast.error("Danh mục không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (isNaN(formData.startingPrice) || formData.startingPrice <= 0) {
       toast.error("Giá gốc phải lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -118,27 +120,27 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
       formData.promotion > 100
     ) {
       toast.error("Khuyến mãi phải từ 0 đến 100!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.description.trim()) {
       toast.error("Mô tả không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.warranty.trim()) {
       toast.error("Bảo hành không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.slug.trim()) {
       toast.error("Slug không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.sku.trim()) {
       toast.error("SKU không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -149,7 +151,7 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
       )
     ) {
       toast.error("Mỗi biến thể màu phải có tên và số lượng tồn kho hợp lệ!");
-      setIsLoading(false);
+      stop();
       return;
     }
 
@@ -222,7 +224,7 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
     } catch (error) {
       toast.error("Có lỗi khi cập nhật máy tính bảng!");
     } finally {
-      setIsLoading(false);
+      stop();
     }
   };
 
@@ -306,7 +308,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="Nhập tên máy tính bảng"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -323,7 +324,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 setFormData({ ...formData, brand: e.target.value })
               }
               placeholder="Nhập thương hiệu"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -340,7 +340,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 setFormData({ ...formData, category: e.target.value })
               }
               placeholder="Nhập danh mục"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -364,7 +363,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 })
               }
               placeholder="Nhập giá gốc"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -385,7 +383,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 })
               }
               placeholder="Nhập % khuyến mãi (nếu có)"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -402,7 +399,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Nhập mô tả"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -419,7 +415,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 setFormData({ ...formData, warranty: e.target.value })
               }
               placeholder="Nhập thời gian bảo hành"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -436,7 +431,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 setFormData({ ...formData, slug: e.target.value })
               }
               placeholder="Nhập slug (ví dụ: ipad-pro-2024)"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -453,7 +447,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 setFormData({ ...formData, sku: e.target.value })
               }
               placeholder="Nhập mã SKU"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -484,7 +477,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -507,7 +499,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -530,7 +521,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -553,7 +543,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -576,7 +565,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -600,7 +588,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -624,7 +611,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -648,7 +634,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -671,7 +656,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -694,7 +678,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -717,7 +700,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -741,7 +723,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -764,7 +745,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -781,7 +761,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300"
               />
               <Label htmlFor="simSupport" className="text-gray-700 font-medium">
@@ -801,7 +780,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300"
               />
               <Label
@@ -839,7 +817,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -863,7 +840,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -887,7 +863,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -910,7 +885,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 })
               }
               placeholder="Nhập trọng lượng"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -931,7 +905,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     newVariants[index].color = e.target.value;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <div className="flex-1">
@@ -965,7 +938,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                         });
                       }
                     }}
-                    disabled={isLoading}
                     className="mt-2"
                   />
                 </div>
@@ -978,7 +950,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     newVariants[index].stock = parseInt(e.target.value) || 0;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {formData.colorVariants.length > 1 && (
@@ -986,7 +957,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                     variant="destructive"
                     size="icon"
                     onClick={() => removeColorVariant(index)}
-                    disabled={isLoading}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -997,7 +967,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
             <Button
               variant="outline"
               onClick={addColorVariant}
-              disabled={isLoading}
               className="mt-2 border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -1013,12 +982,10 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 value={connectivityInput}
                 onChange={(e) => setConnectivityInput(e.target.value)}
                 placeholder="Nhập kết nối và nhấn Thêm"
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddConnectivity}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -1041,7 +1008,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -1058,12 +1024,10 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 value={accessoryInput}
                 onChange={(e) => setAccessoryInput(e.target.value)}
                 placeholder="Nhập phụ kiện và nhấn Thêm"
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddAccessory}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -1086,7 +1050,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -1104,12 +1067,10 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Nhập tag và nhấn Thêm"
                 onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddTag}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -1130,7 +1091,6 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -1144,17 +1104,15 @@ const EditTablet = ({ tablet, children }: EditTabletProps) => {
             <Button
               variant="outline"
               onClick={() => setIsOpen(false)}
-              disabled={isLoading}
               className="border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               Hủy
             </Button>
             <Button
               onClick={handleUpdateTablet}
-              disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Đang cập nhật..." : "Cập nhật"}
+              Cập nhật
             </Button>
           </div>
         </div>

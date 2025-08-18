@@ -27,6 +27,7 @@ import { useState } from "react";
 import { apiPatch, apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { loadingStore } from "@/app/store/loading.store";
 
 export function EditUser({
   children,
@@ -38,16 +39,24 @@ export function EditUser({
   const [userEdit, setUserEdit] = useState<User>(user);
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const { start, stop } = loadingStore();
 
   const handleSubmit = async () => {
-    const res = await apiPatch<User, User>(`/users/${user._id}`, userEdit);
-    if (!res.data) {
-      toast.error(res.error || "Lỗi cập nhật người dùng");
-      return;
+    try {
+      start();
+      const res = await apiPatch<User, User>(`/users/${user.userId}`, userEdit);
+      if (!res.data) {
+        toast.error(res.error || "Lỗi cập nhật người dùng");
+        return;
+      }
+      toast.success("Cập nhật người dùng thành công");
+      router.refresh();
+      setIsOpen(false);
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi khi cập nhật người dùng");
+    } finally {
+      stop();
     }
-    toast.success("Cập nhật người dùng thành công");
-    router.refresh();
-    setIsOpen(false);
   };
 
   const handCancel = () => {

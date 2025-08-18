@@ -15,13 +15,11 @@ const MobileList = ({ mobiles }: { mobiles: Mobile[] }) => {
             className="relative rounded-lg p-2 xs:p-3 sm:p-4 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 bg-gradient-to-b from-zinc-600 to-zinc-800 text-white"
           >
             <Link href={`/mobiles/${mobile._id}`}>
-              {/* Phần trăm khuyến mãi ở góc trên bên trái */}
               {mobile.promotion > 0 && (
                 <span className="absolute z-1 top-1 xs:top-2 left-1 xs:left-2 bg-red-500 text-white text-[10px] xs:text-xs font-medium px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full">
                   -{mobile.promotion}%
                 </span>
               )}
-              {/* Hình ảnh */}
               <div className="relative w-full h-32 xs:h-40 sm:h-48 mb-2 xs:mb-3 sm:mb-4">
                 <Image
                   src={
@@ -33,7 +31,6 @@ const MobileList = ({ mobiles }: { mobiles: Mobile[] }) => {
                   className="object-contain rounded-md"
                 />
               </div>
-              {/* Thông tin sản phẩm */}
               <h3 className="text-[10px] xs:text-xs sm:text-sm md:text-base font-semibold text-cyan-300 mb-1 xs:mb-2">
                 {mobile.name}
               </h3>

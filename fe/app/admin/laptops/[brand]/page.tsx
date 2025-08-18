@@ -1,8 +1,6 @@
 import { apiGet } from "@/lib/api";
 import LaptopTable from "./laptop-table";
 import { Laptop } from "@/lib/types/laptop";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import AddLaptopForm from "./add-laptop";
 
 export default async function Page({

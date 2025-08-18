@@ -19,7 +19,6 @@ const Banner = ({
 }) => {
   return (
     <section className="w-full h-80 xs:h-80 sm:h-80 md:h-[20rem]  bg-gradient-to-tr from-[#0f2027] via-[#2c5364] to-[#24243e] rounded-2xl xs:rounded-3xl shadow-2xl p-4 xs:p-5 sm:p-6 flex items-center justify-center relative overflow-hidden">
-      {/* Decorative blurred neon circles */}
       <div className="absolute -top-8 xs:-top-10 -left-8 xs:-left-10 w-40 xs:w-48 sm:w-56 h-40 xs:h-48 sm:h-56 bg-cyan-400 opacity-40 rounded-full blur-2xl xs:blur-3xl z-0 animate-pulse" />
       <div className="absolute -bottom-12 xs:-bottom-16 -right-12 xs:-right-16 w-48 xs:w-60 sm:w-72 h-48 xs:h-60 sm:h-72 bg-fuchsia-500 opacity-30 rounded-full blur-2xl xs:blur-3xl z-0 animate-pulse" />
       <div className="absolute top-1/2 left-1/2 w-64 xs:w-80 sm:w-96 h-64 xs:h-80 sm:h-96 bg-gradient-radial from-cyan-400/20 via-transparent to-transparent rounded-full blur-xl xs:blur-2xl z-0 pointer-events-none -translate-x-1/2 -translate-y-1/2" />

@@ -13,14 +13,10 @@ import { apiPatch } from "@/lib/api";
 import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-
-interface EditHeadphoneProps {
-  headphone: Headphone;
-  children: React.ReactNode;
-}
+import { loadingStore } from "@/app/store/loading.store";
 
 const defaultSpecifications = {
   driverType: "",
@@ -36,10 +32,16 @@ const defaultSpecifications = {
   audioQuality: "",
 };
 
-const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
+const EditHeadphone = ({
+  headphone,
+  children,
+}: {
+  headphone: Headphone;
+  children: React.ReactNode;
+}) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { start, stop } = loadingStore();
   const [formData, setFormData] = useState({
     name: headphone.name,
     brand: headphone.brand,
@@ -87,36 +89,33 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
         if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
       });
     };
-    // eslint-disable-next-line
   }, []);
 
   const handleUpdateHeadphone = async () => {
-    setIsLoading(true);
-
-    // Validate dữ liệu cơ bản
+    start();
     if (!formData.name.trim()) {
       toast.error("Tên tai nghe không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.brand.trim()) {
       toast.error("Thương hiệu không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.type.trim()) {
       toast.error("Loại tai nghe không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.slug.trim()) {
       toast.error("Đường dẫn SEO không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.sku.trim()) {
       toast.error("Mã hàng hóa không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -124,22 +123,22 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
       Number(formData.startingPrice) <= 0
     ) {
       toast.error("Giá gốc phải là số lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (isNaN(Number(formData.promotion)) || Number(formData.promotion) < 0) {
       toast.error("Khuyến mãi phải là số không âm!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.description.trim()) {
       toast.error("Mô tả không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.warranty.trim()) {
       toast.error("Bảo hành không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     // Validate biến thể màu
@@ -157,7 +156,7 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
       toast.error(
         "Mỗi biến thể màu phải có tên, ảnh (hoặc ảnh hiện tại), và số lượng tồn kho hợp lệ!"
       );
-      setIsLoading(false);
+      stop();
       return;
     }
 
@@ -217,7 +216,7 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
     } catch (error) {
       toast.error("Có lỗi khi cập nhật tai nghe!");
     } finally {
-      setIsLoading(false);
+      stop();
     }
   };
 
@@ -292,7 +291,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="Nhập tên tai nghe"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -309,7 +307,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 setFormData({ ...formData, brand: e.target.value })
               }
               placeholder="Nhập thương hiệu"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -326,7 +323,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 setFormData({ ...formData, type: e.target.value })
               }
               placeholder="Nhập loại tai nghe"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -343,7 +339,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 setFormData({ ...formData, slug: e.target.value })
               }
               placeholder="Nhập đường dẫn SEO"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -360,7 +355,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 setFormData({ ...formData, sku: e.target.value })
               }
               placeholder="Nhập mã hàng hóa"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -384,7 +378,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 })
               }
               placeholder="Nhập giá gốc"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -405,7 +398,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 })
               }
               placeholder="Nhập % khuyến mãi (nếu có)"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -422,7 +414,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Nhập mô tả"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -439,7 +430,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 setFormData({ ...formData, warranty: e.target.value })
               }
               placeholder="Nhập thời gian bảo hành"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -465,7 +455,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -486,7 +475,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -506,7 +494,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -527,7 +514,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -548,7 +534,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -568,7 +553,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -589,7 +573,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -610,7 +593,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -630,7 +612,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -650,7 +631,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -670,7 +650,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -699,7 +678,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -720,7 +698,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -741,7 +718,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -764,7 +740,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 })
               }
               placeholder="Nhập trọng lượng"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -785,7 +760,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     newVariants[index].color = e.target.value;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <div className="flex-1">
@@ -818,7 +792,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                         });
                       }
                     }}
-                    disabled={isLoading}
                     className="mt-2"
                   />
                 </div>
@@ -831,7 +804,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     newVariants[index].stock = parseInt(e.target.value) || 0;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {formData.colorVariants.length > 1 && (
@@ -839,7 +811,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                     variant="destructive"
                     size="icon"
                     onClick={() => removeColorVariant(index)}
-                    disabled={isLoading}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -850,7 +821,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
             <Button
               variant="outline"
               onClick={addColorVariant}
-              disabled={isLoading}
               className="mt-2 border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -866,12 +836,10 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 value={connectivityInput}
                 onChange={(e) => setConnectivityInput(e.target.value)}
                 placeholder="Nhập kết nối và nhấn Thêm"
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddConnectivity}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -894,7 +862,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -911,12 +878,10 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 value={accessoryInput}
                 onChange={(e) => setAccessoryInput(e.target.value)}
                 placeholder="Nhập phụ kiện và nhấn Thêm"
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddAccessory}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -939,7 +904,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -957,12 +921,10 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Nhập tag và nhấn Thêm"
                 onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddTag}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -983,7 +945,6 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -997,17 +958,15 @@ const EditHeadphone = ({ headphone, children }: EditHeadphoneProps) => {
             <Button
               variant="outline"
               onClick={() => setIsOpen(false)}
-              disabled={isLoading}
               className="border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               Hủy
             </Button>
             <Button
               onClick={handleUpdateHeadphone}
-              disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Đang cập nhật..." : "Cập nhật"}
+              Cập nhật
             </Button>
           </div>
         </div>

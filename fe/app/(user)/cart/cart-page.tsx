@@ -22,8 +22,8 @@ import { ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { Checkbox } from "@/components/ui/checkbox";
 import { apiDelete, apiPost } from "@/lib/api";
-import { Input } from "@/components/ui/input"; // Thêm Input từ shadcn/ui
-import { Label } from "@/components/ui/label"; // Thêm Label từ shadcn/ui
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -36,14 +36,15 @@ import {
 import { CartItem } from "@/lib/types/order-item";
 import { useCartStore } from "@/app/store/cart-store";
 import { useAddress } from "@/hooks/useAddress";
+import { loadingStore } from "@/app/store/loading.store";
 
 const CartPage = ({ carts }: { carts: CartItem[] }) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const { cartItemCount, setCartItemCount } = useCartStore();
+  const { start, stop } = loadingStore();
 
   const {
     provinces,
@@ -60,7 +61,6 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
     getFullAddress,
   } = useAddress();
 
-  // Xử lý chọn/bỏ chọn sản phẩm
   const handleSelectItem = (itemId: string) => {
     setSelectedItems((prev) =>
       prev.includes(itemId)
@@ -69,13 +69,12 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
     );
   };
 
-  // Tính tổng tiền của các sản phẩm được chọn
   const selectedTotal = carts
     .filter((item) => selectedItems.includes(item._id))
     .reduce((sum, item) => sum + item.total_price, 0);
 
-  // Xóa sản phẩm khỏi giỏ hàng
   const handleDelete = async (itemId: string) => {
+    start();
     try {
       const res = await apiDelete<any>(`/order-items/${itemId}`);
       if (res.error) {
@@ -89,12 +88,13 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
       console.error("Error deleting item:", error);
       toast.error("Có lỗi khi xóa sản phẩm!");
     }
+    stop();
   };
   const isVietnamesePhoneNumber = (number: string) => {
     return /(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})\b/.test(number);
   };
-  // Xác nhận mua các sản phẩm được chọn
   const handleCheckout = async () => {
+    start();
     if (!phoneNumber || !street || !province || !district || !ward) {
       toast.error("Vui lòng điền đầy đủ thông tin!");
       return;
@@ -113,7 +113,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
       if (res.error) {
         throw new Error(res.error);
       }
-      setCartItemCount(cartItemCount - selectedItems.length); // Reset cart item count
+      setCartItemCount(cartItemCount - selectedItems.length);
       toast.success("Đặt hàng thành công!");
       router.refresh();
       setSelectedItems([]);
@@ -123,6 +123,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
       console.error("Error during checkout:", error);
       toast.error("Có lỗi khi đặt hàng!");
     }
+    stop();
   };
 
   if (carts.length === 0) {
@@ -134,8 +135,6 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
       <h1 className="text-4xl pb-6 font-extrabold bg-gradient-to-r from-cyan-400 to-blue-600 text-transparent bg-clip-text drop-shadow-lg">
         Giỏ hàng của bạn
       </h1>
-
-      {/* Bảng danh sách sản phẩm */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -278,11 +277,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
                 <Label htmlFor="province" className="mb-2">
                   Tỉnh/Thành phố
                 </Label>
-                <Select
-                  value={province}
-                  onValueChange={setProvince}
-                  disabled={isLoading}
-                >
+                <Select value={province} onValueChange={setProvince}>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn tỉnh/thành phố" />
                   </SelectTrigger>
@@ -302,7 +297,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
                 <Select
                   value={district}
                   onValueChange={setDistrict}
-                  disabled={isLoading || !province}
+                  disabled={!province}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn quận/huyện" />
@@ -323,7 +318,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
                 <Select
                   value={ward}
                   onValueChange={setWard}
-                  disabled={isLoading || !district}
+                  disabled={!district}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn phường/xã" />
@@ -346,7 +341,6 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
                   value={street}
                   onChange={(e) => setStreet(e.target.value)}
                   placeholder="Nhập đường, số nhà"
-                  disabled={isLoading}
                 />
               </div>
             </div>

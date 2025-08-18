@@ -6,16 +6,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tablet } from "@/lib/types/tablet";
-import { table } from "console";
 import Image from "next/image";
 import React from "react";
 
-interface ViewLaptopDetailProps {
+const ViewLaptopDetail = ({
+  tablet,
+  children,
+}: {
   tablet: Tablet;
   children: React.ReactNode;
-}
-
-const ViewLaptopDetail = ({ tablet, children }: ViewLaptopDetailProps) => {
+}) => {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>

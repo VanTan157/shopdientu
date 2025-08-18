@@ -17,17 +17,13 @@ import ViewMobileDetail from "./view-mobile-detail";
 import DeleteMobile from "./delete-mobile";
 import EditMobile from "./edit-mobile";
 
-interface MobileFilterTableProps {
-  initialMobiles: Mobile[];
-}
-
-const MobileFilterTable = ({ initialMobiles }: MobileFilterTableProps) => {
+const MobileTable = ({ mobiles }: { mobiles: Mobile[] }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [filterPromotion, setFilterPromotion] = useState<string>("");
 
   // Logic tìm kiếm và lọc
-  const filteredMobiles = initialMobiles.filter((mobile) => {
+  const filteredMobiles = mobiles.filter((mobile) => {
     const matchesSearch = mobile.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -38,7 +34,7 @@ const MobileFilterTable = ({ initialMobiles }: MobileFilterTableProps) => {
       mobile.IsPromotion.toString() === filterPromotion;
     return matchesSearch && matchesStatus && matchesPromotion;
   });
-  if (initialMobiles.length === 0) {
+  if (mobiles.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
         <p className="text-lg text-gray-600 font-medium">
@@ -140,4 +136,4 @@ const MobileFilterTable = ({ initialMobiles }: MobileFilterTableProps) => {
   );
 };
 
-export default MobileFilterTable;
+export default MobileTable;

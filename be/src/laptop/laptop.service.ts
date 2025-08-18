@@ -238,10 +238,10 @@ export class LaptopService {
 
   async getAllBrand(): Promise<string[]> {
     const laptops = await this.laptopModel.find().exec();
-    const brands = new Array<string>();
+    const brands = new Set<string>();
     laptops.forEach((laptop) => {
       if (laptop.brand) {
-        brands.push(laptop.brand);
+        brands.add(laptop.brand);
       }
     });
     return Array.from(brands);

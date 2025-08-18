@@ -29,7 +29,7 @@ export class Order extends Document {
     ],
     default: "Đang chờ xác nhận",
   })
-  status: string; // Trạng thái đơn hàng
+  status: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

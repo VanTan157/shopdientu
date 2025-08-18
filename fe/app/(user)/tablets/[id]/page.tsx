@@ -9,7 +9,6 @@ export default async function Page({
 }) {
   const { id } = await params;
   const res = await apiGet<Tablet>(`/tablets/${id}`);
-  if (!res) return <div>Loading...</div>;
   if (!res.data) return <div>Product not found</div>;
   return <TabletDetail product={res.data} />;
 }

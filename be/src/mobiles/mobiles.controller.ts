@@ -61,6 +61,16 @@ export class MobilesController {
     return this.mobilesService.findAll();
   }
 
+  @Get("get-all-brand")
+  getAllBranch() {
+    return this.mobilesService.getAllBrand();
+  }
+
+  @Get("get-all-mobile-by-brand/:brand")
+  getAllMobileByBrand(@Param("brand") brand: string) {
+    return this.mobilesService.getAllMobileByBrand(brand);
+  }
+
   @Get("get-by-promotion")
   getByPromotion() {
     return this.mobilesService.findByPromotion();
@@ -110,10 +120,8 @@ export class MobilesController {
     return this.mobilesService.remove(id);
   }
 
-  @Get("type/:mobileTypeId")
-  async findByMobileType(
-    @Param("mobileTypeId") mobileTypeId: string
-  ): Promise<Mobile[]> {
-    return this.mobilesService.findByMobileType(mobileTypeId);
+  @Get("type/:branch")
+  async findByBranch(@Param("branch") branch: string): Promise<Mobile[]> {
+    return this.mobilesService.getAllMobileByBrand(branch);
   }
 }

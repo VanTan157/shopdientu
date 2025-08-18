@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { MobileTypesService } from "src/mobile-types/mobile-types.service";
 import { Mobile } from "./entities/mobiles.entity";
 import { CreateMobileDto } from "./dto/create-mobiles.dto";
 import { UpdateMobileDto } from "./dto/update-mobiles.dto";
@@ -12,20 +11,12 @@ const unlinkAsync = promisify(fs.unlink);
 
 @Injectable()
 export class MobilesService {
-  constructor(
-    @InjectModel(Mobile.name) private mobileModel: Model<Mobile>,
-    private mobileTypesService: MobileTypesService
-  ) {}
+  constructor(@InjectModel(Mobile.name) private mobileModel: Model<Mobile>) {}
 
   async create(
     createMobileDto: CreateMobileDto,
     files: Express.Multer.File[]
   ): Promise<Mobile> {
-    const mobileType = await this.mobileTypesService.findOne(
-      createMobileDto.mobile_type_id
-    );
-    if (!mobileType) throw new NotFoundException("Mobile type không tồn tại");
-
     const promotion = createMobileDto.promotion ?? 0;
     const IsPromotion = promotion > 0;
     const finalPrice =
@@ -60,7 +51,6 @@ export class MobilesService {
     try {
       return await newMobile.save();
     } catch (error) {
-      // Kiểm tra xem ảnh đã được sử dụng bởi sản phẩm khác chưa trước khi xóa
       const imagePaths = colorVariants.map((variant) => variant.image);
       const imagesInUse = await this.mobileModel
         .find({ "colorVariants.image": { $in: imagePaths } })
@@ -89,7 +79,7 @@ export class MobilesService {
   }
 
   async findAll(): Promise<Mobile[]> {
-    return this.mobileModel.find().populate("mobile_type_id").exec();
+    return this.mobileModel.find().exec();
   }
 
   async findByPromotion(): Promise<Mobile[]> {
@@ -98,10 +88,7 @@ export class MobilesService {
 
   async findOne(id: string): Promise<Mobile> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
-    const mobile = await this.mobileModel
-      .findById(id)
-      .populate("mobile_type_id")
-      .exec();
+    const mobile = await this.mobileModel.findById(id).exec();
     if (!mobile) throw new NotFoundException("Mobile không tồn tại");
     return mobile;
   }
@@ -232,14 +219,24 @@ export class MobilesService {
     return await this.mobileModel.findByIdAndDelete(id).exec();
   }
 
-  async findByMobileType(mobileTypeId: string): Promise<Mobile[]> {
-    if (!Types.ObjectId.isValid(mobileTypeId))
-      throw new NotFoundException("Mobile type ID không hợp lệ");
-    const mobileType = await this.mobileTypesService.findOne(mobileTypeId);
-    if (!mobileType) throw new NotFoundException("Mobile type không tồn tại");
-    return this.mobileModel
-      .find({ mobile_type_id: mobileTypeId })
-      .populate("mobile_type_id")
-      .exec();
+  async getAllBrand(): Promise<string[]> {
+    const mobiles = await this.mobileModel.find().exec();
+    const brands = new Set<string>();
+    mobiles.forEach((mobile) => {
+      if (mobile.brand) {
+        brands.add(mobile.brand);
+      }
+    });
+    return Array.from(brands);
+  }
+
+  async getAllMobileByBrand(brand: string): Promise<Mobile[]> {
+    const mobiles = await this.mobileModel.find({ brand }).exec();
+    if (!mobiles || mobiles.length === 0) {
+      throw new NotFoundException(
+        "Không tìm thấy mobile nào cho thương hiệu này"
+      );
+    }
+    return mobiles;
   }
 }

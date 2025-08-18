@@ -1,5 +1,4 @@
 import { apiGet } from "@/lib/api";
-
 import { Headphone } from "@/lib/types/headphone";
 import HeadphoneList from "../../headphone-list";
 
@@ -12,7 +11,6 @@ export default async function Page({
   const res = await apiGet<Headphone[]>(
     `/headphones/get-all-headphone-by-brand/${brand}`
   );
-  if (!res) return <div>Loading...</div>;
   if (!res.data) return <div>Product not found</div>;
   return <HeadphoneList headphones={res.data} />;
 }

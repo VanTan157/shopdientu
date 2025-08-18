@@ -3,7 +3,7 @@
 
 import { Mobile } from "@/lib/types/mobile";
 import { ShoppingCart } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,6 +19,8 @@ import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/app/store/cart-store";
+import { loadingStore } from "@/app/store/loading.store";
+import { EProductType } from "@/lib/types/order";
 
 const BtnAddToCart = ({
   product,
@@ -28,27 +30,36 @@ const BtnAddToCart = ({
   index: number;
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
+  const { start, stop } = loadingStore();
   const { setCartItemCount, cartItemCount } = useCartStore();
   const router = useRouter();
 
   const handleAddToCart = async () => {
-    setLoading(true);
-    const res = await apiPost("/order-items", {
-      product_id: product._id,
-      product_type: "mobile",
-      quantity,
-      colorVariant: product.colorVariants[index],
-    });
-    setLoading(false);
-    router.refresh();
-    if (res.data) {
-      setOpen(false);
-      setCartItemCount(cartItemCount + 1);
-      toast.success("Thêm vào giỏ hàng thành công!");
-    } else {
-      toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
+    start();
+    try {
+      const res = await apiPost("/order-items", {
+        product_id: product._id,
+        product_type: EProductType.MOBILE,
+        quantity,
+        colorVariant: product.colorVariants[index],
+      });
+      router.refresh();
+      if (res.data) {
+        setOpen(false);
+        setCartItemCount(cartItemCount + 1);
+        toast.success("Thêm vào giỏ hàng thành công!");
+      } else {
+        toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Có lỗi khi tạo đơn hàng!");
+      }
+    } finally {
+      stop();
     }
   };
 
@@ -56,7 +67,7 @@ const BtnAddToCart = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          className="cursor-pointer hover:scale-110 transition-transform duration-200 flex items-center gap-2 px-8 py-5 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-alloweds"
+          className="cursor-pointer hover:scale-110 transition-transform duration-200 flex items-center gap-2 px-8 py-5 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
           disabled={
             !product.isAvailable || product.colorVariants[index].stock === 0
           }
@@ -85,7 +96,6 @@ const BtnAddToCart = ({
               min={1}
               max={product.colorVariants[index].stock}
               className="col-span-3"
-              disabled={loading}
             />
           </div>
           <p className="text-sm text-gray-500">
@@ -93,16 +103,10 @@ const BtnAddToCart = ({
           </p>
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={() => setOpen(false)}>
             Hủy
           </Button>
-          <Button onClick={handleAddToCart} disabled={loading}>
-            {loading ? "Đang thêm..." : "Xác nhận"}
-          </Button>
+          <Button onClick={handleAddToCart}>Xác nhận</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

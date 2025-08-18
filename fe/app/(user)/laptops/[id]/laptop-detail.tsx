@@ -6,7 +6,7 @@ import BtnAddToCart from "./btn-add-cart";
 import { Laptop } from "@/lib/types/laptop";
 
 const LaptopDetail = ({ product }: { product: Laptop }) => {
-  const [colorVariant, setColorVariant] = useState(0);
+  const [colorVariant, setColorVariant] = useState<number>(0);
   const totalStock = product.colorVariants.reduce(
     (sum, variant) => sum + variant.stock,
     0

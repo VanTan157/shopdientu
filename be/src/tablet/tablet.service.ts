@@ -239,10 +239,10 @@ export class TabletService {
 
   async getAllBrand(): Promise<string[]> {
     const laptops = await this.tabletModel.find().exec();
-    const brands = new Array<string>();
+    const brands = new Set<string>();
     laptops.forEach((tablet) => {
       if (tablet.brand) {
-        brands.push(tablet.brand);
+        brands.add(tablet.brand);
       }
     });
     return Array.from(brands);

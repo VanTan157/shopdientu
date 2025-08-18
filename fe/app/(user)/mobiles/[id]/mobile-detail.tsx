@@ -15,7 +15,6 @@ const MobileDetail = ({ product }: { product: Mobile }) => {
     <section className="container mx-auto p-5 my-10 rounded-lg shadow-lg">
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Hình ảnh sản phẩm */}
           <div className="relative w-full h-40 md:h-96 rounded-lg overflow-hidden shadow-lg">
             <Image
               src={

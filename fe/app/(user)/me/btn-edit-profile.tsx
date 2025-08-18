@@ -1,5 +1,6 @@
 "use client";
 
+import { loadingStore } from "@/app/store/loading.store";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +23,9 @@ export function BtnEditProfile({ user }: { user: User }) {
   const [name, setName] = useState<string>(user.name);
   const [open, setOpen] = useState<boolean>(false);
   const router = useRouter();
+  const { start, stop } = loadingStore();
   const handleSubmit = async () => {
+    start();
     try {
       const res = await apiPatch<User, {}>(`auth/update-profile`, {
         name,
@@ -36,6 +39,8 @@ export function BtnEditProfile({ user }: { user: User }) {
       router.refresh();
     } catch (error) {
       toast.error("Có lỗi khi thay đổi tên");
+    } finally {
+      stop();
     }
   };
   return (

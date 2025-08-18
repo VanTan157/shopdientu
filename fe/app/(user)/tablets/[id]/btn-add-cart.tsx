@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useCartStore } from "@/app/store/cart-store";
 import { Tablet } from "@/lib/types/tablet";
 import { loadingStore } from "@/app/store/loading.store";
+import { EProductType } from "@/lib/types/order";
 
 const BtnAddToCart = ({
   product,
@@ -35,22 +36,27 @@ const BtnAddToCart = ({
   const { start, stop } = loadingStore();
 
   const handleAddToCart = async () => {
-    start();
-    const res = await apiPost("/order-items", {
-      product_id: product._id,
-      product_type: "tablet",
-      quantity,
-      colorVariant: product.colorVariants[index],
-    });
-    router.refresh(); // Refresh trang để cập nhật giỏ hàng
-    if (res.data) {
-      setOpen(false);
-      setCartItemCount(cartItemCount + 1); // Cập nhật số lượng sản phẩm trong giỏ hàng
-      toast.success("Thêm vào giỏ hàng thành công!");
-    } else {
-      toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
+    try {
+      start();
+      const res = await apiPost("/order-items", {
+        product_id: product._id,
+        product_type: EProductType.TABLET,
+        quantity,
+        colorVariant: product.colorVariants[index],
+      });
+      router.refresh();
+      if (res.data) {
+        setOpen(false);
+        setCartItemCount(cartItemCount + 1);
+        toast.success("Thêm vào giỏ hàng thành công!");
+      } else {
+        toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
+    } finally {
+      stop();
     }
-    stop();
   };
 
   return (

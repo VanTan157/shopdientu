@@ -11,17 +11,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
-
-interface AddHeadphoneFormProps {
-  children?: React.ReactNode;
-  brands?: string[];
-}
+import { loadingStore } from "@/app/store/loading.store";
 
 const defaultSpecifications = {
   driverType: "",
@@ -43,10 +39,10 @@ const defaultDimensions = {
   height: 0,
 };
 
-const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
+const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { start, stop } = loadingStore();
   const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -72,32 +68,32 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
   const [imagePreview, setImagePreview] = useState([] as string[]);
 
   const handleAddHeadphone = async () => {
-    setIsLoading(true);
+    start();
 
     // Validate dữ liệu
     if (!formData.name.trim()) {
       toast.error("Tên tai nghe không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.brand.trim()) {
       toast.error("Thương hiệu không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.type.trim()) {
       toast.error("Loại tai nghe không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.slug.trim()) {
       toast.error("Đường dẫn SEO không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.sku.trim()) {
       toast.error("Mã hàng hóa không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -105,22 +101,22 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
       Number(formData.startingPrice) <= 0
     ) {
       toast.error("Giá gốc phải là số lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (isNaN(Number(formData.promotion)) || Number(formData.promotion) < 0) {
       toast.error("Khuyến mãi phải là số không âm!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.description.trim()) {
       toast.error("Mô tả không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.warranty.trim()) {
       toast.error("Bảo hành không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -136,7 +132,7 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
       toast.error(
         "Mỗi biến thể màu phải có tên, ảnh và số lượng tồn kho hợp lệ!"
       );
-      setIsLoading(false);
+      stop();
       return;
     }
 
@@ -221,7 +217,7 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
     } catch (error) {
       toast.error("Có lỗi khi thêm tai nghe!");
     } finally {
-      setIsLoading(false);
+      stop();
     }
   };
 
@@ -276,12 +272,10 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {children || (
-          <Button className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
-            <Plus className="w-5 h-5" />
-            Thêm tai nghe mới
-          </Button>
-        )}
+        <Button className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
+          <Plus className="w-5 h-5" />
+          Thêm tai nghe mới
+        </Button>
       </DialogTrigger>
       <DialogContent className="w-[90%] !max-w-[90%] max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl">
         <DialogHeader className="border-b pb-4">
@@ -302,7 +296,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="Nhập tên tai nghe"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -321,11 +314,10 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     onChange={(e) =>
                       setFormData({ ...formData, brand: e.target.value })
                     }
-                    disabled={isLoading}
                     className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Chọn thương hiệu</option>
-                    {brands.map((brand) => (
+                    {brands?.map((brand) => (
                       <option key={brand} value={brand}>
                         {brand}
                       </option>
@@ -334,7 +326,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                   <Button
                     variant="outline"
                     onClick={() => setIsAddingNewBrand(true)}
-                    disabled={isLoading}
                     className="border-gray-300 text-gray-700 hover:bg-gray-100"
                   >
                     Thêm thương hiệu mới
@@ -349,7 +340,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                       setFormData({ ...formData, brand: e.target.value })
                     }
                     placeholder="Nhập thương hiệu mới"
-                    disabled={isLoading}
                     className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <Button
@@ -358,7 +348,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                       setIsAddingNewBrand(false);
                       setFormData({ ...formData, brand: "" });
                     }}
-                    disabled={isLoading}
                     className="border-gray-300 text-gray-700 hover:bg-gray-100"
                   >
                     Hủy
@@ -380,7 +369,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 setFormData({ ...formData, type: e.target.value })
               }
               placeholder="Nhập loại tai nghe (Over-ear, In-ear, On-ear...)"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -397,7 +385,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 setFormData({ ...formData, slug: e.target.value })
               }
               placeholder="Nhập đường dẫn SEO (ví dụ: sony-wh-1000xm5)"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -414,7 +401,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 setFormData({ ...formData, sku: e.target.value })
               }
               placeholder="Nhập mã hàng hóa (ví dụ: WH1000XM5)"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -438,7 +424,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 })
               }
               placeholder="Nhập giá gốc"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -459,7 +444,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 })
               }
               placeholder="Nhập % khuyến mãi (nếu có)"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -476,7 +460,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Nhập mô tả"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -493,7 +476,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 setFormData({ ...formData, warranty: e.target.value })
               }
               placeholder="Nhập thời gian bảo hành (ví dụ: 12 tháng)"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -519,7 +501,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -540,7 +521,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -560,7 +540,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -581,7 +560,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -602,7 +580,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -622,7 +599,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -643,7 +619,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -664,7 +639,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -684,7 +658,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -704,7 +677,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -724,7 +696,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -753,7 +724,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -774,7 +744,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -795,7 +764,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -818,7 +786,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 })
               }
               placeholder="Nhập trọng lượng"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -839,7 +806,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     newVariants[index].color = e.target.value;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <div className="flex-1">
@@ -868,7 +834,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                         });
                       }
                     }}
-                    disabled={isLoading}
                     className="mt-2"
                   />
                 </div>
@@ -881,7 +846,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     newVariants[index].stock = parseInt(e.target.value) || 0;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {formData.colorVariants.length > 1 && (
@@ -889,7 +853,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                     variant="destructive"
                     size="icon"
                     onClick={() => removeColorVariant(index)}
-                    disabled={isLoading}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -900,7 +863,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
             <Button
               variant="outline"
               onClick={addColorVariant}
-              disabled={isLoading}
               className="mt-2 border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -916,12 +878,10 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 value={connectivityInput}
                 onChange={(e) => setConnectivityInput(e.target.value)}
                 placeholder="Nhập kết nối và nhấn Thêm"
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddConnectivity}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -944,7 +904,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -961,12 +920,10 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 value={accessoryInput}
                 onChange={(e) => setAccessoryInput(e.target.value)}
                 placeholder="Nhập phụ kiện và nhấn Thêm"
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddAccessory}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -989,7 +946,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -1007,12 +963,10 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Nhập tag và nhấn Thêm"
                 onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddTag}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -1033,7 +987,6 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -1046,9 +999,8 @@ const AddHeadphoneForm = ({ children, brands = [] }: AddHeadphoneFormProps) => {
           <Button
             onClick={handleAddHeadphone}
             className="w-full bg-blue-600 hover:bg-blue-700"
-            disabled={isLoading}
           >
-            {isLoading ? <Loader2 className="animate-spin" /> : "Thêm tai nghe"}
+            Thêm tai nghe
           </Button>
         </div>
       </DialogContent>

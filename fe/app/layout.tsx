@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/lib/auth-context";
 import Providers from "./providers";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { LoadingSpinner } from "@/components/loading";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
             {children}
           </GoogleOAuthProvider>
         </AuthProvider>
+        <LoadingSpinner />
       </body>
     </html>
   );

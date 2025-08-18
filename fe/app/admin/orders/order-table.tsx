@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { apiPatch, apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Order } from "@/lib/types/order";
+import { EOrderStatus, Order } from "@/lib/types/order";
 import {
   Table,
   TableBody,
@@ -27,12 +27,13 @@ import { Input } from "@/components/ui/input";
 
 const OrderTable = ({ orders }: { orders: Order[] }) => {
   const router = useRouter();
-  const [orderStatus, setOrderStatus] = useState<string>("Tất cả");
+  const [orderStatus, setOrderStatus] = useState<EOrderStatus>(
+    EOrderStatus.ALL
+  );
   const [search, setSearch] = useState<string>("");
-  // Lọc đơn hàng theo trạng thái và tìm kiếm theo mã đơn hàng
   const ordersByStatus = orders.filter((order) => {
     const matchStatus =
-      orderStatus === "Tất cả" || order.status === orderStatus;
+      orderStatus === EOrderStatus.ALL || order.status === orderStatus;
     const matchSearch =
       search.trim() === "" ||
       order._id.toLowerCase().includes(search.trim().toLowerCase());
@@ -72,19 +73,29 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
       <div className="flex items-center gap-4 mb-4">
         <Select
           value={orderStatus}
-          onValueChange={setOrderStatus}
-          defaultValue="Tất cả"
+          onValueChange={(value) => setOrderStatus(value as EOrderStatus)}
+          defaultValue={EOrderStatus.ALL}
         >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Trạng TableHeadái đơn hàng" />
+            <SelectValue placeholder="Trạng thái đơn hàng" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Tất cả">Tất cả</SelectItem>
-            <SelectItem value="Đang chờ xác nhận">Đang chờ xác nhận</SelectItem>
-            <SelectItem value="Đã xác nhận">Đã xác nhận</SelectItem>
-            <SelectItem value="Đang vận chuyển">Đang vận chuyển</SelectItem>
-            <SelectItem value="Hoàn thành">Đã hoàn thành</SelectItem>
-            <SelectItem value="Đã hủy">Đã hủy</SelectItem>
+            <SelectItem value={EOrderStatus.ALL}>{EOrderStatus.ALL}</SelectItem>
+            <SelectItem value={EOrderStatus.PENDING}>
+              {EOrderStatus.PENDING}
+            </SelectItem>
+            <SelectItem value={EOrderStatus.CONFIRMED}>
+              {EOrderStatus.CONFIRMED}
+            </SelectItem>
+            <SelectItem value={EOrderStatus.SHIPPED}>
+              {EOrderStatus.SHIPPED}
+            </SelectItem>
+            <SelectItem value={EOrderStatus.COMPLETED}>
+              {EOrderStatus.COMPLETED}
+            </SelectItem>
+            <SelectItem value={EOrderStatus.CANCELED}>
+              {EOrderStatus.CANCELED}
+            </SelectItem>
           </SelectContent>
         </Select>
         <Input
@@ -161,14 +172,14 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-2 items-center">
-                    {order.status === "Đang chờ xác nhận" && (
+                    {order.status === EOrderStatus.PENDING && (
                       <>
                         <Button
                           onClick={() =>
                             UpdateStatus({
                               orderId: order._id,
                               userId: order.user_id,
-                              status: "Đã xác nhận",
+                              status: EOrderStatus.CONFIRMED,
                             })
                           }
                           className="bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700 cursor-pointer transition-colors duration-200 text-xs w-full"
@@ -180,7 +191,7 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
                             UpdateStatus({
                               orderId: order._id,
                               userId: order.user_id,
-                              status: "Đã hủy",
+                              status: EOrderStatus.CANCELED,
                             })
                           }
                           className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 cursor-pointer transition-colors duration-200 text-xs w-full"
@@ -189,13 +200,13 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
                         </Button>
                       </>
                     )}
-                    {order.status === "Đã xác nhận" && (
+                    {order.status === EOrderStatus.CONFIRMED && (
                       <Button
                         onClick={() =>
                           UpdateStatus({
                             orderId: order._id,
                             userId: order.user_id,
-                            status: "Đang vận chuyển",
+                            status: EOrderStatus.SHIPPED,
                           })
                         }
                         className="bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700 cursor-pointer transition-colors duration-200 text-xs w-full"

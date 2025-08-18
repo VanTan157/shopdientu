@@ -28,7 +28,6 @@ const HeadphoneTable = ({ headphones }: { headphones: Headphone[] }) => {
   const [filterStatus, setFilterStatus] = useState<string>("Tất cả");
   const [filterPromotion, setFilterPromotion] = useState<string>("Tất cả");
 
-  // Logic tìm kiếm và lọc
   const filteredHeadphones = headphones.filter((headphone) => {
     const matchesSearch = headphone.name
       .toLowerCase()

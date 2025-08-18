@@ -1,4 +1,3 @@
-// app/orders/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -27,79 +26,73 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, Eye, Check } from "lucide-react";
 import Image from "next/image";
-import { Order, OrderStatus } from "@/lib/types/order";
+import { EOrderStatus, Order, OrderStatus } from "@/lib/types/order";
 import { apiPatch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { set } from "date-fns";
-import { se } from "date-fns/locale";
+import { loadingStore } from "@/app/store/loading.store";
 
 const OrderPage = ({ orders }: { orders: Order[] }) => {
-  const [filterStatus, setFilterStatus] = useState<OrderStatus | "Tất cả">(
-    "Tất cả"
+  const [filterStatus, setFilterStatus] = useState<EOrderStatus>(
+    EOrderStatus.ALL
   );
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const { start, stop } = loadingStore();
 
-  // Các trạng thái đơn hàng
-  const statuses: (OrderStatus | "Tất cả")[] = [
-    "Tất cả",
-    "Đang chờ xác nhận",
-    "Đã xác nhận",
-    "Đang vận chuyển",
-    "Hoàn thành",
-    "Đã hủy",
-  ];
-
-  // Hủy đơn hàng
   const handleCancelOrder = async (orderId: string) => {
+    start();
     try {
       const res = await apiPatch<any, { status: OrderStatus }>(
         `/order/${orderId}`,
         {
-          status: "Đã hủy",
+          status: EOrderStatus.CANCELED,
         }
       );
       if (res.error) {
         throw new Error(res.error);
       }
       toast.success("Hủy đơn hàng thành công!");
-      setOpen(false); // Đóng dialog sau khi hủy
+      setOpen(false);
       router.refresh();
     } catch (error) {
       console.error("Error canceling order:", error);
       toast.error("Có lỗi khi hủy đơn hàng!");
+    } finally {
+      stop();
     }
   };
 
   const handleCompleteOrder = async (orderId: string) => {
+    start();
     try {
       const res = await apiPatch<any, { status: OrderStatus }>(
         `/order/${orderId}`,
         {
-          status: "Hoàn thành",
+          status: EOrderStatus.COMPLETED,
         }
       );
       if (res.error) {
         throw new Error(res.error);
       }
       toast.success("Nhận hàng thành công!");
-      setOpen(false); // Đóng dialog sau khi hoàn thành
+      setOpen(false);
       router.refresh();
     } catch (error) {
-      console.error("Error compelete order:", error);
+      console.error("Error complete order:", error);
       toast.error("Có lỗi khi nhận đơn hàng!");
+    } finally {
+      stop();
     }
   };
 
   if (orders.length === 0)
     return <div className="text-center py-10">Chưa có đơn hàng nào!</div>;
 
-  // Lọc theo trạng thái và tìm kiếm theo mã đơn hàng
   const ordersToDisplay = orders.filter(
     (order) =>
-      (filterStatus === "Tất cả" || order.status === filterStatus) &&
+      (filterStatus === EOrderStatus.ALL || order.status === filterStatus) &&
       order._id.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -108,23 +101,30 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
       <h1 className="text-4xl font-extrabold bg-gradient-to-r from-cyan-400 to-blue-600 text-transparent bg-clip-text drop-shadow-lg">
         Đơn hàng của bạn
       </h1>
-
-      {/* Lọc theo trạng thái */}
       <div className="my-6 flex items-center gap-12">
         <Select
-          onValueChange={(value) =>
-            setFilterStatus(value as OrderStatus | "Tất cả")
-          }
+          onValueChange={(value) => setFilterStatus(value as EOrderStatus)}
         >
           <SelectTrigger className="w-[200px] border border-cyan-300 bg-white text-gray-800 hover:bg-gray-50 focus:ring-2 focus:ring-cyan-500">
             <SelectValue placeholder="Lọc theo trạng thái" />
           </SelectTrigger>
           <SelectContent>
-            {statuses.map((status) => (
-              <SelectItem key={status} value={status}>
-                {status}
-              </SelectItem>
-            ))}
+            <SelectItem value={EOrderStatus.ALL}>{EOrderStatus.ALL}</SelectItem>
+            <SelectItem value={EOrderStatus.PENDING}>
+              {EOrderStatus.PENDING}
+            </SelectItem>
+            <SelectItem value={EOrderStatus.CONFIRMED}>
+              {EOrderStatus.CONFIRMED}
+            </SelectItem>
+            <SelectItem value={EOrderStatus.SHIPPED}>
+              {EOrderStatus.SHIPPED}
+            </SelectItem>
+            <SelectItem value={EOrderStatus.COMPLETED}>
+              {EOrderStatus.COMPLETED}
+            </SelectItem>
+            <SelectItem value={EOrderStatus.CANCELED}>
+              {EOrderStatus.CANCELED}
+            </SelectItem>
           </SelectContent>
         </Select>
         {/* Tìm kiếm theo mã đơn hàng */}
@@ -167,16 +167,6 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
               className="hover:bg-gray-900 transition-colors"
             >
               <TableCell className="font-semibold">{order._id}</TableCell>
-              {/* <TableCell className="flex items-center gap-2 font-semibold">
-                {order.orderitem_ids.map((item, index) => (
-                  <div key={item._id} className="flex items-center gap-2">
-                    <span className="truncate">
-                      {item.product.name}
-                      {index < order.orderitem_ids.length - 1 && ", "}
-                    </span>
-                  </div>
-                ))}
-              </TableCell> */}
               <TableCell className="font-semibold">
                 {new Date(order.createdAt).toLocaleDateString("vi-VN")}
               </TableCell>
@@ -265,8 +255,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                   </DialogContent>
                 </Dialog>
 
-                {/* Hủy đơn (chỉ khi trạng thái cho phép) */}
-                {order.status === "Đang chờ xác nhận" && (
+                {order.status === EOrderStatus.PENDING && (
                   <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                       <Button
@@ -302,7 +291,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                   </Dialog>
                 )}
 
-                {order.status === "Đang vận chuyển" && (
+                {order.status === EOrderStatus.SHIPPED && (
                   <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                       <Button

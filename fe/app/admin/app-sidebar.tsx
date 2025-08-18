@@ -3,7 +3,6 @@ import {
   Users,
   Smartphone,
   Headphones,
-  Monitor,
   Laptop,
   ChevronDown,
   ShoppingBag,
@@ -32,14 +31,11 @@ import {
 } from "@/components/ui/collapsible";
 import Link from "next/link";
 import { apiGet } from "@/lib/api";
-import { MobileType } from "@/lib/types/mobile";
-import { Button } from "@/components/ui/button";
-import AddMobileForm from "./mobiles/[type]/add-mobile";
+import AddMobileForm from "./mobiles/[brand]/add-mobile";
 import AddLaptopForm from "./laptops/[brand]/add-laptop";
 import AddHeadphoneForm from "./headphones/[brand]/add-headphone";
 import AddTabletForm from "./tablet/[brand]/add-tablet";
 
-// Menu items.
 const items = [
   {
     title: "Dashboard",
@@ -55,25 +51,25 @@ const items = [
     title: "Điện thoại",
     url: "/admin/mobiles",
     icon: Smartphone,
-    hasSubmenu: true, // Thêm thuộc tính để nhận biết có submenu
+    hasSubmenu: true,
   },
   {
     title: "Tai nghe",
     url: "#",
     icon: Headphones,
-    hasSubmenu: true, // Thêm thuộc tính để nhận biết có submenu
+    hasSubmenu: true,
   },
   {
     title: "Máy tính bảng",
     url: "#",
     icon: Tablet,
-    hasSubmenu: true, // Thêm thuộc tính để nhận biết có submenu
+    hasSubmenu: true,
   },
   {
     title: "Laptop",
     url: "/admin/laptops",
     icon: Laptop,
-    hasSubmenu: true, // Thêm thuộc tính để nhận biết có submenu
+    hasSubmenu: true,
   },
   {
     title: "Đơn hàng",
@@ -88,8 +84,9 @@ const items = [
 ];
 
 export async function AppSidebar() {
-  const resTypesMobile = await apiGet<MobileType[]>("/mobile-types");
-  const mobile_types = resTypesMobile.data || [];
+  const resBrandsMobile = await apiGet<string[]>("/mobiles/get-all-brand");
+  const brands_mobile = resBrandsMobile.data || [];
+  console.log(resBrandsMobile);
 
   const resBrandsLaptop = await apiGet<string[]>("/laptops/get-all-brand");
   const brands_laptop = resBrandsLaptop.data || [];
@@ -133,7 +130,7 @@ export async function AppSidebar() {
                       <CollapsibleContent>
                         <SidebarMenuSub>
                           {item.title === "Điện thoại" &&
-                            (mobile_types.length === 0 ? (
+                            (brands_mobile.length === 0 ? (
                               <div>
                                 <p className="text-gray-500 text-sm mb-2">
                                   Hiện tại chưa có sản phẩm nào
@@ -141,11 +138,11 @@ export async function AppSidebar() {
                                 <AddMobileForm />
                               </div>
                             ) : (
-                              mobile_types.map((type) => (
-                                <SidebarMenuSubItem key={type._id}>
+                              brands_mobile.map((brand, index) => (
+                                <SidebarMenuSubItem key={index}>
                                   <SidebarMenuSubButton asChild>
-                                    <Link href={`/admin/mobiles/${type.type}`}>
-                                      <span>{type.type}</span>
+                                    <Link href={`/admin/mobiles/${brand}`}>
+                                      <span>{brand}</span>
                                     </Link>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>

@@ -16,22 +16,24 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
+import { loadingStore } from "@/app/store/loading.store";
 
-interface EditMobileProps {
+const EditMobile = ({
+  mobile,
+  children,
+}: {
   mobile: Mobile;
   children: React.ReactNode;
-}
-
-const EditMobile = ({ mobile, children }: EditMobileProps) => {
+}) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { start, stop } = loadingStore();
   const [formData, setFormData] = useState({
     name: mobile.name,
     StartingPrice: mobile.StartingPrice,
     promotion: mobile.promotion,
     description: mobile.description || "",
-    mobile_type_id: mobile.mobile_type_id._id || "",
+    brand: mobile.brand || "",
     specifications: {
       screenSize: mobile.specifications.screenSize || "",
       resolution: mobile.specifications.resolution || "",
@@ -72,11 +74,11 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
   }, [imagePreview]);
 
   const handleUpdateMobile = async () => {
-    setIsLoading(true);
+    start();
 
     if (!formData.name.trim()) {
       toast.error("Tên điện thoại không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -85,7 +87,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       formData.StartingPrice <= 0
     ) {
       toast.error("Giá gốc phải là số lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -95,17 +97,17 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       formData.promotion > 100
     ) {
       toast.error("Khuyến mãi phải là số từ 0 đến 100!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.description.trim()) {
       toast.error("Mô tả không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
-    if (!formData.mobile_type_id) {
-      toast.error("Loại điện thoại không được để trống!");
-      setIsLoading(false);
+    if (!formData.brand) {
+      toast.error("Thương hiệu không được để trống!");
+      stop();
       return;
     }
     const specs = formData.specifications;
@@ -119,7 +121,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       !specs.os
     ) {
       toast.error("Vui lòng nhập đầy đủ thông số kỹ thuật!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -136,12 +138,12 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       toast.error(
         "Mỗi biến thể màu phải có tên, ảnh (hoặc ảnh hiện tại), và số lượng tồn kho hợp lệ!"
       );
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.camera.rear.trim() || !formData.camera.front.trim()) {
       toast.error("Vui lòng nhập đầy đủ thông tin camera!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -150,12 +152,12 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       formData.weight <= 0
     ) {
       toast.error("Trọng lượng phải là số lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (formData.tags.some((tag) => typeof tag !== "string" || !tag.trim())) {
       toast.error("Tag không hợp lệ!");
-      setIsLoading(false);
+      stop();
       return;
     }
 
@@ -165,7 +167,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
       formDataToSend.append("StartingPrice", formData.StartingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
-      formDataToSend.append("mobile_type_id", formData.mobile_type_id);
+      formDataToSend.append("brand", formData.brand);
       formDataToSend.append(
         "specifications",
         JSON.stringify(formData.specifications)
@@ -203,7 +205,7 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
     } catch (error) {
       toast.error("Có lỗi khi cập nhật điện thoại!");
     } finally {
-      setIsLoading(false);
+      stop();
     }
   };
 
@@ -255,8 +257,23 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="Nhập tên điện thoại"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Thương hiệu */}
+          <div>
+            <Label htmlFor="brand" className="text-gray-700 font-medium">
+              Thương hiệu
+            </Label>
+            <Input
+              id="brand"
+              value={formData.brand}
+              onChange={(e) =>
+                setFormData({ ...formData, brand: e.target.value })
+              }
+              placeholder="Nhập thương hiệu"
+              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
@@ -279,7 +296,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                 })
               }
               placeholder="Nhập giá gốc"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -303,7 +319,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                 })
               }
               placeholder="Nhập % khuyến mãi (nếu có)"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -323,7 +338,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Nhập mô tả"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -349,7 +363,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -369,7 +382,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -387,7 +399,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -405,7 +416,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -425,7 +435,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -443,7 +452,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -463,7 +471,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -487,7 +494,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     newVariants[index].color = e.target.value;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <div className="flex-1">
@@ -520,7 +526,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                         });
                       }
                     }}
-                    disabled={isLoading}
                     className="mt-2"
                   />
                 </div>
@@ -533,7 +538,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     newVariants[index].stock = parseInt(e.target.value) || 0;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {formData.colorVariants.length > 1 && (
@@ -541,7 +545,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     variant="destructive"
                     size="icon"
                     onClick={() => removeColorVariant(index)}
-                    disabled={isLoading}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -552,7 +555,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
             <Button
               variant="outline"
               onClick={addColorVariant}
-              disabled={isLoading}
               className="mt-2 border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -576,7 +578,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     camera: { ...formData.camera, rear: e.target.value },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -593,7 +594,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                     camera: { ...formData.camera, front: e.target.value },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -615,7 +615,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                 })
               }
               placeholder="Nhập trọng lượng"
-              disabled={isLoading}
               className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -629,12 +628,10 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Nhập tag và nhấn Thêm"
                 onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddTag}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -655,7 +652,6 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -669,17 +665,15 @@ const EditMobile = ({ mobile, children }: EditMobileProps) => {
             <Button
               variant="outline"
               onClick={() => setIsOpen(false)}
-              disabled={isLoading}
               className="border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               Hủy
             </Button>
             <Button
               onClick={handleUpdateMobile}
-              disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Đang cập nhật..." : "Cập nhật"}
+              Cập nhật
             </Button>
           </div>
         </div>

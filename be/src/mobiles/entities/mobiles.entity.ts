@@ -4,6 +4,9 @@ import { Document, Types } from "mongoose";
 @Schema({ timestamps: true })
 export class Mobile extends Document {
   @Prop({ required: true })
+  brand: string;
+
+  @Prop({ required: true })
   name: string;
 
   @Prop({ required: true })
@@ -20,9 +23,6 @@ export class Mobile extends Document {
 
   @Prop()
   description: string;
-
-  @Prop({ type: Types.ObjectId, ref: "MobileType", required: true })
-  mobile_type_id: Types.ObjectId;
 
   @Prop({ type: Object })
   specifications: {

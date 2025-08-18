@@ -10,6 +10,9 @@ import { Transform } from "class-transformer";
 
 export class CreateMobileDto {
   @IsString()
+  brand: string;
+
+  @IsString()
   name: string;
 
   @IsNumber()
@@ -24,9 +27,6 @@ export class CreateMobileDto {
   @IsString()
   @IsOptional()
   description: string;
-
-  @IsMongoId()
-  mobile_type_id: string;
 
   @IsObject()
   @IsOptional()

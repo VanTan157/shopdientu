@@ -1,3 +1,4 @@
+import { loadingStore } from "@/app/store/loading.store";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,22 +9,22 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { apiDelete } from "@/lib/api";
-import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
-interface DeleteMobileProps {
-  id: string; // ID của điện thoại
-  children: React.ReactNode; // Để bọc thẻ div từ MobileFilterTable
-}
-
-const DeleteMobile = ({ id, children }: DeleteMobileProps) => {
+const DeleteMobile = ({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false); // Trạng thái loading
+  const { start, stop } = loadingStore();
 
   const handleDeleteMobile = async (mobileId: string) => {
-    setLoading(true); // Bắt đầu loading
+    start(); // Bắt đầu loading
     const res = await apiDelete(`/mobiles/${mobileId}`);
 
     if (res.data) {
@@ -34,7 +35,7 @@ const DeleteMobile = ({ id, children }: DeleteMobileProps) => {
     } else {
       toast.error("Có lỗi khi xóa sản phẩm!");
     } // Làm mới trang sau khi xóa
-    setLoading(false); // Kết thúc loading
+    stop(); // Kết thúc loading
   };
 
   return (
@@ -52,13 +53,11 @@ const DeleteMobile = ({ id, children }: DeleteMobileProps) => {
             </span>
             <span className="flex justify-end mt-4">
               <Button
-                disabled={loading}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                 onClick={() => {
                   handleDeleteMobile(id);
                 }}
               >
-                {loading && <Loader2 className="animate-spin" />}
                 Xóa
               </Button>
             </span>

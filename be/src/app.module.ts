@@ -8,13 +8,12 @@ import { ConfigModule } from "@nestjs/config";
 import { OrderItemsModule } from "./order-items/order-items.module";
 import { OrderModule } from "./order/order.module";
 import { MobilesModule } from "./mobiles/mobiles.module";
-import { MobileTypesModule } from "./mobile-types/mobile-types.module";
 import { NotificationsGateway } from "./notifications.gateway";
 import { NotificationsModule } from "./notifications/notifications.module";
-import { LaptopModule } from './laptop/laptop.module';
-import { HeadphoneModule } from './headphone/headphone.module';
-import { TabletModule } from './tablet/tablet.module';
-import { MailModule } from './mail/mail.module';
+import { LaptopModule } from "./laptop/laptop.module";
+import { HeadphoneModule } from "./headphone/headphone.module";
+import { TabletModule } from "./tablet/tablet.module";
+import { MailModule } from "./mail/mail.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,7 +25,6 @@ import { MailModule } from './mail/mail.module';
     AuthModule,
     ConfigModule.forRoot({ isGlobal: true }),
     MobilesModule,
-    MobileTypesModule,
     OrderItemsModule,
     OrderModule,
     NotificationsModule,

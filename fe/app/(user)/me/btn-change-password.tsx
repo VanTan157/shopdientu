@@ -16,19 +16,20 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { User } from "@/lib/types/user";
 import { apiPatch } from "@/lib/api";
 import { toast } from "sonner";
-import { error } from "console";
+import { loadingStore } from "@/app/store/loading.store";
 
-export function BtnChangPassWord({ user }: { user: User }) {
+export function BtnChangPassWord() {
   const [oldPass, setOldPass] = useState<string>("");
   const [newPass, setNewPass] = useState<string>("");
   const [showOldPass, setShowOldPass] = useState<boolean>(false);
   const [showNewPass, setShowNewPass] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
   const router = useRouter();
+  const { start, stop } = loadingStore();
   const handleSubmit = async () => {
+    start();
     try {
       const res = await apiPatch(`/auth/change-password`, {
         oldPass,
@@ -43,6 +44,8 @@ export function BtnChangPassWord({ user }: { user: User }) {
       setOpen(false);
     } catch (error) {
       toast.error("Có lỗi xảy ra khi thay đổi mật khẩu");
+    } finally {
+      stop();
     }
   };
   const closeDialog = () => {

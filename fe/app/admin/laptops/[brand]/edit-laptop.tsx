@@ -13,19 +13,21 @@ import { apiPatch } from "@/lib/api";
 import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { loadingStore } from "@/app/store/loading.store";
 
-interface EditLaptopProps {
+const EditLaptop = ({
+  laptop,
+  children,
+}: {
   laptop: Laptop;
   children: React.ReactNode;
-}
-
-const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
+}) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { start, stop } = loadingStore();
   const [formData, setFormData] = useState({
     name: laptop.name,
     brand: laptop.brand,
@@ -77,28 +79,25 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
   }, [imagePreview]);
 
   const handleUpdateLaptop = async () => {
-    setIsLoading(true);
-
-    // Validate dữ liệu
-    // Validate dữ liệu cơ bản
+    start();
     if (!formData.name.trim()) {
       toast.error("Tên laptop không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.brand.trim()) {
       toast.error("Thương hiệu không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.category.trim()) {
       toast.error("Danh mục không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (isNaN(formData.startingPrice) || formData.startingPrice <= 0) {
       toast.error("Giá gốc phải lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -107,69 +106,69 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
       formData.promotion > 100
     ) {
       toast.error("Khuyến mãi phải từ 0 đến 100!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.description.trim()) {
       toast.error("Mô tả không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!formData.warranty.trim()) {
       toast.error("Bảo hành không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     // Validate thông số kỹ thuật
     const specs = formData.specifications;
     if (!String(specs.screenSize).trim()) {
       toast.error("Kích thước màn hình không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!specs.resolution.trim()) {
       toast.error("Độ phân giải không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!specs.refreshRate.trim()) {
       toast.error("Tần số quét không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!specs.cpu.trim()) {
       toast.error("CPU không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!specs.gpu.trim()) {
       toast.error("GPU không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!String(specs.ram).trim()) {
       toast.error("RAM không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!String(specs.storage).trim()) {
       toast.error("Bộ nhớ không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!String(specs.battery).trim()) {
       toast.error("Pin không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!specs.os.trim()) {
       toast.error("Hệ điều hành không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!specs.keyboard.trim()) {
       toast.error("Bàn phím không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (
@@ -178,17 +177,17 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
       specs.ports.some((p) => !p.trim())
     ) {
       toast.error("Cổng kết nối không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!specs.webcam.trim()) {
       toast.error("Webcam không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     if (!specs.audio.trim()) {
       toast.error("Âm thanh không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     // Validate kích thước
@@ -201,13 +200,13 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
       formData.dimensions.height <= 0
     ) {
       toast.error("Kích thước phải lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
     // Validate trọng lượng
     if (isNaN(formData.weight) || formData.weight <= 0) {
       toast.error("Trọng lượng phải lớn hơn 0!");
-      setIsLoading(false);
+      stop();
       return;
     }
     // Validate biến thể màu
@@ -225,7 +224,7 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
       toast.error(
         "Mỗi biến thể màu phải có tên, ảnh (hoặc ảnh hiện tại), và số lượng tồn kho hợp lệ!"
       );
-      setIsLoading(false);
+      stop();
       return;
     }
     // Validate kết nối
@@ -234,7 +233,7 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
       formData.connectivity.some((c) => !c.trim())
     ) {
       toast.error("Kết nối không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     // Validate phụ kiện
@@ -243,13 +242,13 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
       formData.accessories.some((a) => !a.trim())
     ) {
       toast.error("Phụ kiện không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
     // Validate tags
     if (!Array.isArray(formData.tags) || formData.tags.some((t) => !t.trim())) {
       toast.error("Tag không được để trống!");
-      setIsLoading(false);
+      stop();
       return;
     }
 
@@ -307,7 +306,7 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
     } catch (error) {
       toast.error("Có lỗi khi cập nhật laptop!");
     } finally {
-      setIsLoading(false);
+      stop();
     }
   };
 
@@ -380,7 +379,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="Nhập tên laptop"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -397,7 +395,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 setFormData({ ...formData, brand: e.target.value })
               }
               placeholder="Nhập thương hiệu"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -414,7 +411,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 setFormData({ ...formData, category: e.target.value })
               }
               placeholder="Nhập danh mục"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -438,7 +434,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 })
               }
               placeholder="Nhập giá gốc"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -459,7 +454,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 })
               }
               placeholder="Nhập % khuyến mãi (nếu có)"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -476,7 +470,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Nhập mô tả"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -493,7 +486,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 setFormData({ ...formData, warranty: e.target.value })
               }
               placeholder="Nhập thời gian bảo hành"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -519,7 +511,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -539,7 +530,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -559,7 +549,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -577,7 +566,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -595,7 +583,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -613,7 +600,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -633,7 +619,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -651,7 +636,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -671,7 +655,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -691,7 +674,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -711,7 +693,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -731,7 +712,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -751,7 +731,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     },
                   })
                 }
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -780,7 +759,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -801,7 +779,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -822,7 +799,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                       },
                     })
                   }
-                  disabled={isLoading}
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -845,7 +821,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 })
               }
               placeholder="Nhập trọng lượng"
-              disabled={isLoading}
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -866,7 +841,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     newVariants[index].color = e.target.value;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <div className="flex-1">
@@ -899,7 +873,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                         });
                       }
                     }}
-                    disabled={isLoading}
                     className="mt-2"
                   />
                 </div>
@@ -912,7 +885,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     newVariants[index].stock = parseInt(e.target.value) || 0;
                     setFormData({ ...formData, colorVariants: newVariants });
                   }}
-                  disabled={isLoading}
                   className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 {formData.colorVariants.length > 1 && (
@@ -920,7 +892,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                     variant="destructive"
                     size="icon"
                     onClick={() => removeColorVariant(index)}
-                    disabled={isLoading}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -931,7 +902,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
             <Button
               variant="outline"
               onClick={addColorVariant}
-              disabled={isLoading}
               className="mt-2 border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -947,12 +917,10 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 value={connectivityInput}
                 onChange={(e) => setConnectivityInput(e.target.value)}
                 placeholder="Nhập kết nối và nhấn Thêm"
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddConnectivity}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -975,7 +943,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -992,12 +959,10 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 value={accessoryInput}
                 onChange={(e) => setAccessoryInput(e.target.value)}
                 placeholder="Nhập phụ kiện và nhấn Thêm"
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddAccessory}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -1020,7 +985,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -1038,12 +1002,10 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Nhập tag và nhấn Thêm"
                 onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                disabled={isLoading}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
               <Button
                 onClick={handleAddTag}
-                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Thêm
@@ -1064,7 +1026,6 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
                       })
                     }
                     className="text-red-600"
-                    disabled={isLoading}
                   >
                     x
                   </button>
@@ -1078,17 +1039,15 @@ const EditLaptop = ({ laptop, children }: EditLaptopProps) => {
             <Button
               variant="outline"
               onClick={() => setIsOpen(false)}
-              disabled={isLoading}
               className="border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               Hủy
             </Button>
             <Button
               onClick={handleUpdateLaptop}
-              disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Đang cập nhật..." : "Cập nhật"}
+              Cập nhật
             </Button>
           </div>
         </div>

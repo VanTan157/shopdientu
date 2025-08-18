@@ -27,22 +27,27 @@ const LoginPage = () => {
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     start();
-    const response = await apiPost<LoginResponse, LoginFormInputs>(
-      "/auth/login",
-      data,
-      {}
-    );
-    if (response.error) {
-      toast.error(response.error);
+    try {
+      const response = await apiPost<LoginResponse, LoginFormInputs>(
+        "/auth/login",
+        data,
+        {}
+      );
+      if (response.error) {
+        toast.error(response.error);
+      }
+      if (response.data) {
+        toast.success("Đăng nhập thành công");
+        console.log("Login response:", response.data.user);
+        setUser(response.data.user);
+        router.push("/");
+        router.refresh();
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Đã xảy ra lỗi, vui lòng thử lại");
+    } finally {
+      stop();
     }
-    if (response.data) {
-      toast.success("Đăng nhập thành công");
-      console.log("Login response:", response.data.user);
-      setUser(response.data.user);
-      router.push("/");
-      router.refresh();
-    }
-    stop();
   };
 
   const handleGoogleLogin = () => {

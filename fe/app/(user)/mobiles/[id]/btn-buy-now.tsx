@@ -5,7 +5,7 @@ import { ShoppingBag } from "lucide-react";
 import { apiPost } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,15 +23,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAddress } from "@/hooks/useAddress";
+import { loadingStore } from "@/app/store/loading.store";
+import { EProductType } from "@/lib/types/order";
 
 const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
   const router = useRouter();
-
-  // State cho form
-  const [isOpen, setIsOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [quantity, setQuantity] = useState<number>(1);
+  const { start, stop } = loadingStore();
 
   const {
     provinces,
@@ -48,18 +48,13 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
     getFullAddress,
   } = useAddress();
 
-  const handleBuyNow = async () => {
-    setIsOpen(true);
-  };
-
   const isVietnamesePhoneNumber = (number: string) => {
     return /(03|05|07|08|09|01[2|6|8|9])+([0-9]{8})\b/.test(number);
   };
 
   const handleConfirmBuy = async () => {
-    setIsLoading(true);
+    start();
     try {
-      // Kiểm tra tính hợp lệ
       if (!product.isAvailable || product.colorVariants[index].stock === 0) {
         toast.error("Sản phẩm không khả dụng hoặc hết hàng!");
         setIsOpen(false);
@@ -69,7 +64,7 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
         toast.error(
           `Số lượng vượt quá tồn kho (${product.colorVariants[index].stock})!`
         );
-        setIsLoading(false);
+        stop();
         return;
       }
       if (
@@ -81,7 +76,7 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
         !ward
       ) {
         toast.error("Vui lòng điền đầy đủ thông tin!");
-        setIsLoading(false);
+        stop();
         return;
       }
       if (!isVietnamesePhoneNumber(phoneNumber)) {
@@ -89,11 +84,10 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
         return;
       }
 
-      // Bước 1: Tạo OrderItem
       const orderItemData = {
         product_id: product._id,
-        product_type: "mobile",
-        quantity: quantity, // Số lượng từ form
+        product_type: EProductType.MOBILE,
+        quantity: quantity,
         colorVariant: {
           _id: product.colorVariants[index]._id,
           color: product.colorVariants[index].color,
@@ -112,7 +106,6 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
 
       const orderItemId = orderItemResponse.data._id;
 
-      // Bước 2: Tạo Order
       const orderData = {
         orderitem_ids: [orderItemId],
         phone_number: phoneNumber,
@@ -130,22 +123,15 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
 
       toast.success("Đơn hàng đã được tạo thành công!");
       setIsOpen(false);
-      router.refresh(); // Refresh trang để cập nhật giỏ hàng
+      router.refresh();
     } catch (error) {
-      console.error("Error creating order:", error);
-      toast.error("Có lỗi khi tạo đơn hàng!");
-
-      // Thử refresh token nếu lỗi do token
-      if (
-        error instanceof Error &&
-        (error.message.includes("Unauthorized") ||
-          error.message.includes("Failed to refresh token"))
-      ) {
-        toast.info("Đang thử lại sau khi làm mới token...");
-        handleConfirmBuy(); // Thử lại
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Có lỗi khi tạo đơn hàng!");
       }
     } finally {
-      setIsLoading(false);
+      stop();
     }
   };
 
@@ -156,7 +142,7 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
         disabled={
           !product.isAvailable || product.colorVariants[index].stock === 0
         }
-        onClick={handleBuyNow}
+        onClick={() => setIsOpen(true)}
       >
         <ShoppingBag className="w-5 h-5" />
         Mua ngay
@@ -177,18 +163,13 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="Nhập số điện thoại"
-                disabled={isLoading}
               />
             </div>
             <div>
               <Label htmlFor="province" className="mb-2">
                 Tỉnh/Thành phố
               </Label>
-              <Select
-                value={province}
-                onValueChange={setProvince}
-                disabled={isLoading}
-              >
+              <Select value={province} onValueChange={setProvince}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn tỉnh/thành phố" />
                 </SelectTrigger>
@@ -208,7 +189,7 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
               <Select
                 value={district}
                 onValueChange={setDistrict}
-                disabled={isLoading || !province}
+                disabled={!province}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn quận/huyện" />
@@ -226,11 +207,7 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
               <Label htmlFor="ward" className="mb-2">
                 Phường/Xã
               </Label>
-              <Select
-                value={ward}
-                onValueChange={setWard}
-                disabled={isLoading || !district}
-              >
+              <Select value={ward} onValueChange={setWard} disabled={!district}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn phường/xã" />
                 </SelectTrigger>
@@ -252,7 +229,6 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
                 placeholder="Nhập đường, số nhà"
-                disabled={isLoading}
               />
             </div>
             <div>
@@ -270,23 +246,16 @@ const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
                 min={1}
                 max={product.colorVariants[index].stock}
                 placeholder="Nhập số lượng"
-                disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-1">
                 Tồn kho: {product.colorVariants[index].stock}
               </p>
             </div>
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-                disabled={isLoading}
-              >
+              <Button variant="outline" onClick={() => setIsOpen(false)}>
                 Hủy
               </Button>
-              <Button onClick={handleConfirmBuy} disabled={isLoading}>
-                {isLoading ? "Đang xử lý..." : "Xác nhận"}
-              </Button>
+              <Button onClick={handleConfirmBuy}>Xác nhận</Button>
             </div>
           </div>
         </DialogContent>

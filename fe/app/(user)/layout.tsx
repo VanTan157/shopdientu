@@ -1,6 +1,5 @@
 import Footer from "@/components/footer";
 import HeaderUser from "@/components/header-user";
-import { LoadingSpinner } from "@/components/loading";
 
 export default function UserLayout({
   children,
@@ -14,7 +13,6 @@ export default function UserLayout({
       </header>
       <main className="mt-18 flex-1">{children}</main>
       <Footer />
-      <LoadingSpinner />
     </div>
   );
 }

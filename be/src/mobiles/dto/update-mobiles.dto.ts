@@ -11,6 +11,10 @@ import {
 export class UpdateMobileDto {
   @IsString()
   @IsOptional()
+  brand?: string;
+
+  @IsString()
+  @IsOptional()
   name?: string;
 
   @IsNumber()

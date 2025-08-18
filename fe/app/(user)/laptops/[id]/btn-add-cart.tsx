@@ -1,4 +1,3 @@
-// components/BtnAddToCart.tsx
 "use client";
 
 import { ShoppingCart } from "lucide-react";
@@ -20,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { Laptop } from "@/lib/types/laptop";
 import { useCartStore } from "@/app/store/cart-store";
 import { loadingStore } from "@/app/store/loading.store";
+import { EProductType } from "@/lib/types/order";
 
 const BtnAddToCart = ({
   product,
@@ -29,28 +29,37 @@ const BtnAddToCart = ({
   index: number;
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   const { cartItemCount, setCartItemCount } = useCartStore();
   const router = useRouter();
   const { start, stop } = loadingStore();
 
   const handleAddToCart = async () => {
     start();
-    const res = await apiPost("/order-items", {
-      product_id: product._id,
-      product_type: "laptop",
-      quantity,
-      colorVariant: product.colorVariants[index],
-    });
-    router.refresh(); // Refresh trang để cập nhật giỏ hàng
-    if (res.data) {
-      setOpen(false);
-      setCartItemCount(cartItemCount + 1); // Cập nhật số lượng sản phẩm trong giỏ hàng
-      toast.success("Thêm vào giỏ hàng thành công!");
-    } else {
-      toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
+    try {
+      const res = await apiPost("/order-items", {
+        product_id: product._id,
+        product_type: EProductType.LAPTOP,
+        quantity,
+        colorVariant: product.colorVariants[index],
+      });
+      router.refresh();
+      if (res.data) {
+        setOpen(false);
+        setCartItemCount(cartItemCount + 1);
+        toast.success("Thêm vào giỏ hàng thành công!");
+      } else {
+        toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Có lỗi khi tạo đơn hàng!");
+      }
+    } finally {
+      stop();
     }
-    stop();
   };
 
   return (
