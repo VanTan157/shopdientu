@@ -34,6 +34,7 @@ export class OrderService {
         if (!item) {
           throw new NotFoundException(`OrderItem not found: ${id}`);
         }
+        await this.orderItemsService.updateIsInCart(id, true);
         return item;
       })
     );
@@ -44,7 +45,8 @@ export class OrderService {
     );
 
     const order = new this.orderModel({
-      ...CreateOrderDto,
+      ...createOrderDto,
+      totalAmount: total_amount,
       userId,
       status: status || EOrderStatus.PENDING,
     });

@@ -12,7 +12,6 @@ import { ITablet } from "@/lib/types/tablet";
 const Page = async () => {
   const resMobile = await apiGet<IMobile[]>("/mobiles/get-by-promotion");
   const mobiles = resMobile.data || [];
-  console.log(resMobile);
 
   const resLaptop = await apiGet<ILaptop[]>("/laptops/get-by-promotion");
   const laptops = resLaptop.data || [];
@@ -26,7 +25,6 @@ const Page = async () => {
   const tablets = resTablet.data || [];
 
   const hotDeals = [...mobiles, ...laptops, ...headphones, ...tablets];
-  console.log(hotDeals);
   return (
     <div className="p-8">
       <Banner hotDeals={hotDeals} />

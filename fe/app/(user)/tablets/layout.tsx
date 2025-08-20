@@ -1,5 +1,3 @@
-// app/mobiles/layout.tsx
-
 import { apiGet } from "@/lib/api";
 import TabletHeader from "./tablet-header";
 

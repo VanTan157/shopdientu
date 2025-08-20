@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEffect, useState } from "react";
-import { apiPatch, apiPost } from "@/lib/api";
+import { useState } from "react";
+import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { EOrderStatus, Order } from "@/lib/types/order";
@@ -24,8 +24,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { IOrderItem } from "@/lib/types/order-item";
+import { loadingStore } from "@/app/store/loading.store";
 
 const OrderTable = ({ orders }: { orders: Order[] }) => {
+  const { start, stop } = loadingStore();
   const router = useRouter();
   const [orderStatus, setOrderStatus] = useState<EOrderStatus>(
     EOrderStatus.ALL
@@ -40,6 +43,29 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
     return matchStatus && matchSearch;
   });
 
+  const [orderItems, setOrderItems] = useState<IOrderItem[]>([]);
+
+  const handleViewDetails = async (order: Order) => {
+    start();
+    try {
+      const itemPromises = order.orderitemIds.map((itemId) =>
+        apiGet<IOrderItem>(`/order-items/${itemId}`)
+      );
+      const results = await Promise.all(itemPromises);
+      const items = results
+        .filter((result) => result && result.data)
+        .map((result) => result.data!);
+      setOrderItems(items);
+      console.log("Order item details:", items);
+    } catch (error) {
+      console.error("Error fetching order items:", error);
+      toast.error("Có lỗi khi lấy chi tiết đơn hàng!");
+      setOrderItems([]);
+    } finally {
+      stop();
+    }
+  };
+
   const UpdateStatus = async ({
     orderId,
     userId,
@@ -49,6 +75,7 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
     userId: string;
     status: string;
   }) => {
+    start();
     const res = await apiPatch<Order, { status: string }>(`/order/${orderId}`, {
       status: status,
     });
@@ -60,10 +87,8 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
       });
       router.refresh();
     } else if (res.error) toast.error(res.error);
-    else
-      toast.error(
-        "Có lỗi xảy ra trong quá trình cập nhật trạng thái đơn hàng!"
-      );
+    else toast.error(res.message);
+    stop();
   };
   return (
     <>
@@ -138,16 +163,16 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
                   {order._id}
                 </TableCell>
                 <TableCell className="break-words whitespace-pre-line">
-                  {order.user_id}
+                  {order.userId}
                 </TableCell>
                 <TableCell className="break-words whitespace-pre-line">
-                  {order.phone_number}
+                  {order.phoneNumber}
                 </TableCell>
                 <TableCell className="break-words whitespace-pre-line">
                   {order.address}
                 </TableCell>
                 <TableCell>
-                  {order.total_amount.toLocaleString("vi-VN", {
+                  {order.totalAmount.toLocaleString("vi-VN", {
                     style: "currency",
                     currency: "VND",
                   })}
@@ -160,11 +185,11 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
                   })}
                 </TableCell>
                 <TableCell className="px-2 py-2">
-                  <OrderDetail
-                    orderId={order._id}
-                    orderDetails={order.orderitem_ids}
-                  >
-                    <Eye className="w-4 h-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors duration-200" />
+                  <OrderDetail orderItems={orderItems}>
+                    <Eye
+                      className="w-4 h-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors duration-200"
+                      onClick={() => handleViewDetails(order)}
+                    />
                   </OrderDetail>
                 </TableCell>
                 <TableCell className="break-words whitespace-pre-line">
@@ -178,7 +203,7 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
                           onClick={() =>
                             UpdateStatus({
                               orderId: order._id,
-                              userId: order.user_id,
+                              userId: order.userId,
                               status: EOrderStatus.CONFIRMED,
                             })
                           }
@@ -190,7 +215,7 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
                           onClick={() =>
                             UpdateStatus({
                               orderId: order._id,
-                              userId: order.user_id,
+                              userId: order.userId,
                               status: EOrderStatus.CANCELED,
                             })
                           }
@@ -205,7 +230,7 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
                         onClick={() =>
                           UpdateStatus({
                             orderId: order._id,
-                            userId: order.user_id,
+                            userId: order.userId,
                             status: EOrderStatus.SHIPPED,
                           })
                         }

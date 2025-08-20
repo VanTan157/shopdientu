@@ -1,8 +1,8 @@
-import { Headphone } from "@/lib/types/headphone";
+import { IHeadphone } from "@/lib/types/headphone";
 import Image from "next/image";
 import Link from "next/link";
 
-const HeadphoneList = ({ headphones }: { headphones: Headphone[] }) => {
+const HeadphoneList = ({ headphones }: { headphones: IHeadphone[] }) => {
   return (
     <section className="mt-4 xs:mt-6 sm:mt-8">
       <h2 className="text-xl xs:text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 pb-2 xs:pb-3 sm:pb-4">
@@ -34,9 +34,6 @@ const HeadphoneList = ({ headphones }: { headphones: Headphone[] }) => {
               <h3 className="text-[10px] xs:text-xs sm:text-sm md:text-base font-semibold text-cyan-300 mb-1 xs:mb-2">
                 {headphone.name}
               </h3>
-              <p className="text-[10px] xs:text-xs sm:text-sm text-white">
-                {headphone.brand} - {headphone.type}
-              </p>
               {headphone.isPromotion ? (
                 <div className="mt-1 xs:mt-2">
                   <span className="text-gray-500 line-through text-[10px] xs:text-xs sm:text-sm block">

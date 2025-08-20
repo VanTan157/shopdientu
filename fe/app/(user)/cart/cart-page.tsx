@@ -102,26 +102,24 @@ const CartPage = ({ carts }: { carts: IOrderItem[] }) => {
       toast.error("Số điện thoại không hợp lệ!");
       return;
     }
-    try {
-      const orderData = {
-        orderitem_ids: selectedItems,
-        phone_number: phoneNumber,
-        address: getFullAddress(),
-      };
-      const res = await apiPost<any, typeof orderData>("/order", orderData);
-      if (res.error) {
-        throw new Error(res.error);
-      }
-      setCartItemCount(cartItemCount - selectedItems.length);
-      toast.success("Đặt hàng thành công!");
-      router.refresh();
-      setSelectedItems([]);
-      setPhoneNumber("");
-      setIsCheckoutOpen(false);
-    } catch (error) {
-      console.error("Error during checkout:", error);
-      toast.error("Có lỗi khi đặt hàng!");
+    const orderData = {
+      orderitemIds: selectedItems,
+      phoneNumber,
+      address: getFullAddress(),
+    };
+    const res = await apiPost<IOrderItem, typeof orderData>(
+      "/order",
+      orderData
+    );
+    if (res.error) {
+      toast.error(res.message);
     }
+    setCartItemCount(cartItemCount - selectedItems.length);
+    toast.success("Đặt hàng thành công!");
+    router.refresh();
+    setSelectedItems([]);
+    setPhoneNumber("");
+    setIsCheckoutOpen(false);
     stop();
   };
 
@@ -201,7 +199,7 @@ const CartPage = ({ carts }: { carts: IOrderItem[] }) => {
               </TableCell>
               <TableCell className="font-semibold">{item.quantity}</TableCell>
               <TableCell className="font-semibold">
-                {item.totalPrice.toLocaleString("vi-VN")} ₫
+                {item.unitPrice.toLocaleString("vi-VN")} ₫
               </TableCell>
               <TableCell className="font-semibold">
                 {item.totalPrice.toLocaleString("vi-VN")} ₫

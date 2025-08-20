@@ -1,6 +1,7 @@
 import { apiGet } from "@/lib/api";
-import { Headphone } from "@/lib/types/headphone";
 import HeadphoneDetail from "./headphone-detail";
+import { IHeadphone } from "@/lib/types/headphone";
+import { toast } from "sonner";
 
 export default async function Page({
   params,
@@ -8,7 +9,11 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const res = await apiGet<Headphone>(`/headphones/${id}`);
+  const res = await apiGet<IHeadphone>(`/headphones/${id}`);
+  if (res.error) {
+    toast.error(res.message);
+    return;
+  }
   if (!res) return <div>Loading...</div>;
   if (!res.data) return <div>Product not found</div>;
   return <HeadphoneDetail product={res.data} />;

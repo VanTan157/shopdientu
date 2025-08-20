@@ -240,7 +240,6 @@ export class UsersService {
 
   async validateUser(email: string, password: string) {
     const user = await this.userModel.findOne({ email }).exec();
-    console.log("User found:", user);
     if (!user || !user.password) {
       throw new NotFoundException("Tài khoản không tồn tại");
     }

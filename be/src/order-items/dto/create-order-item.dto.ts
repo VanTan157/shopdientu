@@ -25,10 +25,7 @@ class ColorVariantDto {
 }
 
 export class CreateOrderItemDto {
-  @IsMongoId()
-  userId: string;
-
-  @IsMongoId()
+  @IsString()
   productId: string;
 
   @IsString()

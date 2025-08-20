@@ -22,7 +22,6 @@ export class MobilesService {
     createMobileDto: CreateMobileDto,
     files: Express.Multer.File[]
   ): Promise<ApiResponse<Mobile>> {
-    console.log("Creating:", createMobileDto);
     if (files.length !== createMobileDto.colorVariants.length) {
       throw new BadRequestException(
         "Số lượng file ảnh phải khớp với số lượng biến thể màu"

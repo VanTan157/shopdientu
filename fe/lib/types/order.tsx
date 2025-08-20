@@ -9,11 +9,13 @@ export type OrderStatus =
 export interface Order {
   _id: string;
   userId: string;
-  orderitemIds: string;
+  orderitemIds: string[];
   totalAmount: number;
   phoneNumber: string;
   address: string;
   status: EOrderStatus;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export enum EOrderStatus {

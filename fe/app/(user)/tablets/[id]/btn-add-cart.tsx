@@ -18,16 +18,16 @@ import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/app/store/cart-store";
-import { Tablet } from "@/lib/types/tablet";
 import { loadingStore } from "@/app/store/loading.store";
 import { EProductType } from "@/lib/types/order";
-import { orderItem } from "@/lib/types/order-item";
+import { ITablet } from "@/lib/types/tablet";
+import { IOrderItem } from "@/lib/types/order-item";
 
 const BtnAddToCart = ({
   product,
   index,
 }: {
-  product: Tablet;
+  product: ITablet;
   index: number;
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
@@ -38,11 +38,13 @@ const BtnAddToCart = ({
 
   const handleAddToCart = async () => {
     start();
-    const res = await apiPost<orderItem, any>("/order-items", {
-      product_id: product._id,
-      product_type: EProductType.TABLET,
+    const res = await apiPost<IOrderItem, any>("/order-items", {
+      productId: product._id,
       quantity,
       colorVariant: product.colorVariants[index],
+      productName: product.name,
+      productType: EProductType.TABLET,
+      unitPrice: product.finalPrice,
     });
     router.refresh();
     if (res.success) {

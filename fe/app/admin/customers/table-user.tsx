@@ -19,13 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User } from "@/lib/types/user";
+import { EUserType, IAllUser } from "@/lib/types/user";
 import { useState } from "react";
 import { EditUser } from "./edit-customer";
 
-export function TableUser({ users }: { users: User[] }) {
+export function TableUser({ users }: { users: IAllUser[] }) {
+  console.log("users", users);
   const [userSearch, setUserSearch] = useState<string>();
-  const [userSelected, setUserSelected] = useState<string>("tatca");
+  const [userSelected, setUserSelected] = useState<EUserType>(EUserType.ALL);
 
   if (!users || users.length === 0) {
     return (
@@ -38,7 +39,7 @@ export function TableUser({ users }: { users: User[] }) {
       .toLowerCase()
       .includes(userSearch?.toLowerCase() || "");
     const matchesType =
-      userSelected === "tatca" || user.type === userSelected.toUpperCase();
+      userSelected === EUserType.ALL || user.type === userSelected;
     return matchesSearch && matchesType;
   });
 
@@ -50,15 +51,18 @@ export function TableUser({ users }: { users: User[] }) {
           value={userSearch || ""}
           onChange={(e) => setUserSearch(e.target.value)}
         />
-        <Select value={userSelected} onValueChange={setUserSelected}>
+        <Select
+          value={userSelected}
+          onValueChange={(value) => setUserSelected(value as EUserType)}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select a type" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value="tatca">Tất cả</SelectItem>
-              <SelectItem value="USER">USER</SelectItem>
-              <SelectItem value="ADMIN">ADMIN</SelectItem>
+              <SelectItem value={EUserType.ALL}>{EUserType.ALL}</SelectItem>
+              <SelectItem value={EUserType.USER}>{EUserType.USER}</SelectItem>
+              <SelectItem value={EUserType.ADMIN}>{EUserType.ADMIN}</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -75,8 +79,8 @@ export function TableUser({ users }: { users: User[] }) {
         </TableHeader>
         <TableBody>
           {filteredUsers.map((user) => (
-            <TableRow key={user.userId}>
-              <TableCell>{user.userId}</TableCell>
+            <TableRow key={user._id}>
+              <TableCell>{user._id}</TableCell>
               <TableCell>{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>{user.type}</TableCell>

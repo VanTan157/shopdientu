@@ -29,9 +29,7 @@ export class OrderItemsService {
     private mobilesService: MobilesService,
     private laptopsService: LaptopService,
     private headphonesService: HeadphoneService,
-    private tabletService: TabletService,
-    @Inject(forwardRef(() => OrderService))
-    private orderService: OrderService
+    private tabletService: TabletService
   ) {}
 
   async findProductByType(productId: string, productType: EProductType) {
@@ -51,7 +49,7 @@ export class OrderItemsService {
 
   async getOrderNotInOrder(userId: string): Promise<ApiResponse<OrderItem[]>> {
     const orderItems = await this.orderItemModel
-      .find({ user_id: userId, isInCart: false })
+      .find({ userId, isInCart: false })
       .sort({ createdAt: -1 })
       .exec();
 
@@ -81,15 +79,16 @@ export class OrderItemsService {
       throw new NotFoundException("Giá sản phẩm không hợp lệ");
     }
 
-    const total_price = createOrderItemDto.quantity * product.finalPrice;
+    const totalPrice = createOrderItemDto.quantity * product.finalPrice;
 
     const orderItem = new this.orderItemModel({
-      user_id: userId,
-      product_id: createOrderItemDto.productId,
-      product_type: createOrderItemDto.productType,
+      userId,
+      productId: createOrderItemDto.productId,
+      productType: createOrderItemDto.productType,
+      productName: product.name,
       quantity: createOrderItemDto.quantity,
-      unit_price: product.finalPrice,
-      total_price,
+      unitPrice: product.finalPrice,
+      totalPrice,
       colorVariant: {
         _id: createOrderItemDto.colorVariant._id,
         color: createOrderItemDto.colorVariant.color,
@@ -103,6 +102,12 @@ export class OrderItemsService {
       message: "Thêm sản phẩm vào giỏ hàng thành công",
       data: orderItem,
     };
+  }
+
+  updateIsInCart(id: string, isInCart: boolean) {
+    return this.orderItemModel
+      .findByIdAndUpdate(id, { isInCart }, { new: true })
+      .exec();
   }
 
   async findAll(): Promise<ApiResponse<OrderItem[]>> {

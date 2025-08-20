@@ -16,6 +16,7 @@ const MobileDetail = ({ product }: { product: IMobile }) => {
   return (
     <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 my-10 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12">
+        {/* Image Section */}
         <div className="relative w-full h-64 sm:h-80 lg:h-[32rem] rounded-xl overflow-hidden shadow-xl transform hover:scale-[1.02] transition-transform duration-300">
           <Image
             src={
@@ -34,6 +35,7 @@ const MobileDetail = ({ product }: { product: IMobile }) => {
           )}
         </div>
 
+        {/* Product Info Section */}
         <div className="flex flex-col gap-6">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-cyan-300 tracking-tight">
             {product.name}
@@ -59,6 +61,7 @@ const MobileDetail = ({ product }: { product: IMobile }) => {
             )}
           </p>
 
+          {/* Color Variants */}
           <div>
             <p className="font-semibold text-lg sm:text-xl text-white mb-3">
               Màu sắc:
@@ -87,6 +90,7 @@ const MobileDetail = ({ product }: { product: IMobile }) => {
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <BtnBuyNow product={product} index={colorVariant} />
             <BtnAddToCart product={product} index={colorVariant} />
@@ -94,6 +98,7 @@ const MobileDetail = ({ product }: { product: IMobile }) => {
         </div>
       </div>
 
+      {/* Description and Specifications */}
       <div className="mt-12">
         <p className="text-gray-200 mb-8 whitespace-pre-wrap text-sm sm:text-base leading-relaxed">
           {product.description}
@@ -109,12 +114,12 @@ const MobileDetail = ({ product }: { product: IMobile }) => {
               {product.specifications.screenSize}"
             </p>
             <p>
-              <strong className="text-cyan-300">RAM:</strong>{" "}
-              {product.specifications.ram}GB
+              <strong className="text-cyan-300">Độ phân giải:</strong>{" "}
+              {product.specifications.resolution}
             </p>
             <p>
-              <strong className="text-cyan-300">Trọng lượng:</strong>{" "}
-              {product.dimensions.weight}g
+              <strong className="text-cyan-300">Tần số quét:</strong>{" "}
+              {product.specifications.refreshRate}Hz
             </p>
           </div>
           <div className="flex flex-col gap-3">
@@ -133,12 +138,52 @@ const MobileDetail = ({ product }: { product: IMobile }) => {
           </div>
           <div className="flex flex-col gap-3">
             <p>
+              <strong className="text-cyan-300">RAM:</strong>{" "}
+              {product.specifications.ram}GB
+            </p>
+            <p>
               <strong className="text-cyan-300">Bộ nhớ:</strong>{" "}
               {product.specifications.storage}GB
             </p>
             <p>
               <strong className="text-cyan-300">Pin:</strong>{" "}
               {product.specifications.battery}mAh
+            </p>
+          </div>
+        </div>
+
+        <hr className="border-gray-700 my-8" />
+        <h2 className="text-2xl sm:text-3xl font-semibold text-cyan-400 uppercase mb-6">
+          Thông tin khác
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-200 text-sm sm:text-base">
+          <div className="flex flex-col gap-3">
+            <p>
+              <strong className="text-cyan-300">Phụ kiện:</strong>{" "}
+              {product.accessories.join(", ")}
+            </p>
+            <p>
+              <strong className="text-cyan-300">Thương hiệu:</strong>{" "}
+              {product.brand}
+            </p>
+            <p>
+              <strong className="text-cyan-300">Loại SIM:</strong>{" "}
+              {product.specifications.simType}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <p>
+              <strong className="text-cyan-300">Kích thước:</strong>{" "}
+              {product.dimensions.length} x {product.dimensions.width} x{" "}
+              {product.dimensions.height} mm
+            </p>
+            <p>
+              <strong className="text-cyan-300">Trọng lượng:</strong>{" "}
+              {product.dimensions.weight}g
+            </p>
+            <p>
+              <strong className="text-cyan-300">Bảo hành:</strong>{" "}
+              {product.warranty}
             </p>
           </div>
         </div>

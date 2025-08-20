@@ -25,11 +25,8 @@ class UpdateColorVariantDto {
 }
 
 export class UpdateOrderItemDto {
-  @IsMongoId()
-  userId: Types.ObjectId;
-
-  @IsMongoId()
-  productId: Types.ObjectId;
+  @IsString()
+  productId: string;
 
   @IsString()
   productName: string;

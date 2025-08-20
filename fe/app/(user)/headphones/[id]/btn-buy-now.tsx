@@ -1,6 +1,4 @@
 "use client";
-
-import { ShoppingBag } from "lucide-react";
 import { apiPost } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -21,16 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Headphone } from "@/lib/types/headphone";
 import { useAddress } from "@/hooks/useAddress";
 import { EProductType } from "@/lib/types/order";
 import { loadingStore } from "@/app/store/loading.store";
+import { IHeadphone } from "@/lib/types/headphone";
+import { ShoppingBag } from "lucide-react";
 
 const BtnBuyNow = ({
   product,
   index,
 }: {
-  product: Headphone;
+  product: IHeadphone;
   index: number;
 }) => {
   const router = useRouter();
@@ -61,85 +60,81 @@ const BtnBuyNow = ({
 
   const handleConfirmBuy = async () => {
     start();
-    try {
-      if (!product.isAvailable || product.colorVariants[index].stock === 0) {
-        toast.error("Sản phẩm không khả dụng hoặc hết hàng!");
-        setIsOpen(false);
-        return;
-      }
-      if (quantity > product.colorVariants[index].stock) {
-        toast.error(
-          `Số lượng vượt quá tồn kho (${product.colorVariants[index].stock})!`
-        );
-        stop();
-        return;
-      }
-      if (
-        !phoneNumber ||
-        !street ||
-        quantity < 1 ||
-        !province ||
-        !district ||
-        !ward
-      ) {
-        toast.error("Vui lòng điền đầy đủ thông tin!");
-        stop();
-        return;
-      }
-      if (!isVietnamesePhoneNumber(phoneNumber)) {
-        toast.error("Số điện thoại không hợp lệ!");
-        return;
-      }
-
-      const orderItemData = {
-        product_id: product._id,
-        product_type: EProductType.HEADPHONE,
-        quantity: quantity,
-        colorVariant: {
-          _id: product.colorVariants[index]._id,
-          color: product.colorVariants[index].color,
-          image: product.colorVariants[index].image,
-        },
-      };
-
-      const orderItemResponse = await apiPost<any, typeof orderItemData>(
-        "/order-items",
-        orderItemData
-      );
-
-      if (orderItemResponse.error) {
-        throw new Error(orderItemResponse.error);
-      }
-
-      const orderItemId = orderItemResponse.data._id;
-
-      const orderData = {
-        orderitem_ids: [orderItemId],
-        phone_number: phoneNumber,
-        address: getFullAddress(),
-      };
-
-      const orderResponse = await apiPost<any, typeof orderData>(
-        "/order",
-        orderData
-      );
-
-      if (orderResponse.error) {
-        throw new Error(orderResponse.error);
-      }
-
-      toast.success("Đơn hàng đã được tạo thành công!");
+    if (!product.isAvailable || product.colorVariants[index].stock === 0) {
+      toast.error("Sản phẩm không khả dụng hoặc hết hàng!");
       setIsOpen(false);
-      router.refresh();
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Có lỗi khi tạo đơn hàng!");
-      }
-    } finally {
-      stop();
+      return;
     }
+    if (quantity > product.colorVariants[index].stock) {
+      toast.error(
+        `Số lượng vượt quá tồn kho (${product.colorVariants[index].stock})!`
+      );
+      stop();
+      return;
+    }
+    if (
+      !phoneNumber ||
+      !street ||
+      quantity < 1 ||
+      !province ||
+      !district ||
+      !ward
+    ) {
+      toast.error("Vui lòng điền đầy đủ thông tin!");
+      stop();
+      return;
+    }
+    if (!isVietnamesePhoneNumber(phoneNumber)) {
+      toast.error("Số điện thoại không hợp lệ!");
+      return;
+    }
+
+    const orderItemData = {
+      productId: product._id,
+      quantity,
+      productName: product.name,
+      productType: EProductType.HEADPHONE,
+      unitPrice: product.finalPrice,
+      colorVariant: {
+        _id: product.colorVariants[index]._id,
+        color: product.colorVariants[index].color,
+        image: product.colorVariants[index].image,
+      },
+    };
+
+    const orderItemResponse = await apiPost<any, typeof orderItemData>(
+      "/order-items",
+      orderItemData
+    );
+
+    if (orderItemResponse.error) {
+      toast.error(orderItemResponse.message);
+      return;
+    }
+
+    const orderItemId = orderItemResponse.data._id;
+
+    const orderData = {
+      orderitemIds: [orderItemId],
+      phoneNumber: phoneNumber,
+      address: getFullAddress(),
+    };
+
+    const orderResponse = await apiPost<any, typeof orderData>(
+      "/order",
+      orderData
+    );
+
+    if (orderResponse.error) {
+      toast.error(orderResponse.message);
+      return;
+    }
+
+    toast.success("Đơn hàng đã được tạo thành công!");
+    setIsOpen(false);
+    router.refresh();
+
+    stop();
   };
 
   return (

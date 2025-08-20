@@ -16,17 +16,17 @@ import { Label } from "@/components/ui/label";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Laptop } from "@/lib/types/laptop";
 import { useCartStore } from "@/app/store/cart-store";
 import { loadingStore } from "@/app/store/loading.store";
 import { EProductType } from "@/lib/types/order";
-import { orderItem } from "@/lib/types/order-item";
+import { ILaptop } from "@/lib/types/laptop";
+import { IOrderItem } from "@/lib/types/order-item";
 
 const BtnAddToCart = ({
   product,
   index,
 }: {
-  product: Laptop;
+  product: ILaptop;
   index: number;
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
@@ -37,11 +37,13 @@ const BtnAddToCart = ({
 
   const handleAddToCart = async () => {
     start();
-    const res = await apiPost<orderItem, any>("/order-items", {
-      product_id: product._id,
-      product_type: EProductType.LAPTOP,
+    const res = await apiPost<IOrderItem, any>("/order-items", {
+      productId: product._id,
       quantity,
       colorVariant: product.colorVariants[index],
+      productName: product.name,
+      productType: EProductType.LAPTOP,
+      unitPrice: product.finalPrice,
     });
     router.refresh();
     if (res.success) {

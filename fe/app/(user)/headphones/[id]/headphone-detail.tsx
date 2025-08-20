@@ -1,11 +1,12 @@
 "use client";
+
 import Image from "next/image";
 import { useState } from "react";
 import BtnBuyNow from "./btn-buy-now";
 import BtnAddToCart from "./btn-add-cart";
-import { Headphone } from "@/lib/types/headphone";
+import { IHeadphone } from "@/lib/types/headphone";
 
-const HeadphoneDetail = ({ product }: { product: Headphone }) => {
+const HeadphoneDetail = ({ product }: { product: IHeadphone }) => {
   const [colorVariant, setColorVariant] = useState<number>(0);
   const totalStock = product.colorVariants.reduce(
     (sum, variant) => sum + variant.stock,
@@ -13,175 +14,177 @@ const HeadphoneDetail = ({ product }: { product: Headphone }) => {
   );
 
   return (
-    <section className="container mx-auto p-5 my-10 rounded-lg shadow-lg">
-      <div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="relative w-full h-40 md:h-96 rounded-lg overflow-hidden shadow-lg">
-            <Image
-              src={
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}${product.colorVariants[colorVariant]?.image}` ||
-                "/placeholder.jpg"
-              }
-              alt={product.name}
-              fill
-              quality={100}
-              className="object-contain rounded-lg shadow-md"
-            />
-            {product.promotion > 0 && (
-              <span className="absolute top-2 left-2 bg-red-600 text-white text-sm font-medium px-2 py-1 rounded-full">
-                Giảm {product.promotion}%
-              </span>
-            )}
+    <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 my-10 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12">
+        {/* Image Section */}
+        <div className="relative w-full h-64 sm:h-80 lg:h-[32rem] rounded-xl overflow-hidden shadow-xl transform hover:scale-[1.02] transition-transform duration-300">
+          <Image
+            src={
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}${product.colorVariants[colorVariant]?.image}` ||
+              "/placeholder.jpg"
+            }
+            alt={product.name}
+            fill
+            quality={100}
+            className="object-contain rounded-xl"
+          />
+          {product.promotion > 0 && (
+            <span className="absolute top-4 left-4 bg-red-500 text-white text-sm sm:text-base font-semibold px-3 py-1.5 rounded-full shadow-md">
+              Giảm {product.promotion}%
+            </span>
+          )}
+        </div>
+
+        {/* Product Info Section */}
+        <div className="flex flex-col gap-6">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-cyan-300 tracking-tight">
+            {product.name}
+          </h1>
+
+          <div className="flex items-center gap-4">
+            <span className="text-gray-400 line-through text-sm sm:text-lg">
+              {product.startingPrice.toLocaleString("vi-VN")} ₫
+            </span>
+            <span className="text-red-400 text-lg sm:text-2xl font-bold">
+              {product.finalPrice.toLocaleString("vi-VN")} ₫
+            </span>
           </div>
 
+          <p className="text-sm sm:text-base">
+            <span className="font-semibold text-white">Tình trạng: </span>
+            {product.isAvailable && totalStock > 0 ? (
+              <span className="text-green-400">
+                Còn hàng ({totalStock} sản phẩm)
+              </span>
+            ) : (
+              <span className="text-red-400">Hết hàng</span>
+            )}
+          </p>
+
+          {/* Color Variants */}
           <div>
-            <h1 className="text-xl md:text-4xl font-bold mb-4 text-cyan-300">
-              {product.name}
-            </h1>
-
-            <div className="mb-4 flex items-center">
-              <span className="text-gray-500 line-through text-xs md:text-lg">
-                {product.startingPrice.toLocaleString("vi-VN")} ₫
-              </span>
-              <span className="ml-4 text-red-500 text-base md:text-2xl font-bold">
-                {product.finalPrice.toLocaleString("vi-VN")} ₫
-              </span>
-            </div>
-
-            <p className="mb-4">
-              <span className="font-semibold text-base md:text-xl">
-                Tình trạng:{" "}
-              </span>
-              {product.isAvailable && totalStock > 0 ? (
-                <span className="text-green-500 text-xs md:text-lg">
-                  Còn hàng ({totalStock} sản phẩm)
-                </span>
-              ) : (
-                <span className="text-red-500 text-xs md:text-lg">
-                  Hết hàng
-                </span>
-              )}
+            <p className="font-semibold text-lg sm:text-xl text-white mb-3">
+              Màu sắc:
             </p>
-
-            <div className="mb-4">
-              <p className="font-semibold text-base md:text-xl">Màu sắc:</p>
-              <div className="flex gap-2 mt-2">
-                {product.colorVariants.map((variant, index) => (
-                  <div
-                    onClick={() => setColorVariant(index)}
-                    key={variant._id}
-                    className={`cursor-pointer flex flex-col px-2 py-2 w-[30%] items-center rounded-lg border-2 transition-colors duration-200
-                      ${
-                        colorVariant === index
-                          ? "border-blue-500 bg-blue-900 text-cyan-300 shadow-lg"
-                          : "border-gray-400 bg-gray-800 text-white hover:border-blue-400"
-                      }
-                      focus:outline-none`}
-                  >
-                    <span className="text-xs md:text-base">
-                      {variant.color}
-                    </span>
-                    <span className="text-xs md:text-sm text-white">
-                      ({variant.stock} còn)
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="flex flex-wrap gap-3">
+              {product.colorVariants.map((variant, index) => (
+                <button
+                  type="button"
+                  onClick={() => setColorVariant(index)}
+                  key={variant._id}
+                  className={`flex flex-col items-center px-4 py-2.5 rounded-lg border-2 transition-all duration-200 w-28 sm:w-32
+                    ${
+                      colorVariant === index
+                        ? "border-cyan-400 bg-cyan-900/30 text-cyan-200 shadow-lg"
+                        : "border-gray-600 bg-gray-700/50 text-gray-200 hover:border-cyan-500 hover:bg-cyan-900/20"
+                    }`}
+                >
+                  <span className="font-semibold text-sm sm:text-base">
+                    {variant.color}
+                  </span>
+                  <span className="text-xs text-gray-300">
+                    ({variant.stock} còn)
+                  </span>
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="md:flex gap-4 pt-4 space-y-2">
-              <BtnBuyNow product={product} index={colorVariant} />
-              <BtnAddToCart product={product} index={colorVariant} />
-            </div>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <BtnBuyNow product={product} index={colorVariant} />
+            <BtnAddToCart product={product} index={colorVariant} />
+          </div>
+        </div>
+      </div>
+
+      {/* Description and Specifications */}
+      <div className="mt-12">
+        <p className="text-gray-200 mb-8 whitespace-pre-wrap text-sm sm:text-base leading-relaxed">
+          {product.description}
+        </p>
+        <hr className="border-gray-700 my-8" />
+        <h2 className="text-2xl sm:text-3xl font-semibold text-cyan-400 uppercase mb-6">
+          Thông số kỹ thuật
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-200 text-sm sm:text-base">
+          <div className="flex flex-col gap-3">
+            <p>
+              <strong className="text-cyan-300">Loại driver:</strong>{" "}
+              {product.specifications.driverType}
+            </p>
+            <p>
+              <strong className="text-cyan-300">Kích thước driver:</strong>{" "}
+              {product.specifications.driverSize}mm
+            </p>
+            <p>
+              <strong className="text-cyan-300">Dải tần số:</strong>{" "}
+              {product.specifications.frequencyRange}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <p>
+              <strong className="text-cyan-300">Trở kháng:</strong>{" "}
+              {product.specifications.impedance}Ω
+            </p>
+            <p>
+              <strong className="text-cyan-300">Chống ồn:</strong>{" "}
+              {product.specifications.noiseCancellation}
+            </p>
+            <p>
+              <strong className="text-cyan-300">Microphone:</strong>{" "}
+              {product.specifications.microphone ? "Có" : "Không"}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <p>
+              <strong className="text-cyan-300">Thời lượng pin:</strong>{" "}
+              {product.specifications.batteryLife} giờ
+            </p>
+            <p>
+              <strong className="text-cyan-300">Thời gian sạc:</strong>{" "}
+              {product.specifications.chargingTime} giờ
+            </p>
+            <p>
+              <strong className="text-cyan-300">Cổng sạc:</strong>{" "}
+              {product.specifications.chargingPort}
+            </p>
           </div>
         </div>
 
-        <div className="mt-6">
-          <p className="text-white mb-4 whitespace-pre-wrap text-sm md:text-base">
-            {product.description}
-          </p>
-          <hr className="my-6" />
-          <h2 className="text-2xl font-semibold mb-2 text-indigo-400 uppercase pt-4">
-            Thông số kỹ thuật:
-          </h2>
-          <ul className="text-white list-none grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm md:text-base">
-            <div className="flex flex-col gap-2">
-              <li>
-                <strong>Loại driver:</strong>{" "}
-                {product.specifications.driverType}
-              </li>
-              <li>
-                <strong>Kích thước driver:</strong>{" "}
-                {product.specifications.driverSize}mm
-              </li>
-              <li>
-                <strong>Dải tần số:</strong>{" "}
-                {product.specifications.frequencyRange}Hz
-              </li>
-              <li>
-                <strong>Độ nhạy:</strong> {product.specifications.sensitivity}dB
-              </li>
-              <li>
-                <strong>Trở kháng:</strong> {product.specifications.impedance}Ω
-              </li>
-              <li>
-                <strong>Chống ồn:</strong>{" "}
-                {product.specifications.noiseCancellation}
-              </li>
-            </div>
-            <div className="flex flex-col gap-2">
-              <li>
-                <strong>Thời lượng pin:</strong>{" "}
-                {product.specifications.batteryLife} giờ
-              </li>
-              <li>
-                <strong>Thời gian sạc:</strong>{" "}
-                {product.specifications.chargingTime} giờ
-              </li>
-              <li>
-                <strong>Cổng sạc:</strong> {product.specifications.chargingPort}
-              </li>
-              <li>
-                <strong>Microphone:</strong> {product.specifications.microphone}
-              </li>
-              <li>
-                <strong>Chất lượng âm thanh:</strong>{" "}
-                {product.specifications.audioQuality}
-              </li>
-              <li>
-                <strong>Trọng lượng:</strong> {product.weight}g
-              </li>
-            </div>
-            <div className="flex flex-col gap-2">
-              <li>
-                <strong>Kích thước:</strong> {product.dimensions.length} x{" "}
-                {product.dimensions.width} x {product.dimensions.height} cm
-              </li>
-            </div>
-          </ul>
-
-          <hr className="my-6" />
-          <div className="mt-4">
-            <h3 className="text-2xl font-semibold mb-2 text-indigo-400 uppercase pt-4">
-              Thông tin khác:
-            </h3>
-            <ul className="text-white list-none grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm md:text-base">
-              <li>
-                <strong>Phụ kiện:</strong> {product.accessories.join(", ")}
-              </li>
-              <li>
-                <strong>Thương hiệu:</strong> {product.brand}
-              </li>
-              <li>
-                <strong>Loại tai nghe:</strong> {product.type}
-              </li>
-              <li>
-                <strong>Kết nối:</strong> {product.connectivity.join(", ")}
-              </li>
-              <li>
-                <strong>Bảo hành:</strong> {product.warranty}
-              </li>
-            </ul>
+        <hr className="border-gray-700 my-8" />
+        <h2 className="text-2xl sm:text-3xl font-semibold text-cyan-400 uppercase mb-6">
+          Thông tin khác
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-200 text-sm sm:text-base">
+          <div className="flex flex-col gap-3">
+            <p>
+              <strong className="text-cyan-300">Phụ kiện:</strong>{" "}
+              {product.accessories.join(", ")}
+            </p>
+            <p>
+              <strong className="text-cyan-300">Thương hiệu:</strong>{" "}
+              {product.brand}
+            </p>
+            <p>
+              <strong className="text-cyan-300">Kết nối:</strong>{" "}
+              {product.specifications.connectivity}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <p>
+              <strong className="text-cyan-300">Kích thước:</strong>{" "}
+              {product.dimensions.length} x {product.dimensions.width} x{" "}
+              {product.dimensions.height} mm
+            </p>
+            <p>
+              <strong className="text-cyan-300">Trọng lượng:</strong>{" "}
+              {product.dimensions.weight}g
+            </p>
+            <p>
+              <strong className="text-cyan-300">Bảo hành:</strong>{" "}
+              {product.warranty}
+            </p>
           </div>
         </div>
       </div>

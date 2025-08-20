@@ -16,17 +16,17 @@ import { Label } from "@/components/ui/label";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Headphone } from "@/lib/types/headphone";
 import { useCartStore } from "@/app/store/cart-store";
 import { EProductType } from "@/lib/types/order";
 import { loadingStore } from "@/app/store/loading.store";
-import { orderItem } from "@/lib/types/order-item";
+import { IOrderItem } from "@/lib/types/order-item";
+import { IHeadphone } from "@/lib/types/headphone";
 
 const BtnAddToCart = ({
   product,
   index,
 }: {
-  product: Headphone;
+  product: IHeadphone;
   index: number;
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
@@ -37,11 +37,13 @@ const BtnAddToCart = ({
 
   const handleAddToCart = async () => {
     start();
-    const res = await apiPost<orderItem, any>("/order-items", {
-      product_id: product._id,
-      product_type: EProductType.HEADPHONE,
+    const res = await apiPost<IOrderItem, any>("/order-items", {
+      productId: product._id,
       quantity,
       colorVariant: product.colorVariants[index],
+      productName: product.name,
+      productType: EProductType.HEADPHONE,
+      unitPrice: product.finalPrice,
     });
     router.refresh();
     if (res.success) {

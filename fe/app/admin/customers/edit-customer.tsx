@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User } from "@/lib/types/user";
+import { EUserType, IAllUser } from "@/lib/types/user";
 import { useState } from "react";
-import { apiPatch, apiPost } from "@/lib/api";
+import { apiPatch } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { loadingStore } from "@/app/store/loading.store";
@@ -34,29 +34,27 @@ export function EditUser({
   user,
 }: {
   children: React.ReactNode;
-  user: User;
+  user: IAllUser;
 }) {
-  const [userEdit, setUserEdit] = useState<User>(user);
+  const [userEdit, setUserEdit] = useState<IAllUser>(user);
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const { start, stop } = loadingStore();
 
   const handleSubmit = async () => {
-    try {
-      start();
-      const res = await apiPatch<User, User>(`/users/${user.userId}`, userEdit);
-      if (!res.data) {
-        toast.error(res.error || "Lỗi cập nhật người dùng");
-        return;
-      }
-      toast.success("Cập nhật người dùng thành công");
-      router.refresh();
-      setIsOpen(false);
-    } catch (error) {
-      toast.error("Đã xảy ra lỗi khi cập nhật người dùng");
-    } finally {
-      stop();
+    start();
+    const res = await apiPatch<IAllUser, IAllUser>(
+      `/users/${user._id}`,
+      userEdit
+    );
+    if (res.error) {
+      toast.error(res.message);
+      return;
     }
+    toast.success("Cập nhật người dùng thành công");
+    router.refresh();
+    setIsOpen(false);
+    stop();
   };
 
   const handCancel = () => {
@@ -104,7 +102,7 @@ export function EditUser({
               <Select
                 value={userEdit.type}
                 onValueChange={(value) =>
-                  setUserEdit({ ...userEdit, type: value as User["type"] })
+                  setUserEdit({ ...userEdit, type: value as IAllUser["type"] })
                 }
               >
                 <SelectTrigger className="w-[180px]">
@@ -112,8 +110,12 @@ export function EditUser({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem value="USER">USER</SelectItem>
-                    <SelectItem value="ADMIN">ADMIN</SelectItem>
+                    <SelectItem value={EUserType.USER}>
+                      {EUserType.USER}
+                    </SelectItem>
+                    <SelectItem value={EUserType.ADMIN}>
+                      {EUserType.ADMIN}
+                    </SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

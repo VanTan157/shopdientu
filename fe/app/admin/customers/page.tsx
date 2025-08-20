@@ -1,16 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { apiGet } from "@/lib/api";
-import { User } from "@/lib/types/user";
+import { IAllUser } from "@/lib/types/user";
 import { Plus } from "lucide-react";
 import { cookies } from "next/headers";
 import { TableUser } from "./table-user";
+import { toast } from "sonner";
 
 const page = async () => {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value || null;
-  const res = await apiGet<User>("/users", {
+  const res = await apiGet<IAllUser[]>("/users", {
     Cookie: `accessToken=${accessToken}`,
   });
+  if (res.error) {
+    toast.error(res.message);
+    return;
+  }
 
   return (
     <div className="bg-white min-h-screen mx-auto p-8">
@@ -21,7 +26,7 @@ const page = async () => {
           Thêm người dùng
         </Button>
       </div>
-      <TableUser users={Array.isArray(res.data) ? res.data : []} />
+      <TableUser users={res.data || []} />
     </div>
   );
 };

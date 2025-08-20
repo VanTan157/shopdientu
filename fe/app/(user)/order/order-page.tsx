@@ -27,10 +27,11 @@ import {
 import { Trash2, Eye, Check } from "lucide-react";
 import Image from "next/image";
 import { EOrderStatus, Order, OrderStatus } from "@/lib/types/order";
-import { apiPatch } from "@/lib/api";
+import { apiGet, apiPatch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { loadingStore } from "@/app/store/loading.store";
+import { IOrderItem } from "@/lib/types/order-item";
 
 const OrderPage = ({ orders }: { orders: Order[] }) => {
   const [filterStatus, setFilterStatus] = useState<EOrderStatus>(
@@ -40,25 +41,41 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { start, stop } = loadingStore();
+  const [orderItems, setOrderItems] = useState<IOrderItem[]>([]);
 
   const handleCancelOrder = async (orderId: string) => {
     start();
-    try {
-      const res = await apiPatch<any, { status: OrderStatus }>(
-        `/order/${orderId}`,
-        {
-          status: EOrderStatus.CANCELED,
-        }
-      );
-      if (res.error) {
-        throw new Error(res.error);
+    const res = await apiPatch<any, { status: OrderStatus }>(
+      `/order/${orderId}`,
+      {
+        status: EOrderStatus.CANCELED,
       }
-      toast.success("Hủy đơn hàng thành công!");
-      setOpen(false);
-      router.refresh();
+    );
+    if (res.error) {
+      toast.error(res.message);
+    }
+    toast.success("Hủy đơn hàng thành công!");
+    setOpen(false);
+    router.refresh();
+    stop();
+  };
+
+  const handleViewDetails = async (order: Order) => {
+    start();
+    try {
+      const itemPromises = order.orderitemIds.map((itemId) =>
+        apiGet<IOrderItem>(`/order-items/${itemId}`)
+      );
+      const results = await Promise.all(itemPromises);
+      const items = results
+        .filter((result) => result && result.data)
+        .map((result) => result.data!);
+      setOrderItems(items);
+      console.log("Order item details:", items);
     } catch (error) {
-      console.error("Error canceling order:", error);
-      toast.error("Có lỗi khi hủy đơn hàng!");
+      console.error("Error fetching order items:", error);
+      toast.error("Có lỗi khi lấy chi tiết đơn hàng!");
+      setOrderItems([]);
     } finally {
       stop();
     }
@@ -66,25 +83,19 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
 
   const handleCompleteOrder = async (orderId: string) => {
     start();
-    try {
-      const res = await apiPatch<any, { status: OrderStatus }>(
-        `/order/${orderId}`,
-        {
-          status: EOrderStatus.COMPLETED,
-        }
-      );
-      if (res.error) {
-        throw new Error(res.error);
+    const res = await apiPatch<any, { status: OrderStatus }>(
+      `/order/${orderId}`,
+      {
+        status: EOrderStatus.COMPLETED,
       }
-      toast.success("Nhận hàng thành công!");
-      setOpen(false);
-      router.refresh();
-    } catch (error) {
-      console.error("Error complete order:", error);
-      toast.error("Có lỗi khi nhận đơn hàng!");
-    } finally {
-      stop();
+    );
+    if (res.error) {
+      toast.error(res.message);
     }
+    toast.success("Nhận hàng thành công!");
+    setOpen(false);
+    router.refresh();
+    stop();
   };
 
   if (orders.length === 0)
@@ -171,17 +182,17 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                 {new Date(order.createdAt).toLocaleDateString("vi-VN")}
               </TableCell>
               <TableCell className="font-semibold">
-                {order.total_amount.toLocaleString("vi-VN")} ₫
+                {order.totalAmount.toLocaleString("vi-VN")} ₫
               </TableCell>
               <TableCell className="font-semibold">{order.status}</TableCell>
               <TableCell className="flex gap-2">
-                {/* Xem chi tiết */}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
                       size="icon"
                       className="bg-blue-800 border-0 hover:bg-blue-200 text-white cursor-pointer hover:scale-110 transition-transform duration-200"
+                      onClick={() => handleViewDetails(order)}
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
@@ -192,20 +203,20 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                     </DialogHeader>
                     <div className="space-y-4">
                       <p>
-                        <strong>Số điện thoại:</strong> {order.phone_number}
+                        <strong>Số điện thoại: </strong> {order.phoneNumber}
                       </p>
                       <p>
-                        <strong>Địa chỉ:</strong> {order.address}
+                        <strong>Địa chỉ: </strong> {order.address}
                       </p>
                       <p>
-                        <strong>Trạng thái:</strong> {order.status}
+                        <strong>Trạng thái: </strong> {order.status}
                       </p>
                       <p>
-                        <strong>Tổng tiền:</strong>
-                        {order.total_amount.toLocaleString("vi-VN")} ₫
+                        <strong>Tổng tiền: </strong>
+                        {order.totalAmount.toLocaleString("vi-VN")} ₫
                       </p>
                       <h3 className="text-lg font-semibold">Sản phẩm:</h3>
-                      {order.orderitem_ids.length > 0 ? (
+                      {orderItems.length > 0 ? (
                         <div className="overflow-x-auto w-full">
                           <Table>
                             <TableHeader>
@@ -216,24 +227,24 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                                 <TableHead>Màu sắc</TableHead>
                                 <TableHead>Số lượng</TableHead>
                                 <TableHead className="text-right">
-                                  Tổng giá
+                                  Đơn giá
                                 </TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {order.orderitem_ids.map((item) => (
+                              {orderItems.map((item) => (
                                 <TableRow key={item._id}>
                                   <TableCell className="flex items-center gap-2">
                                     <Image
                                       src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${item.colorVariant.image}`}
-                                      alt={item.product.name}
+                                      alt={item.colorVariant.color}
                                       width={40}
                                       height={40}
                                       className="object-contain rounded-md"
                                       quality={100}
                                     />
                                     <span className="truncate">
-                                      {item.product.name}
+                                      {item.productName}
                                     </span>
                                   </TableCell>
                                   <TableCell>
@@ -241,7 +252,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                                   </TableCell>
                                   <TableCell>{item.quantity}</TableCell>
                                   <TableCell className="text-right">
-                                    {item.total_price.toLocaleString("vi-VN")} ₫
+                                    {item.unitPrice.toLocaleString("vi-VN")} ₫
                                   </TableCell>
                                 </TableRow>
                               ))}

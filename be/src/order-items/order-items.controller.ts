@@ -26,7 +26,6 @@ export class OrderItemsController {
   @Post()
   create(@Body() createOrderItemDto: CreateOrderItemDto, @Req() req: Request) {
     const userId = (req.user as JwtPayload).userId;
-    console.log("Creating order item for user:", userId);
     return this.orderItemsService.create(createOrderItemDto, userId);
   }
 

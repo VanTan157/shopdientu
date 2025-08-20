@@ -1,12 +1,12 @@
 import { apiGet } from "@/lib/api";
-import { Headphone } from "@/lib/types/headphone";
-import { Laptop } from "@/lib/types/laptop";
-import { Mobile } from "@/lib/types/mobile";
 import MobileList from "../mobiles/mobile-list";
 import LaptopList from "../laptops/laptop-list";
 import HeadphoneList from "../headphones/headphone-list";
-import { Tablet } from "@/lib/types/tablet";
 import TabletList from "../tablets/tablet-list";
+import { IMobile } from "@/lib/types/mobile";
+import { ILaptop } from "@/lib/types/laptop";
+import { IHeadphone } from "@/lib/types/headphone";
+import { ITablet } from "@/lib/types/tablet";
 
 type SearchPageProps = {
   searchParams: { [key: string]: string };
@@ -14,16 +14,16 @@ type SearchPageProps = {
 
 const Page = async ({ searchParams }: SearchPageProps) => {
   const query = await searchParams.query?.toLowerCase();
-  const resMobile = await apiGet<Mobile[]>("/mobiles");
+  const resMobile = await apiGet<IMobile[]>("/mobiles");
   const mobiles = resMobile.data || [];
 
-  const resLaptop = await apiGet<Laptop[]>("/laptops");
+  const resLaptop = await apiGet<ILaptop[]>("/laptops");
   const laptops = resLaptop.data || [];
 
-  const resHeadphone = await apiGet<Headphone[]>("/headphones");
+  const resHeadphone = await apiGet<IHeadphone[]>("/headphones");
   const headphones = resHeadphone.data || [];
 
-  const resTablet = await apiGet<Tablet[]>("/tablets");
+  const resTablet = await apiGet<ITablet[]>("/tablets");
   const tablets = resTablet.data || [];
 
   const filteredMobiles = mobiles.filter((mobile) =>

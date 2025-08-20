@@ -2,7 +2,7 @@
 
 import { useCartStore } from "@/app/store/cart-store";
 import { apiGet } from "@/lib/api";
-import { CartItem } from "@/lib/types/order-item";
+import { IOrderItem } from "@/lib/types/order-item";
 import { ShoppingCart } from "lucide-react";
 import { useEffect } from "react";
 
@@ -11,12 +11,13 @@ const CartIcon = () => {
   useEffect(() => {
     const fetchCartItem = async () => {
       try {
-        const res = await apiGet<CartItem[]>(
+        const res = await apiGet<IOrderItem[]>(
           "/order-items/get-order-item-not-in-order",
           undefined,
           ["carts"],
           true
         );
+        console.log("Fetched cart items:", res.data);
         if (res.success && res.data) {
           setCartItemCount(res.data.length);
         }
