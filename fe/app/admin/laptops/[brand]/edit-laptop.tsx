@@ -8,7 +8,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Laptop } from "@/lib/types/laptop";
 import { apiPatch } from "@/lib/api";
 import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -17,12 +16,13 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { loadingStore } from "@/app/store/loading.store";
+import { ILaptop } from "@/lib/types/laptop";
 
 const EditLaptop = ({
   laptop,
   children,
 }: {
-  laptop: Laptop;
+  laptop: ILaptop;
   children: React.ReactNode;
 }) => {
   const router = useRouter();
@@ -31,45 +31,49 @@ const EditLaptop = ({
   const [formData, setFormData] = useState({
     name: laptop.name,
     brand: laptop.brand,
-    category: laptop.category,
     startingPrice: laptop.startingPrice,
     promotion: laptop.promotion,
     description: laptop.description || "",
     specifications: {
-      screenSize: laptop.specifications.screenSize || "",
+      screenSize: laptop.specifications.screenSize || 0,
       resolution: laptop.specifications.resolution || "",
+      refreshRate: laptop.specifications.refreshRate || 0,
       cpu: laptop.specifications.cpu || "",
       gpu: laptop.specifications.gpu || "",
-      ram: laptop.specifications.ram || "",
-      storage: laptop.specifications.storage || "",
-      battery: laptop.specifications.battery || "",
+      ram: laptop.specifications.ram || 0,
+      storage: laptop.specifications.storage || 0,
+      battery: laptop.specifications.battery || 0,
       os: laptop.specifications.os || "",
-      refreshRate: laptop.specifications.refreshRate || "",
-      keyboard: laptop.specifications.keyboard || "",
-      ports: laptop.specifications.ports || [],
-      webcam: laptop.specifications.webcam || "",
-      audio: laptop.specifications.audio || "",
+      camera: {
+        rear: laptop.specifications.camera.rear || "",
+        front: laptop.specifications.camera.front || "",
+      },
     },
     colorVariants: laptop.colorVariants.map((variant) => ({
       color: variant.color,
       image: null as File | null,
       stock: variant.stock,
       existingImage: variant.image || "",
+      hasNewImage: "false",
     })),
-    weight: laptop.weight || 0,
     dimensions: {
       length: laptop.dimensions?.length || 0,
       width: laptop.dimensions?.width || 0,
       height: laptop.dimensions?.height || 0,
+      weight: laptop.dimensions?.weight || 0,
     },
-    connectivity: laptop.connectivity || [],
-    accessories: laptop.accessories || [],
     warranty: laptop.warranty || "",
+    accessories: laptop.accessories || [],
     tags: laptop.tags || [],
   });
-  const [imagePreview, setImagePreview] = useState([] as string[]);
+  const [imagePreview, setImagePreview] = useState<string[]>(
+    laptop.colorVariants.map((variant) =>
+      variant.image
+        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}${variant.image}`
+        : ""
+    )
+  );
   const [tagInput, setTagInput] = useState("");
-  const [connectivityInput, setConnectivityInput] = useState("");
   const [accessoryInput, setAccessoryInput] = useState("");
 
   useEffect(() => {
@@ -90,22 +94,22 @@ const EditLaptop = ({
       stop();
       return;
     }
-    if (!formData.category.trim()) {
-      toast.error("Danh mục không được để trống!");
-      stop();
-      return;
-    }
-    if (isNaN(formData.startingPrice) || formData.startingPrice <= 0) {
-      toast.error("Giá gốc phải lớn hơn 0!");
+    if (
+      typeof formData.startingPrice !== "number" ||
+      isNaN(formData.startingPrice) ||
+      formData.startingPrice <= 0
+    ) {
+      toast.error("Giá gốc phải là số lớn hơn 0!");
       stop();
       return;
     }
     if (
+      typeof formData.promotion !== "number" ||
       isNaN(formData.promotion) ||
       formData.promotion < 0 ||
       formData.promotion > 100
     ) {
-      toast.error("Khuyến mãi phải từ 0 đến 100!");
+      toast.error("Khuyến mãi phải là số từ 0 đến 100!");
       stop();
       return;
     }
@@ -114,102 +118,34 @@ const EditLaptop = ({
       stop();
       return;
     }
-    if (!formData.warranty.trim()) {
-      toast.error("Bảo hành không được để trống!");
-      stop();
-      return;
-    }
-    // Validate thông số kỹ thuật
     const specs = formData.specifications;
-    if (!String(specs.screenSize).trim()) {
-      toast.error("Kích thước màn hình không được để trống!");
-      stop();
-      return;
-    }
-    if (!specs.resolution.trim()) {
-      toast.error("Độ phân giải không được để trống!");
-      stop();
-      return;
-    }
-    if (!specs.refreshRate.trim()) {
-      toast.error("Tần số quét không được để trống!");
-      stop();
-      return;
-    }
-    if (!specs.cpu.trim()) {
-      toast.error("CPU không được để trống!");
-      stop();
-      return;
-    }
-    if (!specs.gpu.trim()) {
-      toast.error("GPU không được để trống!");
-      stop();
-      return;
-    }
-    if (!String(specs.ram).trim()) {
-      toast.error("RAM không được để trống!");
-      stop();
-      return;
-    }
-    if (!String(specs.storage).trim()) {
-      toast.error("Bộ nhớ không được để trống!");
-      stop();
-      return;
-    }
-    if (!String(specs.battery).trim()) {
-      toast.error("Pin không được để trống!");
-      stop();
-      return;
-    }
-    if (!specs.os.trim()) {
-      toast.error("Hệ điều hành không được để trống!");
-      stop();
-      return;
-    }
-    if (!specs.keyboard.trim()) {
-      toast.error("Bàn phím không được để trống!");
-      stop();
-      return;
-    }
     if (
-      !Array.isArray(specs.ports) ||
-      specs.ports.length === 0 ||
-      specs.ports.some((p) => !p.trim())
+      specs.screenSize <= 0 ||
+      !specs.resolution.trim() ||
+      specs.refreshRate <= 0 ||
+      !specs.cpu.trim() ||
+      !specs.gpu.trim() ||
+      specs.ram <= 0 ||
+      specs.storage <= 0 ||
+      specs.battery <= 0 ||
+      !specs.os.trim() ||
+      !specs.camera.rear.trim() ||
+      !specs.camera.front.trim()
     ) {
-      toast.error("Cổng kết nối không được để trống!");
+      toast.error("Vui lòng nhập đầy đủ thông số kỹ thuật!");
       stop();
       return;
     }
-    if (!specs.webcam.trim()) {
-      toast.error("Webcam không được để trống!");
-      stop();
-      return;
-    }
-    if (!specs.audio.trim()) {
-      toast.error("Âm thanh không được để trống!");
-      stop();
-      return;
-    }
-    // Validate kích thước
     if (
-      isNaN(formData.dimensions.length) ||
-      isNaN(formData.dimensions.width) ||
-      isNaN(formData.dimensions.height) ||
       formData.dimensions.length <= 0 ||
       formData.dimensions.width <= 0 ||
-      formData.dimensions.height <= 0
+      formData.dimensions.height <= 0 ||
+      formData.dimensions.weight <= 0
     ) {
-      toast.error("Kích thước phải lớn hơn 0!");
+      toast.error("Kích thước và trọng lượng phải lớn hơn 0!");
       stop();
       return;
     }
-    // Validate trọng lượng
-    if (isNaN(formData.weight) || formData.weight <= 0) {
-      toast.error("Trọng lượng phải lớn hơn 0!");
-      stop();
-      return;
-    }
-    // Validate biến thể màu
     if (
       !Array.isArray(formData.colorVariants) ||
       formData.colorVariants.length === 0 ||
@@ -227,27 +163,8 @@ const EditLaptop = ({
       stop();
       return;
     }
-    // Validate kết nối
-    if (
-      !Array.isArray(formData.connectivity) ||
-      formData.connectivity.some((c) => !c.trim())
-    ) {
-      toast.error("Kết nối không được để trống!");
-      stop();
-      return;
-    }
-    // Validate phụ kiện
-    if (
-      !Array.isArray(formData.accessories) ||
-      formData.accessories.some((a) => !a.trim())
-    ) {
-      toast.error("Phụ kiện không được để trống!");
-      stop();
-      return;
-    }
-    // Validate tags
-    if (!Array.isArray(formData.tags) || formData.tags.some((t) => !t.trim())) {
-      toast.error("Tag không được để trống!");
+    if (formData.tags.some((tag) => typeof tag !== "string" || !tag.trim())) {
+      toast.error("Tag không hợp lệ!");
       stop();
       return;
     }
@@ -256,7 +173,6 @@ const EditLaptop = ({
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("brand", formData.brand);
-      formDataToSend.append("category", formData.category);
       formDataToSend.append("startingPrice", formData.startingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
@@ -264,47 +180,45 @@ const EditLaptop = ({
         "specifications",
         JSON.stringify(formData.specifications)
       );
-      formDataToSend.append("weight", formData.weight.toString());
       formDataToSend.append("dimensions", JSON.stringify(formData.dimensions));
-      formDataToSend.append(
-        "connectivity",
-        JSON.stringify(formData.connectivity)
-      );
+      formDataToSend.append("warranty", formData.warranty);
       formDataToSend.append(
         "accessories",
         JSON.stringify(formData.accessories)
       );
-      formDataToSend.append("warranty", formData.warranty);
       formDataToSend.append("tags", JSON.stringify(formData.tags));
+      formDataToSend.append(
+        "colorVariants",
+        JSON.stringify(
+          formData.colorVariants.map((variant) => ({
+            color: variant.color,
+            stock: variant.stock,
+            existingImage: variant.existingImage,
+            hasNewImage: variant.hasNewImage,
+          }))
+        )
+      );
 
+      // Append files
       formData.colorVariants.forEach((variant, index) => {
-        formDataToSend.append(`colorVariants[${index}][color]`, variant.color);
-        formDataToSend.append(
-          `colorVariants[${index}][stock]`,
-          variant.stock.toString()
-        );
-        formDataToSend.append(
-          `colorVariants[${index}][existingImage]`,
-          variant.existingImage
-        );
         if (variant.image) {
           formDataToSend.append("images", variant.image);
-          formDataToSend.append(`colorVariants[${index}][hasNewImage]`, "true");
         }
       });
 
-      const response = await apiPatch<Laptop, FormData>(
+      const response = await apiPatch<ILaptop, FormData>(
         `/laptops/${laptop._id}`,
         formDataToSend
       );
 
-      if (response.error) throw new Error(response.error);
+      if (response.error) toast.error(response.error);
 
       toast.success("Cập nhật laptop thành công!");
       router.refresh();
       setIsOpen(false);
     } catch (error) {
       toast.error("Có lỗi khi cập nhật laptop!");
+      console.error(error);
     } finally {
       stop();
     }
@@ -315,9 +229,16 @@ const EditLaptop = ({
       ...formData,
       colorVariants: [
         ...formData.colorVariants,
-        { color: "", image: null, stock: 0, existingImage: "" },
+        {
+          color: "",
+          image: null,
+          stock: 0,
+          existingImage: "",
+          hasNewImage: "false",
+        },
       ],
     });
+    setImagePreview((prev) => [...prev, ""]);
   };
 
   const removeColorVariant = (index: number) => {
@@ -331,19 +252,6 @@ const EditLaptop = ({
     if (tagInput && !formData.tags.includes(tagInput)) {
       setFormData({ ...formData, tags: [...formData.tags, tagInput] });
       setTagInput("");
-    }
-  };
-
-  const handleAddConnectivity = () => {
-    if (
-      connectivityInput &&
-      !formData.connectivity.includes(connectivityInput)
-    ) {
-      setFormData({
-        ...formData,
-        connectivity: [...formData.connectivity, connectivityInput],
-      });
-      setConnectivityInput("");
     }
   };
 
@@ -395,22 +303,6 @@ const EditLaptop = ({
                 setFormData({ ...formData, brand: e.target.value })
               }
               placeholder="Nhập thương hiệu"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Danh mục */}
-          <div>
-            <Label htmlFor="category" className="text-gray-700 font-medium">
-              Danh mục
-            </Label>
-            <Input
-              id="category"
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
-              }
-              placeholder="Nhập danh mục"
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -495,19 +387,19 @@ const EditLaptop = ({
             <Label className="text-gray-900 font-semibold">
               Thông số kỹ thuật
             </Label>
-            <div className="flex items-center  space-x-2">
+            <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
                 Kích thước màn hình (inch)
               </Label>
               <Input
                 placeholder="Kích thước màn hình (inch)"
-                value={formData.specifications.screenSize}
+                value={formData.specifications.screenSize || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      screenSize: e.target.value,
+                      screenSize: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -539,13 +431,13 @@ const EditLaptop = ({
               </Label>
               <Input
                 placeholder="Tần số quét"
-                value={formData.specifications.refreshRate}
+                value={formData.specifications.refreshRate || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      refreshRate: e.target.value,
+                      refreshRate: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -587,16 +479,18 @@ const EditLaptop = ({
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">RAM</Label>
+              <Label className="text-gray-700 font-medium w-[20%]">
+                RAM (GB)
+              </Label>
               <Input
                 placeholder="RAM (GB)"
-                value={formData.specifications.ram}
+                value={formData.specifications.ram || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      ram: e.target.value,
+                      ram: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -605,17 +499,17 @@ const EditLaptop = ({
             </div>
             <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
-                Bộ nhớ
+                Bộ nhớ (GB)
               </Label>
               <Input
                 placeholder="Bộ nhớ (GB)"
-                value={formData.specifications.storage}
+                value={formData.specifications.storage || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      storage: e.target.value,
+                      storage: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -623,16 +517,18 @@ const EditLaptop = ({
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">Pin</Label>
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Pin (mAh)
+              </Label>
               <Input
-                placeholder="Pin (Wh)"
-                value={formData.specifications.battery}
+                placeholder="Pin (mAh)"
+                value={formData.specifications.battery || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      battery: e.target.value,
+                      battery: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -658,19 +554,27 @@ const EditLaptop = ({
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
+          </div>
+
+          {/* Camera */}
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+            <Label className="text-gray-900 font-semibold">Camera</Label>
             <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
-                Bàn phím
+                Camera sau
               </Label>
               <Input
-                placeholder="Bàn phím"
-                value={formData.specifications.keyboard}
+                placeholder="Camera sau"
+                value={formData.specifications.camera.rear}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      keyboard: e.target.value,
+                      camera: {
+                        ...formData.specifications.camera,
+                        rear: e.target.value,
+                      },
                     },
                   })
                 }
@@ -679,55 +583,20 @@ const EditLaptop = ({
             </div>
             <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
-                Cổng kết nối
+                Camera trước
               </Label>
               <Input
-                placeholder="Cổng kết nối (phân cách bằng dấu phẩy)"
-                value={formData.specifications.ports.join(", ")}
+                placeholder="Camera trước"
+                value={formData.specifications.camera.front}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      ports: e.target.value.split(",").map((p) => p.trim()),
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Webcam
-              </Label>
-              <Input
-                placeholder="Webcam"
-                value={formData.specifications.webcam}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      webcam: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Âm thanh
-              </Label>
-              <Input
-                placeholder="Âm thanh"
-                value={formData.specifications.audio}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      audio: e.target.value,
+                      camera: {
+                        ...formData.specifications.camera,
+                        front: e.target.value,
+                      },
                     },
                   })
                 }
@@ -736,15 +605,15 @@ const EditLaptop = ({
             </div>
           </div>
 
-          {/* Kích thước */}
+          {/* Kích thước và trọng lượng */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
             <Label className="text-gray-900 font-semibold mb-4">
-              Kích thước (cm)
+              Kích thước và trọng lượng
             </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-gray-700 font-medium mb-2">
-                  Chiều dài
+                  Chiều dài (mm)
                 </Label>
                 <Input
                   placeholder="Chiều dài"
@@ -764,7 +633,7 @@ const EditLaptop = ({
               </div>
               <div>
                 <Label className="text-gray-700 font-medium mb-2">
-                  Chiều rộng
+                  Chiều rộng (mm)
                 </Label>
                 <Input
                   placeholder="Chiều rộng"
@@ -784,7 +653,7 @@ const EditLaptop = ({
               </div>
               <div>
                 <Label className="text-gray-700 font-medium mb-2">
-                  Chiều cao
+                  Chiều cao (mm)
                 </Label>
                 <Input
                   placeholder="Chiều cao"
@@ -802,27 +671,27 @@ const EditLaptop = ({
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              <div>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Trọng lượng (kg)
+                </Label>
+                <Input
+                  placeholder="Trọng lượng"
+                  type="text"
+                  value={formData.dimensions.weight || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        weight: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Trọng lượng */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label htmlFor="weight" className="text-gray-700 font-medium">
-              Trọng lượng (kg)
-            </Label>
-            <Input
-              id="weight"
-              type="text"
-              value={formData.weight || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  weight: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập trọng lượng"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
           </div>
 
           {/* Biến thể màu */}
@@ -864,6 +733,7 @@ const EditLaptop = ({
                       const file = e.target.files?.[0] || null;
                       const newVariants = [...formData.colorVariants];
                       newVariants[index].image = file;
+                      newVariants[index].hasNewImage = file ? "true" : "false";
                       setFormData({ ...formData, colorVariants: newVariants });
                       if (file) {
                         setImagePreview((prev) => {
@@ -907,48 +777,6 @@ const EditLaptop = ({
               <Plus className="w-4 h-4 mr-2" />
               Thêm màu
             </Button>
-          </div>
-
-          {/* Kết nối */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">Kết nối</Label>
-            <div className="flex gap-2">
-              <Input
-                value={connectivityInput}
-                onChange={(e) => setConnectivityInput(e.target.value)}
-                placeholder="Nhập kết nối và nhấn Thêm"
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <Button
-                onClick={handleAddConnectivity}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Thêm
-              </Button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {formData.connectivity.map((conn, index) => (
-                <span
-                  key={index}
-                  className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
-                >
-                  {conn}
-                  <button
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        connectivity: formData.connectivity.filter(
-                          (_, i) => i !== index
-                        ),
-                      })
-                    }
-                    className="text-red-600"
-                  >
-                    x
-                  </button>
-                </span>
-              ))}
-            </div>
           </div>
 
           {/* Phụ kiện */}

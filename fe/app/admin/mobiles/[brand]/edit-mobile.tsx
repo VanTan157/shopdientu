@@ -1,4 +1,4 @@
-import { Mobile } from "@/lib/types/mobile";
+"use client";
 import {
   Dialog,
   DialogContent,
@@ -17,12 +17,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { loadingStore } from "@/app/store/loading.store";
+import { IMobile } from "@/lib/types/mobile";
 
 const EditMobile = ({
   mobile,
   children,
 }: {
-  mobile: Mobile;
+  mobile: IMobile;
   children: React.ReactNode;
 }) => {
   const router = useRouter();
@@ -30,30 +31,39 @@ const EditMobile = ({
   const { start, stop } = loadingStore();
   const [formData, setFormData] = useState({
     name: mobile.name,
-    StartingPrice: mobile.StartingPrice,
+    startingPrice: mobile.startingPrice,
     promotion: mobile.promotion,
     description: mobile.description || "",
     brand: mobile.brand || "",
     specifications: {
-      screenSize: mobile.specifications.screenSize || "",
+      screenSize: mobile.specifications.screenSize || 0,
       resolution: mobile.specifications.resolution || "",
-      cpu: mobile.specifications.cpu || "",
-      ram: mobile.specifications.ram || "",
-      storage: mobile.specifications.storage || "",
-      battery: mobile.specifications.battery || "",
+      refreshRate: mobile.specifications.refreshRate || 0,
+      simType: mobile.specifications.simType || "",
+      ram: mobile.specifications.ram || 0,
+      storage: mobile.specifications.storage || 0,
+      battery: mobile.specifications.battery || 0,
       os: mobile.specifications.os || "",
+      camera: {
+        rear: mobile.specifications.camera.rear || "",
+        front: mobile.specifications.camera.front || "",
+      },
     },
     colorVariants: mobile.colorVariants.map((variant) => ({
       color: variant.color,
       image: null as File | null,
       stock: variant.stock,
       existingImage: variant.image || "",
+      hasNewImage: "false",
     })),
-    camera: {
-      rear: mobile.camera.rear || "",
-      front: mobile.camera.front || "",
+    dimensions: {
+      length: mobile.dimensions?.length || 0,
+      width: mobile.dimensions?.width || 0,
+      height: mobile.dimensions?.height || 0,
+      weight: mobile.dimensions?.weight || 0,
     },
-    weight: mobile.weight || 0,
+    warranty: mobile.warranty || "",
+    accessories: mobile.accessories || [],
     tags: mobile.tags || [],
   });
   const [imagePreview, setImagePreview] = useState<string[]>(
@@ -64,6 +74,7 @@ const EditMobile = ({
     )
   );
   const [tagInput, setTagInput] = useState("");
+  const [accessoryInput, setAccessoryInput] = useState("");
 
   useEffect(() => {
     return () => {
@@ -82,9 +93,9 @@ const EditMobile = ({
       return;
     }
     if (
-      typeof formData.StartingPrice !== "number" ||
-      isNaN(formData.StartingPrice) ||
-      formData.StartingPrice <= 0
+      typeof formData.startingPrice !== "number" ||
+      isNaN(formData.startingPrice) ||
+      formData.startingPrice <= 0
     ) {
       toast.error("Giá gốc phải là số lớn hơn 0!");
       stop();
@@ -114,7 +125,7 @@ const EditMobile = ({
     if (
       !specs.screenSize ||
       !specs.resolution ||
-      !specs.cpu ||
+      !specs.simType ||
       !specs.ram ||
       !specs.storage ||
       !specs.battery ||
@@ -141,15 +152,18 @@ const EditMobile = ({
       stop();
       return;
     }
-    if (!formData.camera.rear.trim() || !formData.camera.front.trim()) {
+    if (
+      !formData.specifications.camera.rear.trim() ||
+      !formData.specifications.camera.front.trim()
+    ) {
       toast.error("Vui lòng nhập đầy đủ thông tin camera!");
       stop();
       return;
     }
     if (
-      typeof formData.weight !== "number" ||
-      isNaN(formData.weight) ||
-      formData.weight <= 0
+      typeof formData.dimensions.weight !== "number" ||
+      isNaN(formData.dimensions.weight) ||
+      formData.dimensions.weight <= 0
     ) {
       toast.error("Trọng lượng phải là số lớn hơn 0!");
       stop();
@@ -164,7 +178,7 @@ const EditMobile = ({
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
-      formDataToSend.append("StartingPrice", formData.StartingPrice.toString());
+      formDataToSend.append("startingPrice", formData.startingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
       formDataToSend.append("brand", formData.brand);
@@ -172,27 +186,33 @@ const EditMobile = ({
         "specifications",
         JSON.stringify(formData.specifications)
       );
-      formDataToSend.append("camera", JSON.stringify(formData.camera));
-      formDataToSend.append("weight", formData.weight.toString());
+      formDataToSend.append("dimensions", JSON.stringify(formData.dimensions));
+      formDataToSend.append("warranty", formData.warranty);
+      formDataToSend.append(
+        "accessories",
+        JSON.stringify(formData.accessories)
+      );
       formDataToSend.append("tags", JSON.stringify(formData.tags));
+      formDataToSend.append(
+        "colorVariants",
+        JSON.stringify(
+          formData.colorVariants.map((variant) => ({
+            color: variant.color,
+            stock: variant.stock,
+            existingImage: variant.existingImage,
+            hasNewImage: variant.hasNewImage,
+          }))
+        )
+      );
 
+      // Append files
       formData.colorVariants.forEach((variant, index) => {
-        formDataToSend.append(`colorVariants[${index}][color]`, variant.color);
-        formDataToSend.append(
-          `colorVariants[${index}][stock]`,
-          variant.stock.toString()
-        );
-        formDataToSend.append(
-          `colorVariants[${index}][existingImage]`,
-          variant.existingImage
-        );
         if (variant.image) {
           formDataToSend.append("images", variant.image);
-          formDataToSend.append(`colorVariants[${index}][hasNewImage]`, "true");
         }
       });
 
-      const response = await apiPatch<Mobile, FormData>(
+      const response = await apiPatch<IMobile, FormData>(
         `/mobiles/${mobile._id}`,
         formDataToSend
       );
@@ -214,7 +234,13 @@ const EditMobile = ({
       ...formData,
       colorVariants: [
         ...formData.colorVariants,
-        { color: "", image: null, stock: 0, existingImage: "" },
+        {
+          color: "",
+          image: null,
+          stock: 0,
+          existingImage: "",
+          hasNewImage: "false",
+        },
       ],
     });
     setImagePreview((prev) => [...prev, ""]);
@@ -232,6 +258,16 @@ const EditMobile = ({
     if (tagInput && !formData.tags.includes(tagInput)) {
       setFormData({ ...formData, tags: [...formData.tags, tagInput] });
       setTagInput("");
+    }
+  };
+
+  const handleAddAccessory = () => {
+    if (accessoryInput && !formData.accessories.includes(accessoryInput)) {
+      setFormData({
+        ...formData,
+        accessories: [...formData.accessories, accessoryInput],
+      });
+      setAccessoryInput("");
     }
   };
 
@@ -288,11 +324,11 @@ const EditMobile = ({
             <Input
               id="startingPrice"
               type="text"
-              value={formData.StartingPrice || ""}
+              value={formData.startingPrice || ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  StartingPrice: parseFloat(e.target.value) || 0,
+                  startingPrice: parseFloat(e.target.value) || 0,
                 })
               }
               placeholder="Nhập giá gốc"
@@ -347,133 +383,311 @@ const EditMobile = ({
             <Label className="text-gray-900 font-semibold mb-2">
               Thông số kỹ thuật
             </Label>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Kích thước màn hình
-              </Label>
-              <Input
-                placeholder="Kích thước màn hình"
-                value={formData.specifications.screenSize}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      screenSize: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-700 font-medium">
+                  Kích thước màn hình (inch)
+                </Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="6.1"
+                  value={formData.specifications.screenSize}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        screenSize: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">
+                  Độ phân giải
+                </Label>
+                <Input
+                  placeholder="1170 x 2532 pixels"
+                  value={formData.specifications.resolution}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        resolution: e.target.value,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">
+                  Tần số quét (Hz)
+                </Label>
+                <Input
+                  type="number"
+                  placeholder="120"
+                  value={formData.specifications.refreshRate}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        refreshRate: parseInt(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">Loại SIM</Label>
+                <Input
+                  placeholder="Nano SIM"
+                  value={formData.specifications.simType}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        simType: e.target.value,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">RAM (GB)</Label>
+                <Input
+                  type="number"
+                  placeholder="8"
+                  value={formData.specifications.ram}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        ram: parseInt(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">Bộ nhớ (GB)</Label>
+                <Input
+                  type="number"
+                  placeholder="256"
+                  value={formData.specifications.storage}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        storage: parseInt(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">Pin (mAh)</Label>
+                <Input
+                  type="number"
+                  placeholder="4000"
+                  value={formData.specifications.battery}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        battery: parseInt(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">
+                  Hệ điều hành
+                </Label>
+                <Input
+                  placeholder="iOS 17"
+                  value={formData.specifications.os}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        os: e.target.value,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Độ phân giải
-              </Label>
-              <Input
-                placeholder="Độ phân giải"
-                value={formData.specifications.resolution}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      resolution: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
+
+            {/* Camera */}
+            <div className="space-y-2">
+              <Label className="text-gray-900 font-semibold">Camera</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-gray-700 font-medium">
+                    Camera sau
+                  </Label>
+                  <Input
+                    placeholder="48MP + 12MP + 12MP"
+                    value={formData.specifications.camera.rear}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        specifications: {
+                          ...formData.specifications,
+                          camera: {
+                            ...formData.specifications.camera,
+                            rear: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <Label className="text-gray-700 font-medium">
+                    Camera trước
+                  </Label>
+                  <Input
+                    placeholder="12MP"
+                    value={formData.specifications.camera.front}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        specifications: {
+                          ...formData.specifications,
+                          camera: {
+                            ...formData.specifications.camera,
+                            front: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">CPU</Label>
-              <Input
-                placeholder="CPU"
-                value={formData.specifications.cpu}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      cpu: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
+          </div>
+
+          {/* Kích thước và trọng lượng */}
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+            <Label className="text-gray-900 font-semibold">
+              Kích thước và trọng lượng
+            </Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-700 font-medium">Dài (mm)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="146.7"
+                  value={formData.dimensions.length}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        length: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">Rộng (mm)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="71.5"
+                  value={formData.dimensions.width}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        width: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">Dày (mm)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="7.8"
+                  value={formData.dimensions.height}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        height: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-700 font-medium">
+                  Trọng lượng (g)
+                </Label>
+                <Input
+                  type="number"
+                  placeholder="194"
+                  value={formData.dimensions.weight}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        weight: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">RAM</Label>
-              <Input
-                placeholder="RAM"
-                value={formData.specifications.ram}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      ram: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Bộ nhớ
-              </Label>
-              <Input
-                placeholder="Bộ nhớ"
-                value={formData.specifications.storage}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      storage: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">Pin</Label>
-              <Input
-                placeholder="Pin"
-                value={formData.specifications.battery}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      battery: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Hệ điều hành
-              </Label>
-              <Input
-                placeholder="Hệ điều hành"
-                value={formData.specifications.os}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      os: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+          </div>
+
+          {/* Bảo hành */}
+          <div>
+            <Label htmlFor="warranty" className="text-gray-700 font-medium">
+              Bảo hành
+            </Label>
+            <Input
+              id="warranty"
+              value={formData.warranty}
+              onChange={(e) =>
+                setFormData({ ...formData, warranty: e.target.value })
+              }
+              placeholder="12 tháng"
+              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
 
           {/* Biến thể màu */}
@@ -517,6 +731,7 @@ const EditMobile = ({
                       const file = e.target.files?.[0] || null;
                       const newVariants = [...formData.colorVariants];
                       newVariants[index].image = file;
+                      newVariants[index].hasNewImage = file ? "true" : "false";
                       setFormData({ ...formData, colorVariants: newVariants });
                       if (file) {
                         setImagePreview((prev) => {
@@ -562,61 +777,47 @@ const EditMobile = ({
             </Button>
           </div>
 
-          {/* Camera */}
+          {/* Phụ kiện */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold mb-2">Camera</Label>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Camera sau
-              </Label>
+            <Label className="text-gray-900 font-semibold mb-2">Phụ kiện</Label>
+            <div className="flex gap-2">
               <Input
-                placeholder="Camera sau"
-                value={formData.camera.rear}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    camera: { ...formData.camera, rear: e.target.value },
-                  })
-                }
+                value={accessoryInput}
+                onChange={(e) => setAccessoryInput(e.target.value)}
+                placeholder="Nhập phụ kiện và nhấn Thêm"
+                onKeyDown={(e) => e.key === "Enter" && handleAddAccessory()}
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
+              <Button
+                onClick={handleAddAccessory}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Thêm
+              </Button>
             </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Camera trước
-              </Label>
-              <Input
-                placeholder="Camera trước"
-                value={formData.camera.front}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    camera: { ...formData.camera, front: e.target.value },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
+            <div className="mt-2 flex flex-wrap gap-2">
+              {formData.accessories.map((accessory, index) => (
+                <span
+                  key={index}
+                  className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
+                >
+                  {accessory}
+                  <button
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        accessories: formData.accessories.filter(
+                          (_, i) => i !== index
+                        ),
+                      })
+                    }
+                    className="text-red-600"
+                  >
+                    x
+                  </button>
+                </span>
+              ))}
             </div>
-          </div>
-
-          {/* Trọng lượng */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label htmlFor="weight" className="text-gray-700 font-medium mb-2">
-              Trọng lượng (g)
-            </Label>
-            <Input
-              id="weight"
-              type="text"
-              value={formData.weight || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  weight: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập trọng lượng"
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
           </div>
 
           {/* Tags */}

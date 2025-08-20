@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   forwardRef,
   Inject,
   Injectable,
@@ -10,62 +11,26 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Order } from "./entities/order.entity";
 import { Model, Types } from "mongoose";
 import { OrderItemsService } from "src/order-items/order-items.service";
-import { ProductType } from "src/order-items/entities/order-item.entity";
-import { MobilesService } from "src/mobiles/mobiles.service";
-import { LaptopService } from "src/laptop/laptop.service";
-import { HeadphoneService } from "src/headphone/headphone.service";
-import e from "express";
-import { TabletService } from "src/tablet/tablet.service";
+import { EOrderStatus, EProductType } from "src/common/types/order.types";
+import { ApiResponse } from "src/common/types/api";
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @Inject(forwardRef(() => OrderItemsService))
-    private orderItemsService: OrderItemsService,
-    private mobilesService: MobilesService,
-    private laptopsService: LaptopService,
-    private headphonesService: HeadphoneService,
-    private tabletService: TabletService
+    private orderItemsService: OrderItemsService
   ) {}
 
-  async populateOrderItem(orderItem: any) {
-    let product;
-    if (orderItem.product_type === ProductType.MOBILE) {
-      product = await this.mobilesService.findOne(
-        orderItem.product_id.toString()
-      );
-    } else if (orderItem.product_type === ProductType.LAPTOP) {
-      product = await this.laptopsService.findOne(
-        orderItem.product_id.toString()
-      );
-    } else if (orderItem.product_type === ProductType.HEADPHONE) {
-      product = await this.headphonesService.findOne(
-        orderItem.product_id.toString()
-      );
-    } else if (orderItem.product_type === ProductType.TABLET) {
-      product = await this.tabletService.findOne(
-        orderItem.product_id.toString()
-      );
-    } else {
-      throw new NotFoundException("Loại sản phẩm không hợp lệ");
-    }
-
-    if (!product) {
-      throw new NotFoundException("Không tìm thấy sản phẩm");
-    }
-    orderItem.product = product;
-    return orderItem;
-  }
-
-  async create(createOrderDto: CreateOrderDto, userId) {
-    const { orderitem_ids, phone_number, address, status } = createOrderDto;
+  async create(
+    createOrderDto: CreateOrderDto,
+    userId: string
+  ): Promise<ApiResponse<Order>> {
+    const { orderitemIds, status } = createOrderDto;
     const orderItems = await Promise.all(
-      orderitem_ids.map(async (id) => {
-        if (!Types.ObjectId.isValid(id)) {
-          throw new NotFoundException(`Invalid OrderItem ID: ${id}`);
-        }
-        const item = await this.orderItemsService.findOne(id);
+      orderitemIds.map(async (id) => {
+        const ressult = await this.orderItemsService.findOne(id);
+        const item = ressult.data;
         if (!item) {
           throw new NotFoundException(`OrderItem not found: ${id}`);
         }
@@ -74,82 +39,56 @@ export class OrderService {
     );
 
     const total_amount = orderItems.reduce(
-      (sum, item) => sum + item.total_price,
+      (sum, item) => sum + item.totalPrice,
       0
     );
 
-    // Tạo Order
     const order = new this.orderModel({
-      user_id: userId,
-      orderitem_ids: orderitem_ids.map((id) => new Types.ObjectId(id)),
-      total_amount,
-      phone_number,
-      address,
-      status: status || "Đang chờ xác nhận", // Dùng mặc định nếu không cung cấp
+      ...CreateOrderDto,
+      userId,
+      status: status || EOrderStatus.PENDING,
     });
 
     const savedOrder = await order.save();
 
-    const populatedOrderItems = await Promise.all(
-      orderitem_ids.map(async (id) => {
-        const item = await this.orderItemsService.findOne(id);
-        return this.populateOrderItem(item);
-      })
-    );
-
     return {
-      ...savedOrder.toObject(),
-      orderitem_ids: populatedOrderItems,
+      success: true,
+      message: "Lấy dánh sách đơn hàng thành công",
+      data: savedOrder,
     };
   }
 
-  async findAll() {
-    const orders = await this.orderModel
-      .find()
-      .sort({ createdAt: -1 }) // Sắp xếp theo createdAt giảm dần (gần nhất trước)
-      .exec();
-    return Promise.all(
-      orders.map(async (order) => {
-        const populatedOrderItems = await Promise.all(
-          order.orderitem_ids.map(async (id) => {
-            const item = await this.orderItemsService.findOne(id.toString());
-            return this.populateOrderItem(item);
-          })
-        );
-        return {
-          ...order.toObject(),
-          orderitem_ids: populatedOrderItems,
-        };
-      })
-    );
+  async findAll(): Promise<ApiResponse<Order[]>> {
+    const orders = await this.orderModel.find().sort({ createdAt: -1 }).exec();
+    return {
+      success: true,
+      message: "Lấy dánh sách đơn hàng thành công",
+      data: orders,
+    };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ApiResponse<Order>> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException(`Invalid Order ID: ${id}`);
+      throw new BadRequestException(`Invalid Order ID: ${id}`);
     }
     const order = await this.orderModel.findById(id).exec();
     if (!order) {
       throw new NotFoundException("Order not found");
     }
 
-    // Populate thông tin OrderItem
-    const populatedOrderItems = await Promise.all(
-      order.orderitem_ids.map(async (id) => {
-        const item = await this.orderItemsService.findOne(id.toString());
-        return this.populateOrderItem(item);
-      })
-    );
-
     return {
-      ...order.toObject(),
-      orderitem_ids: populatedOrderItems,
+      success: true,
+      data: order,
+      message: "Lấy đơn hàng thành công",
     };
   }
 
-  async update(id: string, updateOrderDto: UpdateOrderDto) {
+  async update(
+    id: string,
+    updateOrderDto: UpdateOrderDto
+  ): Promise<ApiResponse<Order>> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException(`Invalid Order ID: ${id}`);
+      throw new BadRequestException(`Invalid Order ID: ${id}`);
     }
     const order = await this.orderModel
       .findByIdAndUpdate(id, updateOrderDto, { new: true })
@@ -158,84 +97,48 @@ export class OrderService {
       throw new NotFoundException("Order not found");
     }
 
-    // Populate thông tin OrderItem
-    const populatedOrderItems = await Promise.all(
-      order.orderitem_ids.map(async (id) => {
-        const item = await this.orderItemsService.findOne(id.toString());
-        return this.populateOrderItem(item);
-      })
-    );
-
     return {
-      ...order.toObject(),
-      orderitem_ids: populatedOrderItems,
+      data: order,
+      success: true,
+      message: "Cập nhật đơn hàng thành công",
     };
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<ApiResponse<null>> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException(`Invalid Order ID: ${id}`);
+      throw new BadRequestException(`Invalid Order ID: ${id}`);
     }
-
-    const order = await this.orderModel.findById(id).exec();
+    const order = await this.orderModel.findByIdAndDelete(id).exec();
     if (!order) {
       throw new NotFoundException("Order not found");
     }
 
-    // Xóa tất cả OrderItem liên quan
-    const orderItemIds = order.orderitem_ids.map((id) => id.toString());
-    await Promise.all(
-      orderItemIds.map(async (orderItemId) => {
-        await this.orderItemsService.remove(orderItemId);
-      })
-    );
-
-    // Xóa Order
-    await this.orderModel.findByIdAndDelete(id).exec();
-
-    // Populate thông tin OrderItem cho kết quả trả về
-    const populatedOrderItems = await Promise.all(
-      orderItemIds.map(async (id) => {
-        const item = await this.orderItemsService.findOne(id);
-        return this.populateOrderItem(item ? item : null);
-      })
-    );
-
     return {
-      ...order.toObject(),
-      orderitem_ids: populatedOrderItems,
+      message: "Xóa đơn hàng thành công",
+      data: null,
+      success: true,
     };
   }
 
-  async getByUser(id: string) {
+  async getByUser(id: string): Promise<ApiResponse<Order[]>> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException(`Invalid User ID: ${id}`);
+      throw new BadRequestException(`Invalid User ID: ${id}`);
     }
     const orders = await this.orderModel
-      .find({ user_id: id })
+      .find({ userId: id })
       .sort({ createdAt: -1 })
       .exec();
-
-    console.log("Orders:", orders);
-
-    // Populate thông tin OrderItem cho từng Order
-    return Promise.all(
-      orders.map(async (order) => {
-        const populatedOrderItems = await Promise.all(
-          order.orderitem_ids.map(async (id) => {
-            const item = await this.orderItemsService.findOne(id.toString());
-            return this.populateOrderItem(item);
-          })
-        );
-        return {
-          ...order.toObject(),
-          orderitem_ids: populatedOrderItems,
-        };
-      })
-    );
+    return {
+      message: "Lấy danh sách đơn hàng thành công",
+      success: true,
+      data: orders,
+    };
   }
 
-  async getByStatus(userId: string, status: string) {
+  async getByStatus(
+    userId: string,
+    status: string
+  ): Promise<ApiResponse<Order[]>> {
     const validStatuses = [
       "Đang chờ xác nhận",
       "Đã xác nhận",
@@ -245,73 +148,18 @@ export class OrderService {
     ];
 
     if (status && !validStatuses.includes(status)) {
-      throw new Error("Invalid status value");
-    }
-
-    const query: any = { user_id: userId };
-    if (status) {
-      query.status = status;
+      throw new BadRequestException("Trạng thái đơn hàng không hợp lệ");
     }
 
     const orders = await this.orderModel
-      .find(query)
+      .find({ userId, status })
       .sort({ createdAt: -1 })
       .exec();
 
-    // Populate thông tin OrderItem cho từng Order
-    return Promise.all(
-      orders.map(async (order) => {
-        const populatedOrderItems = await Promise.all(
-          order.orderitem_ids.map(async (id) => {
-            const item = await this.orderItemsService.findOne(id.toString());
-            return this.populateOrderItem(item);
-          })
-        );
-        return {
-          ...order.toObject(),
-          orderitem_ids: populatedOrderItems,
-        };
-      })
-    );
-  }
-
-  async getAllByStatus(status: string) {
-    const validStatuses = [
-      "Đang chờ xác nhận",
-      "Đã xác nhận",
-      "Đang vận chuyển",
-      "Hoàn thành",
-      "Đã hủy",
-    ];
-
-    if (status && !validStatuses.includes(status)) {
-      throw new Error("Invalid status value");
-    }
-
-    const query: any = {};
-    if (status) {
-      query.status = status;
-    }
-
-    const orders = await this.orderModel
-      .find(query)
-      .sort({ createdAt: -1 })
-      .exec();
-
-    // Populate thông tin OrderItem cho từng Order
-    return Promise.all(
-      orders.map(async (order) => {
-        const populatedOrderItems = await Promise.all(
-          order.orderitem_ids.map(async (id) => {
-            const item = await this.orderItemsService.findOne(id.toString());
-            return this.populateOrderItem(item);
-          })
-        );
-        return {
-          ...order.toObject(),
-          orderitem_ids: populatedOrderItems,
-        };
-      })
-    );
+    return {
+      success: true,
+      message: "Lấy danh sách đơn hàng theo trạng thái thành công",
+      data: orders,
+    };
   }
 }

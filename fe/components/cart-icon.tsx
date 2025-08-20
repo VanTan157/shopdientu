@@ -17,12 +17,9 @@ const CartIcon = () => {
           ["carts"],
           true
         );
-        console.log("Cart items:", res);
-        if (!res || !res.data) {
-          console.error("No data received from API");
-          return;
+        if (res.success && res.data) {
+          setCartItemCount(res.data.length);
         }
-        setCartItemCount(res.data.length);
       } catch (error) {
         console.error("Error fetching cart item count:", error);
       }

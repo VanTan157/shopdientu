@@ -1,88 +1,197 @@
-import { Transform } from "class-transformer";
 import {
   IsString,
   IsNumber,
-  IsMongoId,
   IsArray,
   IsObject,
-  IsOptional,
+  ValidateNested,
+  Min,
 } from "class-validator";
+import { Transform, Type } from "class-transformer";
+
+class UpdateMobileCameraDto {
+  @IsString()
+  rear: string;
+
+  @IsString()
+  front: string;
+}
+
+class UpdateMobileSpecificationsDto {
+  @IsNumber()
+  @Min(0)
+  screenSize: number;
+
+  @IsString()
+  resolution: string;
+
+  @IsNumber()
+  @Min(0)
+  refreshRate: number;
+
+  @IsString()
+  simType: string;
+
+  @IsNumber()
+  @Min(0)
+  ram: number;
+
+  @IsNumber()
+  @Min(0)
+  storage: number;
+
+  @IsNumber()
+  @Min(0)
+  battery: number;
+
+  @IsString()
+  os: string;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => UpdateMobileCameraDto)
+  camera: UpdateMobileCameraDto;
+}
+
+class UpdateColorVariantDto {
+  @IsString()
+  color: string;
+
+  @IsString()
+  image: string;
+
+  @IsNumber()
+  @Min(0)
+  stock: number;
+
+  @IsString()
+  hasNewImage: string;
+}
+
+class UpdateDimensionsDto {
+  @IsNumber()
+  @Min(0)
+  length: number;
+
+  @IsNumber()
+  @Min(0)
+  width: number;
+
+  @IsNumber()
+  @Min(0)
+  height: number;
+
+  @IsNumber()
+  @Min(0)
+  weight: number;
+}
 
 export class UpdateMobileDto {
   @IsString()
-  @IsOptional()
-  brand?: string;
+  brand: string;
 
   @IsString()
-  @IsOptional()
-  name?: string;
+  name: string;
 
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  })
+  @Type(() => Number)
   @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseFloat(value), { toClassOnly: true })
-  StartingPrice?: number;
+  @Min(0)
+  startingPrice: number;
 
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  })
+  @Type(() => Number)
   @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseFloat(value), { toClassOnly: true })
-  promotion?: number;
+  @Min(0)
+  promotion: number;
 
   @IsString()
-  @IsOptional()
-  description?: string;
-
-  @IsMongoId()
-  @IsOptional()
-  mobile_type_id?: string;
-
-  @IsObject()
-  @IsOptional()
-  @Transform(
-    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
-    { toClassOnly: true }
-  )
-  specifications?: {
-    screenSize?: number;
-    resolution?: string;
-    cpu?: string;
-    ram?: number;
-    storage?: number;
-    battery?: number;
-    os?: string;
-  };
+  description: string;
 
   @IsArray()
-  @IsObject({ each: true })
-  @IsOptional()
-  colorVariants?: {
-    color: string;
-    image?: string;
-    stock?: number;
-    hasNewImage?: string;
-  }[];
-
-  @IsObject()
-  @IsOptional()
-  @Transform(
-    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
-    { toClassOnly: true }
-  )
-  camera?: {
-    rear?: string;
-    front?: string;
-  };
-
-  @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseFloat(value), { toClassOnly: true })
-  weight?: number;
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return [];
+      }
+    }
+    return value;
+  })
+  @ValidateNested({ each: true })
+  @Type(() => UpdateColorVariantDto)
+  colorVariants: UpdateColorVariantDto[];
 
   @IsArray()
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(",").map((item) => item.trim());
+      }
+    }
+    return value;
+  })
   @IsString({ each: true })
-  @IsOptional()
-  @Transform(
-    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
-    { toClassOnly: true }
-  )
-  tags?: string[];
+  accessories: string[];
+
+  @IsArray()
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value.split(",").map((item) => item.trim());
+      }
+    }
+    return value;
+  })
+  @IsString({ each: true })
+  tags: string[];
+
+  @IsObject()
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @ValidateNested()
+  @Type(() => UpdateDimensionsDto)
+  dimensions: UpdateDimensionsDto;
+
+  @IsString()
+  warranty: string;
+
+  @IsObject()
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @ValidateNested()
+  @Type(() => UpdateMobileSpecificationsDto)
+  specifications: UpdateMobileSpecificationsDto;
 }

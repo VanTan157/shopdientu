@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { Mobile } from "./entities/mobiles.entity";
@@ -6,6 +10,7 @@ import { CreateMobileDto } from "./dto/create-mobiles.dto";
 import { UpdateMobileDto } from "./dto/update-mobiles.dto";
 import * as fs from "fs";
 import { promisify } from "util";
+import { ApiResponse } from "src/common/types/api";
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -16,100 +21,90 @@ export class MobilesService {
   async create(
     createMobileDto: CreateMobileDto,
     files: Express.Multer.File[]
-  ): Promise<Mobile> {
-    const promotion = createMobileDto.promotion ?? 0;
-    const IsPromotion = promotion > 0;
-    const finalPrice =
-      createMobileDto.StartingPrice -
-      (promotion * createMobileDto.StartingPrice) / 100;
+  ): Promise<ApiResponse<Mobile>> {
+    console.log("Creating:", createMobileDto);
+    if (files.length !== createMobileDto.colorVariants.length) {
+      throw new BadRequestException(
+        "Số lượng file ảnh phải khớp với số lượng biến thể màu"
+      );
+    }
 
-    // Tạo colorVariants từ DTO và files
     const colorVariants = createMobileDto.colorVariants.map(
       (variant, index) => {
         if (!files[index]) {
-          throw new NotFoundException(`Thiếu ảnh cho màu ${variant.color}`);
+          throw new BadRequestException(`Thiếu ảnh cho màu ${variant.color}`);
         }
         return {
           color: variant.color,
           image: `/image/${files[index].filename}`,
-          stock: variant.stock ?? 0,
+          stock: variant.stock,
         };
       }
     );
 
-    const mobileData = {
+    const calculatedTotalStock = colorVariants.reduce(
+      (sum, variant) => sum + variant.stock,
+      0
+    );
+
+    const isPromotion = createMobileDto.promotion > 0;
+    const finalPrice =
+      createMobileDto.startingPrice * (1 - createMobileDto.promotion / 100);
+    const isAvailable = calculatedTotalStock > 0;
+
+    const mobile = new this.mobileModel({
       ...createMobileDto,
-      finalPrice,
-      promotion,
-      IsPromotion,
       colorVariants,
-      isAvailable: colorVariants.some((variant) => variant.stock > 0),
+      totalStock: calculatedTotalStock,
+      finalPrice,
+      isPromotion,
+      isAvailable,
+    });
+    mobile.save();
+    return { data: mobile, message: "Tạo Mobile thành công", success: true };
+  }
+
+  async findAll(): Promise<ApiResponse<Mobile[]>> {
+    const mobiles = await this.mobileModel.find().exec();
+    return {
+      success: true,
+      message: "Lấy danh sách Mobile thành công",
+      data: mobiles,
     };
-
-    const newMobile = new this.mobileModel(mobileData);
-
-    try {
-      return await newMobile.save();
-    } catch (error) {
-      const imagePaths = colorVariants.map((variant) => variant.image);
-      const imagesInUse = await this.mobileModel
-        .find({ "colorVariants.image": { $in: imagePaths } })
-        .exec();
-
-      const imagesInUseSet = new Set(
-        imagesInUse.flatMap((m) => m.colorVariants.map((v) => v.image))
-      );
-      const imagesToDelete = imagePaths.filter(
-        (image) => !imagesInUseSet.has(image)
-      );
-
-      // Chỉ xóa những ảnh không được sử dụng bởi sản phẩm khác
-      if (imagesToDelete.length > 0) {
-        await Promise.all(
-          imagesToDelete.map((imagePath) =>
-            unlinkAsync(`.${imagePath}`).catch((err) =>
-              console.error("Không thể xóa file:", err)
-            )
-          )
-        );
-      }
-
-      throw error; // Ném lại lỗi để client xử lý
-    }
   }
 
-  async findAll(): Promise<Mobile[]> {
-    return this.mobileModel.find().exec();
+  async findByPromotion(): Promise<ApiResponse<Mobile[]>> {
+    const mobiles = await this.mobileModel.find({ isPromotion: true }).exec();
+    return {
+      success: true,
+      message: "Lấy danh sách Mobile khuyến mãi thành công",
+      data: mobiles,
+    };
   }
 
-  async findByPromotion(): Promise<Mobile[]> {
-    return this.mobileModel.find({ IsPromotion: true }).exec();
-  }
-
-  async findOne(id: string): Promise<Mobile> {
-    if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
+  async findOne(id: string): Promise<ApiResponse<Mobile>> {
+    if (!Types.ObjectId.isValid(id))
+      throw new BadRequestException("ID không hợp lệ");
     const mobile = await this.mobileModel.findById(id).exec();
     if (!mobile) throw new NotFoundException("Mobile không tồn tại");
-    return mobile;
+    return {
+      success: true,
+      message: "Lấy thông tin Mobile thành công",
+      data: mobile,
+    };
   }
 
   async update(
     id: string,
     updateMobileDto: UpdateMobileDto,
     files?: Express.Multer.File[]
-  ) {
-    if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
+  ): Promise<ApiResponse<Mobile>> {
+    const result = await this.findOne(id);
 
-    const mobile = await this.mobileModel.findById(id).exec();
-    if (!mobile) throw new NotFoundException("Không tìm thấy Mobile");
-
-    const startingPrice = updateMobileDto.StartingPrice ?? mobile.StartingPrice;
-    const promotion = updateMobileDto.promotion ?? mobile.promotion;
-    const finalPrice = startingPrice - (promotion * startingPrice) / 100;
+    const mobile = result.data;
 
     let colorVariants = mobile.colorVariants;
 
-    // Xử lý colorVariants khi có cập nhật
     if (updateMobileDto.colorVariants) {
       const newColorVariants: Array<{
         color: string;
@@ -117,20 +112,18 @@ export class MobilesService {
         hasNewImage?: string;
         stock?: number;
       }> = updateMobileDto.colorVariants;
-      let fileIndex = 0; // Theo dõi index của file trong mảng files
+      let fileIndex = 0;
 
-      // Xác định các ảnh cũ có thể cần xóa
       const oldImagesToCheck = mobile.colorVariants
         .filter((oldVariant) =>
           newColorVariants.some(
             (newVariant, idx) =>
               newVariant.color === oldVariant.color &&
-              newVariant.hasNewImage === "true" // Có ảnh mới cho màu này
+              newVariant.hasNewImage === "true"
           )
         )
         .map((variant) => variant.image);
 
-      // Kiểm tra xem ảnh cũ có được sử dụng bởi sản phẩm khác không
       const imagesInUse = await this.mobileModel
         .find({
           "colorVariants.image": { $in: oldImagesToCheck },
@@ -145,7 +138,6 @@ export class MobilesService {
         (image) => !imagesInUseSet.has(image)
       );
 
-      // Xóa ảnh cũ không còn được sử dụng
       if (oldImagesToDelete.length > 0) {
         await Promise.all(
           oldImagesToDelete.map((imagePath) =>
@@ -156,17 +148,15 @@ export class MobilesService {
         );
       }
 
-      // Cập nhật colorVariants với thông tin mới
       colorVariants = newColorVariants.map((variant) => {
         const existingVariant = mobile.colorVariants.find(
           (v) => v.color === variant.color
         );
         let image = variant.existingImage || existingVariant?.image || "";
 
-        // Nếu biến thể này có ảnh mới
         if (variant.hasNewImage === "true" && files && files[fileIndex]) {
           image = `/image/${files[fileIndex].filename}`;
-          fileIndex++; // Tăng index để lấy file tiếp theo
+          fileIndex++;
         }
 
         return {
@@ -177,30 +167,36 @@ export class MobilesService {
       });
     }
 
-    // Cập nhật bản ghi trong database
-    const updatedMobile = await this.mobileModel
-      .findByIdAndUpdate(
-        id,
-        {
-          ...updateMobileDto,
-          finalPrice,
-          IsPromotion: promotion > 0,
-          StartingPrice: startingPrice,
-          promotion,
-          colorVariants,
-          isAvailable: colorVariants.some((variant) => variant.stock > 0),
-        },
-        { new: true }
-      )
-      .exec();
+    const totalStock = colorVariants.reduce(
+      (sum, variant) => sum + variant.stock,
+      0
+    );
 
-    return updatedMobile;
+    const updateData = {
+      ...updateMobileDto,
+      finalPrice:
+        updateMobileDto.startingPrice * (1 - updateMobileDto.promotion / 100),
+      isPromotion: updateMobileDto.promotion > 0,
+      colorVariants,
+      totalStock,
+      isAvailable: totalStock > 0,
+    };
+
+    Object.assign(mobile, updateData);
+
+    const updatedMobile = await mobile.save();
+
+    return {
+      data: updatedMobile,
+      message: "Cập nhật mobile thành công",
+      success: true,
+    };
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<ApiResponse<null>> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
 
-    const mobile = await this.mobileModel.findById(id).exec();
+    const mobile = await this.mobileModel.findByIdAndDelete(id).exec();
     if (!mobile) throw new NotFoundException("Không tìm thấy Mobile");
 
     // Xóa tất cả ảnh trong thư mục
@@ -216,10 +212,14 @@ export class MobilesService {
     }
 
     // Xóa bản ghi trong database
-    return await this.mobileModel.findByIdAndDelete(id).exec();
+    return {
+      data: null,
+      message: "Xóa mobile thành công",
+      success: true,
+    };
   }
 
-  async getAllBrand(): Promise<string[]> {
+  async getAllBrand(): Promise<ApiResponse<string[]>> {
     const mobiles = await this.mobileModel.find().exec();
     const brands = new Set<string>();
     mobiles.forEach((mobile) => {
@@ -227,16 +227,24 @@ export class MobilesService {
         brands.add(mobile.brand);
       }
     });
-    return Array.from(brands);
+    return {
+      data: Array.from(brands),
+      message: "Lấy danh sách thương hiệu thành công",
+      success: true,
+    };
   }
 
-  async getAllMobileByBrand(brand: string): Promise<Mobile[]> {
+  async getAllMobileByBrand(brand: string): Promise<ApiResponse<Mobile[]>> {
     const mobiles = await this.mobileModel.find({ brand }).exec();
     if (!mobiles || mobiles.length === 0) {
       throw new NotFoundException(
         "Không tìm thấy mobile nào cho thương hiệu này"
       );
     }
-    return mobiles;
+    return {
+      data: mobiles,
+      success: true,
+      message: "Lấy danh sách mobile theo thương hiệu thành công",
+    };
   }
 }

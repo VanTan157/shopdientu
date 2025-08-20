@@ -1,7 +1,10 @@
 import { apiGet } from "@/lib/api";
 import HeadphoneTable from "./headphone-table";
-import { Headphone } from "@/lib/types/headphone";
 import AddHeadphoneForm from "./add-headphone";
+import { IHeadphone } from "@/lib/types/headphone";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default async function Page({
   params,
@@ -9,21 +12,32 @@ export default async function Page({
   params: Promise<{ brand: string }>;
 }) {
   const { brand } = await params;
-  const res = await apiGet<Headphone[]>(
+  const res = await apiGet<IHeadphone[]>(
     `/headphones/get-all-headphone-by-brand/${brand}`
   );
+
   const brands = await apiGet<string[]>("/headphones/get-all-brand");
-  if (!res) return <div>Loading...</div>;
-  if (!res.data) return <div>Product not found</div>;
+  if (res.error) {
+    toast.error(res.message);
+    return;
+  }
+  const headphones = res.data;
   return (
     <div className="bg-white min-h-screen mx-auto p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">
-          Quản lý Laptop - {brand}
+          Quản lý Tai Nghe - {brand}
         </h1>
         <AddHeadphoneForm brands={brands.data ?? []} />
       </div>
-      <HeadphoneTable headphones={res.data} />
+      <HeadphoneTable headphones={headphones || []} />
+      <div className="mt-6">
+        <Link href="/admin">
+          <Button variant="outline" className="text-gray-700">
+            Quay lại trang quản lý
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

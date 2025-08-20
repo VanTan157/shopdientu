@@ -1,7 +1,5 @@
 // components/BtnAddToCart.tsx
 "use client";
-
-import { Mobile } from "@/lib/types/mobile";
 import { ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,13 +18,15 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/app/store/cart-store";
 import { loadingStore } from "@/app/store/loading.store";
+import { IMobile } from "@/lib/types/mobile";
+import { IOrderItem } from "@/lib/types/order-item";
 import { EProductType } from "@/lib/types/order";
 
 const BtnAddToCart = ({
   product,
   index,
 }: {
-  product: Mobile;
+  product: IMobile;
   index: number;
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
@@ -37,30 +37,23 @@ const BtnAddToCart = ({
 
   const handleAddToCart = async () => {
     start();
-    try {
-      const res = await apiPost("/order-items", {
-        product_id: product._id,
-        product_type: EProductType.MOBILE,
-        quantity,
-        colorVariant: product.colorVariants[index],
-      });
-      router.refresh();
-      if (res.data) {
-        setOpen(false);
-        setCartItemCount(cartItemCount + 1);
-        toast.success("Thêm vào giỏ hàng thành công!");
-      } else {
-        toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Có lỗi khi tạo đơn hàng!");
-      }
-    } finally {
-      stop();
+    const res = await apiPost<IOrderItem, any>("/order-items", {
+      productId: product._id,
+      quantity,
+      colorVariant: product.colorVariants[index],
+      productName: product.name,
+      productType: EProductType.MOBILE,
+      unitPrice: product.finalPrice,
+    });
+    router.refresh();
+    if (res.success) {
+      setOpen(false);
+      setCartItemCount(cartItemCount + 1);
+      toast.success(res.message);
+    } else {
+      toast.error(res.message);
     }
+    stop();
   };
 
   return (

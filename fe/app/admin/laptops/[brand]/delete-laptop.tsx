@@ -25,21 +25,14 @@ const DeleteLaptop = ({
 
   const handleDeleteLaptop = async (laptopId: string) => {
     start();
-    try {
-      const res = await apiDelete(`/laptops/${laptopId}`);
-      if (res.data) {
-        router.refresh();
-        toast.success("Xóa sản phẩm thành công!");
-      } else if (res.error) {
-        toast.error(res.error);
-      } else {
-        toast.error("Có lỗi khi xóa sản phẩm!");
-      }
-    } catch (error) {
-      toast.error("Đã xảy ra lỗi khi xóa sản phẩm!");
-    } finally {
-      stop();
+    const res = await apiDelete(`/laptops/${laptopId}`);
+    if (res.success) {
+      router.refresh();
+      toast.success("Xóa sản phẩm thành công!");
+    } else {
+      toast.error(res.message || "Xóa sản phẩm thất bại!");
     }
+    stop();
   };
 
   return (

@@ -1,8 +1,8 @@
-import { Mobile } from "@/lib/types/mobile";
+import { IMobile } from "@/lib/types/mobile";
 import Image from "next/image";
 import Link from "next/link";
 
-const MobileList = ({ mobiles }: { mobiles: Mobile[] }) => {
+const MobileList = ({ mobiles }: { mobiles: IMobile[] }) => {
   return (
     <section className="mt-4 xs:mt-6 sm:mt-8">
       <h2 className="text-xl xs:text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 pb-2 xs:pb-3 sm:pb-4">
@@ -34,10 +34,10 @@ const MobileList = ({ mobiles }: { mobiles: Mobile[] }) => {
               <h3 className="text-[10px] xs:text-xs sm:text-sm md:text-base font-semibold text-cyan-300 mb-1 xs:mb-2">
                 {mobile.name}
               </h3>
-              {mobile.IsPromotion ? (
+              {mobile.isPromotion ? (
                 <div className="mt-1 xs:mt-2">
                   <span className="text-gray-500 line-through text-[10px] xs:text-xs sm:text-sm block">
-                    {mobile.StartingPrice.toLocaleString("vi-VN")} ₫
+                    {mobile.startingPrice.toLocaleString("vi-VN")} ₫
                   </span>
                   <span className="text-red-500 font-bold text-[10px] xs:text-xs sm:text-sm md:text-base block">
                     {mobile.finalPrice.toLocaleString("vi-VN")} ₫

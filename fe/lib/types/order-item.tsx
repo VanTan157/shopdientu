@@ -1,25 +1,21 @@
-import { Laptop } from "./laptop";
-import { Mobile } from "./mobile";
+import { EProductType } from "./order";
+import { IProduct } from "./product";
 
-// Type cho CartColorVariant
 export interface CartColorVariant {
   _id: string;
   color: string;
   image: string;
 }
 
-// Type cho CartItem (sửa để hỗ trợ cả Mobile và Laptop)
-export interface CartItem {
+export interface IOrderItem {
   _id: string;
-  user_id: string;
-  product_id: string; // Thay vì mobile_id
-  product_type: "mobile" | "laptop"; // Enum cho product_type
+  userId: string;
+  productId: string;
+  productName: string;
+  productType: EProductType;
+  unitPrice: number;
   quantity: number;
-  unit_price: number;
-  total_price: number;
-  colorVariant: CartColorVariant;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-  product: Mobile | Laptop; // Trường product có thể là Mobile hoặc Laptop
+  totalPrice: number;
+  isInCart: boolean;
+  colorVariant: { _id: string; color: string; image: string };
 }

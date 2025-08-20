@@ -20,6 +20,8 @@ import { extname } from "path";
 import { AuthGuard } from "src/auth/auth.guard";
 import { RolesGuard } from "src/auth/roles.guard";
 import { Roles } from "src/auth/roles.decorator";
+import { EUserType } from "src/common/types/user.types";
+import { ApiResponse } from "src/common/types/api";
 
 // Controller xử lý các request HTTP cho module Laptop
 @Controller("laptops")
@@ -28,7 +30,7 @@ export class LaptopController {
 
   // Endpoint tạo laptop mới
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Post()
   @UseInterceptors(
     FilesInterceptor("images", 10, {
@@ -56,40 +58,41 @@ export class LaptopController {
     @Body() createLaptopDto: CreateLaptopDto,
     // Danh sách file ảnh được upload
     @UploadedFiles() files: Express.Multer.File[]
-  ): Promise<Laptop> {
+  ): Promise<ApiResponse<Laptop>> {
     return this.laptopService.create(createLaptopDto, files);
   }
 
   // Endpoint lấy danh sách tất cả laptop
   @Get()
-  findAll(): Promise<Laptop[]> {
+  findAll(): Promise<ApiResponse<Laptop[]>> {
     return this.laptopService.findAll();
   }
 
   @Get("get-all-brand")
-  getAllBranch() {
+  getAllBranch(): Promise<ApiResponse<string[]>> {
     return this.laptopService.getAllBrand();
   }
 
   @Get("get-all-laptop-by-brand/:brand")
-  getAllLaptopByBrand(@Param("brand") brand: string) {
+  getAllLaptopByBrand(
+    @Param("brand") brand: string
+  ): Promise<ApiResponse<Laptop[]>> {
     return this.laptopService.getAllLaptopByBrand(brand);
   }
 
   @Get("get-by-promotion")
-  getByPromotion() {
+  getByPromotion(): Promise<ApiResponse<Laptop[]>> {
     return this.laptopService.findByPromotion();
   }
 
   // Endpoint lấy thông tin một laptop theo ID
   @Get(":id")
-  findOne(@Param("id") id: string): Promise<Laptop> {
+  findOne(@Param("id") id: string): Promise<ApiResponse<Laptop>> {
     return this.laptopService.findOne(id);
   }
 
-  // Endpoint cập nhật laptop
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Patch(":id")
   @UseInterceptors(
     FilesInterceptor("images", 10, {
@@ -113,21 +116,17 @@ export class LaptopController {
     })
   )
   update(
-    // ID của laptop từ URL
     @Param("id") id: string,
-    // Dữ liệu DTO từ body request
     @Body() updateLaptopDto: UpdateLaptopDto,
-    // Danh sách file ảnh mới (nếu có)
     @UploadedFiles() files: Express.Multer.File[]
-  ): Promise<Laptop> {
+  ): Promise<ApiResponse<Laptop>> {
     return this.laptopService.update(id, updateLaptopDto, files);
   }
 
-  // Endpoint xóa laptop
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Delete(":id")
-  remove(@Param("id") id: string) {
+  remove(@Param("id") id: string): Promise<ApiResponse<null>> {
     return this.laptopService.remove(id);
   }
 }

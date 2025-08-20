@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   forwardRef,
   Inject,
   Injectable,
@@ -8,13 +9,18 @@ import { CreateOrderItemDto } from "./dto/create-order-item.dto";
 import { UpdateOrderItemDto } from "./dto/update-order-item.dto";
 import { Model, Types } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
-import { OrderItem, ProductType } from "./entities/order-item.entity";
+import { OrderItem } from "./entities/order-item.entity";
 import { OrderService } from "src/order/order.service";
 import { MobilesService } from "src/mobiles/mobiles.service";
 import { LaptopService } from "src/laptop/laptop.service";
 import { HeadphoneService } from "src/headphone/headphone.service";
 import { TabletService } from "src/tablet/tablet.service";
-import e from "express";
+import { EProductType } from "src/common/types/order.types";
+import { ApiResponse } from "src/common/types/api";
+import { Mobile } from "src/mobiles/entities/mobiles.entity";
+import { Laptop } from "src/laptop/entities/laptop.entity";
+import { Headphone } from "src/headphone/entities/headphone.entity";
+import { Tablet } from "src/tablet/entities/tablet.entity";
 
 @Injectable()
 export class OrderItemsService {
@@ -28,179 +34,151 @@ export class OrderItemsService {
     private orderService: OrderService
   ) {}
 
-  async populateProduct(orderItem: OrderItem) {
-    let product;
-    if (orderItem.product_type === ProductType.MOBILE) {
-      product = await this.mobilesService.findOne(
-        orderItem.product_id.toString()
-      );
-    } else if (orderItem.product_type === ProductType.LAPTOP) {
-      product = await this.laptopsService.findOne(
-        orderItem.product_id.toString()
-      );
-    } else if (orderItem.product_type === ProductType.HEADPHONE) {
-      product = await this.headphonesService.findOne(
-        orderItem.product_id.toString()
-      );
-    } else if (orderItem.product_type === ProductType.TABLET) {
-      product = await this.tabletService.findOne(
-        orderItem.product_id.toString()
-      );
-    } else {
-      throw new NotFoundException("Loại sản phẩm không hợp lệ");
+  async findProductByType(productId: string, productType: EProductType) {
+    switch (productType) {
+      case EProductType.MOBILE:
+        return await this.mobilesService.findOne(productId);
+      case EProductType.LAPTOP:
+        return await this.laptopsService.findOne(productId);
+      case EProductType.HEADPHONE:
+        return await this.headphonesService.findOne(productId);
+      case EProductType.TABLET:
+        return await this.tabletService.findOne(productId);
+      default:
+        throw new NotFoundException("Loại sản phẩm không hợp lệ");
     }
-
-    if (!product) {
-      throw new NotFoundException("Không tìm thấy sản phẩm");
-    }
-
-    // Chuyển OrderItem thành plain object và gắn thông tin sản phẩm
-    const orderItemObject = orderItem.toObject();
-    orderItemObject.product = product;
-    return orderItemObject;
   }
 
-  async getOrderNotInOrder(userId: string) {
-    const order = await this.orderService.getByUser(userId);
-    console.log("Order:", order);
-    if (!order) {
-      return [];
-    }
-    const usedOrderItemIds = order.flatMap((order) =>
-      order.orderitem_ids.map((item) => item._id)
-    );
+  async getOrderNotInOrder(userId: string): Promise<ApiResponse<OrderItem[]>> {
     const orderItems = await this.orderItemModel
-      .find({ user_id: userId, _id: { $nin: usedOrderItemIds } })
+      .find({ user_id: userId, isInCart: false })
       .sort({ createdAt: -1 })
       .exec();
 
-    // Populate thông tin sản phẩm cho từng OrderItem
-    return Promise.all(orderItems.map((item) => this.populateProduct(item)));
+    return {
+      success: true,
+      message: "Lấy danh  giỏ hàng thành công",
+      data: orderItems,
+    };
   }
 
-  async create(createOrderItemDto: CreateOrderItemDto, userId: string) {
-    const { product_id, product_type, quantity, colorVariant } =
-      createOrderItemDto;
-    if (!Types.ObjectId.isValid(product_id)) {
-      throw new NotFoundException("Id sản phẩm không hợp lệ");
-    }
+  async create(
+    createOrderItemDto: CreateOrderItemDto,
+    userId: string
+  ): Promise<ApiResponse<OrderItem>> {
+    const result = await this.findProductByType(
+      createOrderItemDto.productId,
+      createOrderItemDto.productType
+    );
 
-    let product;
-    if (product_type === ProductType.MOBILE) {
-      product = await this.mobilesService.findOne(product_id);
-    } else if (product_type === ProductType.LAPTOP) {
-      product = await this.laptopsService.findOne(product_id);
-    } else if (product_type === ProductType.HEADPHONE) {
-      product = await this.headphonesService.findOne(product_id);
-    } else if (product_type === ProductType.TABLET) {
-      product = await this.tabletService.findOne(product_id);
-    } else {
-      throw new NotFoundException("Loại sản phẩm không hợp lệ");
-    }
-
-    if (!product) {
+    if (!result || !result.data) {
       throw new NotFoundException("Không tìm thấy sản phẩm");
     }
 
-    const total_price = quantity * product.finalPrice;
+    const product = result.data;
+
+    if (!product.finalPrice || isNaN(product.finalPrice)) {
+      throw new NotFoundException("Giá sản phẩm không hợp lệ");
+    }
+
+    const total_price = createOrderItemDto.quantity * product.finalPrice;
 
     const orderItem = new this.orderItemModel({
       user_id: userId,
-      product_id,
-      product_type,
-      quantity,
+      product_id: createOrderItemDto.productId,
+      product_type: createOrderItemDto.productType,
+      quantity: createOrderItemDto.quantity,
       unit_price: product.finalPrice,
       total_price,
       colorVariant: {
-        _id: colorVariant._id,
-        color: colorVariant.color,
-        image: colorVariant.image,
+        _id: createOrderItemDto.colorVariant._id,
+        color: createOrderItemDto.colorVariant.color,
+        image: createOrderItemDto.colorVariant.image,
       },
     });
 
-    const savedItem = await orderItem.save();
-    return this.populateProduct(savedItem); // Populate thông tin sản phẩm khi trả về
+    await orderItem.save();
+    return {
+      success: true,
+      message: "Thêm sản phẩm vào giỏ hàng thành công",
+      data: orderItem,
+    };
   }
 
-  async findAll() {
+  async findAll(): Promise<ApiResponse<OrderItem[]>> {
     const orderItems = await this.orderItemModel
       .find()
       .sort({ createdAt: -1 })
       .exec();
-
-    // Populate thông tin sản phẩm cho từng OrderItem
-    return Promise.all(orderItems.map((item) => this.populateProduct(item)));
+    return {
+      success: true,
+      message: "Lấy danh sách sản phẩm thành công",
+      data: orderItems,
+    };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ApiResponse<OrderItem>> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("Id không hợp lệ");
+      throw new BadRequestException("Id không hợp lệ");
     }
     const orderItem = await this.orderItemModel.findById(id).exec();
     if (!orderItem) throw new NotFoundException("OrderItem not found");
-
-    return this.populateProduct(orderItem); // Populate thông tin sản phẩm
+    return {
+      success: true,
+      message: "Lấy thông tin sản phẩm thành công",
+      data: orderItem,
+    };
   }
 
-  async findByUserId(id: string) {
+  async findByUserId(id: string): Promise<ApiResponse<OrderItem[]>> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("Id không hợp lệ");
+      throw new BadRequestException("Id không hợp lệ");
     }
     const orderItems = await this.orderItemModel
       .find({ user_id: id })
       .sort({ createdAt: -1 })
       .exec();
-    if (!orderItems.length) throw new NotFoundException("User not found");
-
-    // Populate thông tin sản phẩm cho từng OrderItem
-    return Promise.all(orderItems.map((item) => this.populateProduct(item)));
+    return {
+      success: true,
+      message: "Lấy danh sách sản phẩm thành công",
+      data: orderItems,
+    };
   }
 
   async update(id: string, updateOrderItemDto: UpdateOrderItemDto) {
-    const { product_id, product_type, quantity } = updateOrderItemDto;
-    if (!Types.ObjectId.isValid(product_id)) {
-      throw new NotFoundException("Id sản phẩm không hợp lệ");
+    const result = await this.findOne(id);
+    const orderItem = result.data;
+    let totalPrice = orderItem.totalPrice;
+    if (orderItem.quantity !== updateOrderItemDto.quantity) {
+      totalPrice = updateOrderItemDto.quantity * orderItem.quantity;
     }
 
-    let product;
-    if (product_type === ProductType.MOBILE) {
-      product = await this.mobilesService.findOne(product_id);
-    } else if (product_type === ProductType.LAPTOP) {
-      product = await this.laptopsService.findOne(product_id);
-    } else if (product_type === ProductType.HEADPHONE) {
-      product = await this.headphonesService.findOne(product_id);
-    } else if (product_type === ProductType.TABLET) {
-      product = await this.tabletService.findOne(product_id);
-    } else {
-      throw new NotFoundException("Loại sản phẩm không hợp lệ");
-    }
+    const updateDate = {
+      ...updateOrderItemDto,
+      totalPrice,
+    };
 
-    if (!product) {
-      throw new NotFoundException("Không tìm thấy sản phẩm");
-    }
+    Object.assign(orderItem, updateDate);
 
-    const total_price = quantity * product.finalPrice;
-    if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("Id không hợp lệ");
-    }
-    const orderItem = await this.orderItemModel
-      .findByIdAndUpdate(
-        id,
-        { ...updateOrderItemDto, total_price },
-        { new: true }
-      )
-      .exec();
-    if (!orderItem) throw new NotFoundException("OrderItem not found");
+    const updateOrderItem = await orderItem.save();
 
-    return this.populateProduct(orderItem); // Populate thông tin sản phẩm
+    return {
+      success: true,
+      message: "Cập nhật sản phẩm thành công",
+      data: updateOrderItem,
+    };
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<ApiResponse<null>> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("Id không hợp lệ");
+      throw new BadRequestException("Id không hợp lệ");
     }
     const orderItem = await this.orderItemModel.findByIdAndDelete(id).exec();
     if (!orderItem) throw new NotFoundException("OrderItem not found");
-    return orderItem;
+    return {
+      success: true,
+      message: "Xóa sản phẩm thành công",
+      data: null,
+    };
   }
 }

@@ -3,7 +3,7 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LoginFormInputs, LoginResponse } from "@/lib/types/auth";
+import { LoginFormInputs } from "@/lib/types/auth";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,8 @@ import { useEffect, useState } from "react";
 import ActiveAccount from "./active-account";
 import { useUserStore } from "@/app/store/user-store";
 import { loadingStore } from "@/app/store/loading.store";
+import { IApiResponse } from "@/lib/types/api";
+import { User } from "@/lib/types/user";
 
 const LoginPage = () => {
   const {
@@ -28,20 +30,18 @@ const LoginPage = () => {
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     start();
     try {
-      const response = await apiPost<LoginResponse, LoginFormInputs>(
+      const response = await apiPost<User, LoginFormInputs>(
         "/auth/login",
         data,
         {}
       );
-      if (response.error) {
-        toast.error(response.error);
-      }
-      if (response.data) {
-        toast.success("Đăng nhập thành công");
-        console.log("Login response:", response.data.user);
-        setUser(response.data.user);
+      if (response.success && response.data) {
+        toast.success(response.message);
+        setUser(response.data);
         router.push("/");
         router.refresh();
+      } else {
+        toast.error(response.message);
       }
     } catch (error: any) {
       toast.error(error?.message || "Đã xảy ra lỗi, vui lòng thử lại");

@@ -13,9 +13,9 @@ export class MailService {
         template: "./confirmation",
         context: { to, code },
       });
-      return { message: "Email sent successfully" };
+      return { message: "Gửi email thành công", success: true };
     } catch (error) {
-      throw new Error(`Failed to send email: ${error.message}`);
+      throw new Error(`Gửi email thất bại: ${error.message}`);
     }
   }
 }

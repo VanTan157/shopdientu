@@ -1,4 +1,5 @@
 import { IsString, IsEmail, IsOptional } from "class-validator";
+import { EUserType } from "src/common/types/user.types";
 
 export class UpdateUserDto {
   @IsString()
@@ -15,7 +16,7 @@ export class UpdateUserDto {
 
   @IsString()
   @IsOptional()
-  type?: string;
+  type?: EUserType;
 
   @IsString()
   @IsOptional()

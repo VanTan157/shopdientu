@@ -5,12 +5,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Headphone } from "@/lib/types/headphone";
+import { IHeadphone } from "@/lib/types/headphone";
 import Image from "next/image";
 import React from "react";
 
 interface ViewHeadphoneDetailProps {
-  headphone: Headphone;
+  headphone: IHeadphone;
   children: React.ReactNode;
 }
 
@@ -39,9 +39,6 @@ const ViewHeadphoneDetail = ({
                 {headphone.brand}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Loại:</strong> {headphone.type}
-              </p>
-              <p className="text-gray-700">
                 <strong className="font-medium">Giá gốc:</strong>{" "}
                 {headphone.startingPrice?.toLocaleString("vi-VN")} ₫
               </p>
@@ -57,25 +54,13 @@ const ViewHeadphoneDetail = ({
                 <strong className="font-medium">Trạng thái:</strong>{" "}
                 {headphone.isAvailable ? "Có sẵn" : "Hết hàng"}
               </p>
-              <p className="text-gray-700 col-span-1 sm:col-span-2 whitespace-pre-wrap">
-                <strong className="font-medium">Mô tả:</strong>{" "}
-                {headphone.description || "Không có"}
-              </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Bảo hành:</strong>{" "}
                 {headphone.warranty || "N/A"}
               </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Ngày phát hành:</strong>{" "}
-                {headphone.releaseDate
-                  ? new Date(headphone.releaseDate).toLocaleDateString("vi-VN")
-                  : "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">SKU:</strong> {headphone.sku}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Slug:</strong> {headphone.slug}
+              <p className="text-gray-700 col-span-1 sm:col-span-2 whitespace-pre-wrap">
+                <strong className="font-medium">Mô tả:</strong>{" "}
+                {headphone.description || "Không có"}
               </p>
             </div>
           </div>
@@ -98,12 +83,6 @@ const ViewHeadphoneDetail = ({
               <p className="text-gray-700">
                 <strong className="font-medium">Dải tần số:</strong>{" "}
                 {headphone.specifications?.frequencyRange || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Độ nhạy:</strong>{" "}
-                {headphone.specifications?.sensitivity
-                  ? `${headphone.specifications.sensitivity} dB`
-                  : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Trở kháng:</strong>{" "}
@@ -133,11 +112,11 @@ const ViewHeadphoneDetail = ({
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Micro:</strong>{" "}
-                {headphone.specifications?.microphone || "N/A"}
+                {headphone.specifications?.microphone ? "Có" : "Không"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Chất lượng âm thanh:</strong>{" "}
-                {headphone.specifications?.audioQuality || "N/A"}
+                <strong className="font-medium">Kết nối:</strong>{" "}
+                {headphone.specifications?.connectivity || "N/A"}
               </p>
             </div>
           </div>
@@ -150,26 +129,16 @@ const ViewHeadphoneDetail = ({
               <p className="text-gray-700">
                 <strong className="font-medium">Kích thước:</strong>{" "}
                 {headphone.dimensions
-                  ? `${headphone.dimensions.length} x ${headphone.dimensions.width} x ${headphone.dimensions.height} cm`
+                  ? `${headphone.dimensions.length} x ${headphone.dimensions.width} x ${headphone.dimensions.height} mm`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Trọng lượng:</strong>{" "}
-                {headphone.weight ? `${headphone.weight} g` : "N/A"}
+                {headphone.dimensions?.weight
+                  ? `${headphone.dimensions.weight} g`
+                  : "N/A"}
               </p>
             </div>
-          </div>
-          {/* Kết nối */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-xl text-gray-900 mb-3">
-              Kết nối
-            </h3>
-            <p className="text-gray-700">
-              <strong className="font-medium">Kết nối:</strong>{" "}
-              {headphone.connectivity?.length
-                ? headphone.connectivity.join(", ")
-                : "Không có"}
-            </p>
           </div>
           {/* Phụ kiện */}
           <div className="bg-gray-50 p-4 rounded-lg">

@@ -1,7 +1,6 @@
-// app/cart/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
@@ -33,12 +32,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CartItem } from "@/lib/types/order-item";
 import { useCartStore } from "@/app/store/cart-store";
 import { useAddress } from "@/hooks/useAddress";
 import { loadingStore } from "@/app/store/loading.store";
+import { IOrderItem } from "@/lib/types/order-item";
 
-const CartPage = ({ carts }: { carts: CartItem[] }) => {
+const CartPage = ({ carts }: { carts: IOrderItem[] }) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -71,7 +70,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
 
   const selectedTotal = carts
     .filter((item) => selectedItems.includes(item._id))
-    .reduce((sum, item) => sum + item.total_price, 0);
+    .reduce((sum, item) => sum + item.totalPrice, 0);
 
   const handleDelete = async (itemId: string) => {
     start();
@@ -190,22 +189,22 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
               <TableCell className="flex items-center gap-4">
                 <Image
                   src={`${process.env.NEXT_PUBLIC_API_BASE_URL}${item.colorVariant.image}`}
-                  alt={item.product.name}
+                  alt={item.colorVariant.image}
                   width={50}
                   height={50}
                   className="object-contain rounded-md"
                 />
-                <span className="font-semibold">{item.product.name}</span>
+                <span className="font-semibold">{item.productName}</span>
               </TableCell>
               <TableCell className="font-semibold">
                 {item.colorVariant.color}
               </TableCell>
               <TableCell className="font-semibold">{item.quantity}</TableCell>
               <TableCell className="font-semibold">
-                {item.unit_price.toLocaleString("vi-VN")} ₫
+                {item.totalPrice.toLocaleString("vi-VN")} ₫
               </TableCell>
               <TableCell className="font-semibold">
-                {item.total_price.toLocaleString("vi-VN")} ₫
+                {item.totalPrice.toLocaleString("vi-VN")} ₫
               </TableCell>
               <TableCell className="font-semibold">
                 <Dialog>
@@ -223,7 +222,7 @@ const CartPage = ({ carts }: { carts: CartItem[] }) => {
                       <DialogTitle>Xác nhận xóa</DialogTitle>
                     </DialogHeader>
                     <p>
-                      Bạn có chắc muốn xóa {item.product.name} khỏi giỏ hàng?
+                      Bạn có chắc muốn xóa {item.productName} khỏi giỏ hàng?
                     </p>
                     <DialogFooter>
                       <Button variant="outline">Hủy</Button>

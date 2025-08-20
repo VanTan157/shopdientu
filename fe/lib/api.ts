@@ -1,9 +1,4 @@
-// Định nghĩa kiểu dữ liệu trả về từ API
-interface ApiResponse<T> {
-  data: T | null;
-  error: string | null;
-  status: number;
-}
+import { IApiResponse } from "./types/api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -53,8 +48,6 @@ const refreshToken = async (): Promise<boolean> => {
     if (!response.ok) {
       throw new Error("Failed to refresh token");
     }
-
-    // Backend sẽ set lại accessToken qua cookie, không cần trả về token
     return true;
   } catch (error) {
     console.error("Error refreshing token:", error);
@@ -62,14 +55,13 @@ const refreshToken = async (): Promise<boolean> => {
   }
 };
 
-// Hàm request chung với auto refresh token
 const requestWithRefresh = async <T>(
   method: string,
   endpoint: string,
   body?: any,
   headers?: HeadersInit,
   isRetry: boolean = false
-): Promise<ApiResponse<T>> => {
+): Promise<IApiResponse<T>> => {
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method,
@@ -78,40 +70,33 @@ const requestWithRefresh = async <T>(
       credentials: "include",
     });
 
-    const data = await response.json();
+    const data: IApiResponse<T> = await response.json();
 
     if (response.status === 401 && !isRetry) {
-      // Nếu lỗi 401 và chưa thử lại, làm mới token
       const refreshed = await refreshToken();
       if (refreshed) {
-        // Thử lại request với accessToken mới từ cookie
         return requestWithRefresh<T>(method, endpoint, body, headers, true);
       } else {
         throw new Error("Unable to refresh token");
       }
     }
 
-    return {
-      data: response.ok ? data : null,
-      error: response.ok ? null : data.message || "Lỗi không xác định",
-      status: response.status,
-    };
+    return data;
   } catch (error) {
     return {
-      data: null,
+      message: "Lỗi không xác định",
       error: error instanceof Error ? error.message : "Lỗi mạng",
-      status: 500,
+      statusCode: 500,
     };
   }
 };
 
-// GET
 export async function apiGet<T>(
   endpoint: string,
   headers?: HeadersInit,
   tags?: string[],
   forceRefresh?: boolean
-): Promise<ApiResponse<T>> {
+): Promise<IApiResponse<T>> {
   try {
     const autoTags = detectTagsFromEndpoint(endpoint);
     const cacheTags = tags || autoTags;
@@ -125,34 +110,28 @@ export async function apiGet<T>(
     if (forceRefresh) {
       fetchOptions.cache = "no-store";
     } else {
-      fetchOptions.cache = "force-cache";
+      // fetchOptions.cache = "force-cache";
+      fetchOptions.cache = "no-store";
       fetchOptions.next = { tags: cacheTags };
     }
 
     const response = await fetch(`${BASE_URL}${endpoint}`, fetchOptions);
-
-    const data = await response.json();
-    return {
-      data: response.ok ? data : null,
-      error: response.ok ? null : data.message || "Lỗi không xác định",
-      status: response.status,
-    };
+    return response.json();
   } catch (error) {
     return {
-      data: null,
+      message: "Lỗi không xác định",
       error: error instanceof Error ? error.message : "Lỗi mạng",
-      status: 500,
+      statusCode: 500,
     };
   }
 }
 
-// POST
 export async function apiPost<T, U>(
   endpoint: string,
   body: U | FormData,
   headers?: HeadersInit,
   tags?: string[]
-): Promise<ApiResponse<T>> {
+): Promise<IApiResponse<T>> {
   try {
     const isFormData = body instanceof FormData;
     const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -162,36 +141,30 @@ export async function apiPost<T, U>(
       credentials: "include",
     });
 
-    const data = await response.json();
+    const data: IApiResponse<T> = await response.json();
 
-    // Revalidate cache nếu request thành công
     if (response.ok) {
       const autoTags = detectTagsFromEndpoint(endpoint);
       const revalidateTags = tags || autoTags;
       await callRevalidateAPI(revalidateTags);
     }
 
-    return {
-      data: response.ok ? data : null,
-      error: response.ok ? null : data.message || "Lỗi không xác định",
-      status: response.status,
-    };
+    return data;
   } catch (error) {
     return {
-      data: null,
       error: error instanceof Error ? error.message : "Lỗi mạng",
-      status: 500,
+      statusCode: 500,
+      message: "Lỗi không xác định",
     };
   }
 }
 
-// PATCH
 export async function apiPatch<T, U>(
   endpoint: string,
   body: U | FormData,
   headers?: HeadersInit,
   tags?: string[]
-): Promise<ApiResponse<T>> {
+): Promise<IApiResponse<T>> {
   try {
     const isFormData = body instanceof FormData;
     const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -201,25 +174,20 @@ export async function apiPatch<T, U>(
       credentials: "include",
     });
 
-    const data = await response.json();
+    const data: IApiResponse<T> = await response.json();
 
-    // Revalidate cache nếu request thành công
     if (response.ok) {
       const autoTags = detectTagsFromEndpoint(endpoint);
       const revalidateTags = tags || autoTags;
       await callRevalidateAPI(revalidateTags);
     }
 
-    return {
-      data: response.ok ? data : null,
-      error: response.ok ? null : data.message || "Lỗi không xác định",
-      status: response.status,
-    };
+    return data;
   } catch (error) {
     return {
-      data: null,
       error: error instanceof Error ? error.message : "Lỗi mạng",
-      status: 500,
+      statusCode: 500,
+      message: "Lỗi không xác định",
     };
   }
 }
@@ -230,7 +198,7 @@ export async function apiPut<T, U>(
   body: U,
   headers?: HeadersInit,
   tags?: string[]
-): Promise<ApiResponse<T>> {
+): Promise<IApiResponse<T>> {
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: "PUT",
@@ -239,25 +207,20 @@ export async function apiPut<T, U>(
       credentials: "include",
     });
 
-    const data = await response.json();
+    const data: IApiResponse<T> = await response.json();
 
-    // Revalidate cache nếu request thành công
     if (response.ok) {
       const autoTags = detectTagsFromEndpoint(endpoint);
       const revalidateTags = tags || autoTags;
       await callRevalidateAPI(revalidateTags);
     }
 
-    return {
-      data: response.ok ? data : null,
-      error: response.ok ? null : data.message || "Lỗi không xác định",
-      status: response.status,
-    };
+    return data;
   } catch (error) {
     return {
-      data: null,
       error: error instanceof Error ? error.message : "Lỗi mạng",
-      status: 500,
+      statusCode: 500,
+      message: "Lỗi không xác định",
     };
   }
 }
@@ -267,7 +230,7 @@ export async function apiDelete<T>(
   endpoint: string,
   headers?: HeadersInit,
   tags?: string[]
-): Promise<ApiResponse<T>> {
+): Promise<IApiResponse<T>> {
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: "DELETE",
@@ -275,36 +238,29 @@ export async function apiDelete<T>(
       credentials: "include",
     });
 
-    const data = await response.json();
+    const data: IApiResponse<T> = await response.json();
 
-    // Revalidate cache nếu request thành công
     if (response.ok) {
       const autoTags = detectTagsFromEndpoint(endpoint);
       const revalidateTags = tags || autoTags;
       await callRevalidateAPI(revalidateTags);
     }
 
-    return {
-      data: response.ok ? data : null,
-      error: response.ok ? null : data.message || "Lỗi không xác định",
-      status: response.status,
-    };
+    return data;
   } catch (error) {
     return {
-      data: null,
       error: error instanceof Error ? error.message : "Lỗi mạng",
-      status: 500,
+      statusCode: 500,
+      message: "Lỗi không xác định",
     };
   }
 }
 
-// Hàm tiện ích để revalidate cache theo yêu cầu
 export const revalidateCache = async (tags: string | string[]) => {
   const tagArray = Array.isArray(tags) ? tags : [tags];
   await callRevalidateAPI(tagArray);
 };
 
-// Hàm tiện ích để revalidate tất cả cache của sản phẩm
 export const revalidateAllProducts = async () => {
   const productTags = ["laptops", "mobiles", "tablets", "headphones"];
   await callRevalidateAPI(productTags);

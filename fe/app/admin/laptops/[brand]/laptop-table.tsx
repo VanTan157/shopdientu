@@ -16,14 +16,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Laptop } from "@/lib/types/laptop";
 import { Edit, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
 import ViewLaptopDetail from "./view-laptop-detail";
 import EditLaptop from "./edit-laptop";
 import DeleteLaptop from "./delete-laptop";
+import { ILaptop } from "@/lib/types/laptop";
 
-const LaptopTable = ({ laptops }: { laptops: Laptop[] }) => {
+const LaptopTable = ({ laptops }: { laptops: ILaptop[] }) => {
   const [searchName, setSearchName] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("Tất cả");
   const [filterPromotion, setFilterPromotion] = useState<string>("Tất cả");

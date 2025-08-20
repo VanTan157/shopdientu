@@ -21,9 +21,9 @@ import { useState } from "react";
 import ViewLaptopDetail from "./view-tablet-detail";
 import EditLaptop from "./edit-tablet";
 import DeleteLaptop from "./delete-tablet";
-import { Tablet } from "@/lib/types/tablet";
+import { ITablet } from "@/lib/types/tablet";
 
-const LaptopTable = ({ tablets }: { tablets: Tablet[] }) => {
+const LaptopTable = ({ tablets }: { tablets: ITablet[] }) => {
   const [searchName, setSearchName] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("Tất cả");
   const [filterPromotion, setFilterPromotion] = useState<string>("Tất cả");

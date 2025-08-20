@@ -15,35 +15,31 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { AuthGuard } from "src/auth/auth.guard";
 import { RolesGuard } from "src/auth/roles.guard";
 import { Roles } from "src/auth/roles.decorator";
+import { EUserType } from "src/common/types/user.types";
 
 @Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto);
-    return {
-      message: "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.",
-      user,
-    };
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
   }
 
   @Post("verify")
   async verifyCode(@Body() body: { email: string; code: string }) {
-    const user = await this.usersService.verifyCode(body.email, body.code);
-    return { message: "Tài khoản đã được kích hoạt!", user };
+    return this.usersService.verifyCode(body.email, body.code);
   }
 
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN") // Chỉ ADMIN được tạo user
+  @Roles(EUserType.ADMIN)
   @Get()
   findAll() {
     return this.usersService.findAll();
   }
 
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN") // Chỉ ADMIN được tạo user
+  @Roles(EUserType.ADMIN)
   @Get("search")
   async searchUsers(
     @Query("page") page: string = "1",
@@ -75,13 +71,12 @@ export class UsersController {
     @Param("id") id: string,
     @Body() { oldPass, newPass }: { newPass: string; oldPass: string }
   ) {
-    return this.usersService.changPassword(id, { oldPass, newPass });
+    return this.usersService.changePassword(id, { oldPass, newPass });
   }
   @Post("send-code-again")
   async sendCode(@Body("email") email: string) {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     await this.usersService.sendConfirmationCode(email, code);
-    // Lưu code vào DB hoặc cache nếu cần xác thực sau
-    return { message: "Đã gửi lại mã xác nhận đến email!" };
+    return { message: "Đã gửi lại mã xác nhận đến email!", success: true };
   }
 }

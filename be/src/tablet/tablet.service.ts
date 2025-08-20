@@ -10,15 +10,13 @@ import { promisify } from "util";
 import { Tablet } from "./entities/tablet.entity";
 import { CreateTabletDto } from "./dto/create-tablet.dto";
 import { UpdateTabletDto } from "./dto/update-tablet.dto";
-import { a } from "framer-motion/dist/types.d-B50aGbjN";
+import { ApiResponse } from "src/common/types/api";
 
 const unlinkAsync = promisify(fs.unlink);
 
-// Service xử lý logic nghiệp vụ cho module tablet
 @Injectable()
 export class TabletService {
   constructor(
-    // Inject model tablet để tương tác với MongoDB
     @InjectModel(Tablet.name)
     private readonly tabletModel: Model<Tablet>
   ) {}
@@ -27,19 +25,17 @@ export class TabletService {
   async create(
     createTabletDto: CreateTabletDto,
     files: Express.Multer.File[]
-  ): Promise<Tablet> {
-    // Kiểm tra số lượng file ảnh có khớp với số lượng biến thể màu không
+  ): Promise<ApiResponse<Tablet>> {
     if (files.length !== createTabletDto.colorVariants.length) {
       throw new BadRequestException(
         "Số lượng file ảnh phải khớp với số lượng biến thể màu"
       );
     }
 
-    // Xử lý các file ảnh được upload
     const colorVariants = createTabletDto.colorVariants.map(
       (variant, index) => {
         if (!files[index]) {
-          throw new NotFoundException(`Thiếu ảnh cho màu ${variant.color}`);
+          throw new BadRequestException(`Thiếu ảnh cho màu ${variant.color}`);
         }
         return {
           color: variant.color,
@@ -49,19 +45,16 @@ export class TabletService {
       }
     );
 
-    // Tính toán totalStock từ colorVariants
     const calculatedTotalStock = colorVariants.reduce(
       (sum, variant) => sum + variant.stock,
       0
     );
 
-    // Tính toán isPromotion và finalPrice
     const isPromotion = createTabletDto.promotion > 0;
     const finalPrice =
       createTabletDto.startingPrice * (1 - createTabletDto.promotion / 100);
     const isAvailable = calculatedTotalStock > 0;
 
-    // Tạo document mới
     const tablet = new this.tabletModel({
       ...createTabletDto,
       colorVariants,
@@ -71,41 +64,53 @@ export class TabletService {
       isAvailable,
     });
 
-    // Lưu document vào MongoDB
-    return await tablet.save();
+    await tablet.save();
+
+    return {
+      success: true,
+      message: "Tạo tablet thành công",
+      data: tablet,
+    };
   }
 
-  // Lấy danh sách tất cả tablet
-  async findAll(): Promise<Tablet[]> {
-    return await this.tabletModel.find().exec();
+  async findAll(): Promise<ApiResponse<Tablet[]>> {
+    const tablets = await this.tabletModel.find().exec();
+    return {
+      success: true,
+      message: "Lấy danh sách tablet thành công",
+      data: tablets,
+    };
   }
 
-  async findByPromotion() {
-    return await this.tabletModel.find({ isPromotion: true }).exec();
+  async findByPromotion(): Promise<ApiResponse<Tablet[]>> {
+    const tablets = await this.tabletModel.find({ isPromotion: true }).exec();
+    return {
+      success: true,
+      message: "Lấy danh sách tablet khuyến mãi thành công",
+      data: tablets,
+    };
   }
 
-  // Lấy thông tin một tablet theo ID
-  async findOne(id: string): Promise<Tablet> {
+  async findOne(id: string): Promise<ApiResponse<Tablet>> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
     const tablet = await this.tabletModel.findById({ _id: id }).exec();
     if (!tablet) {
-      throw new BadRequestException("Không tìm thấy tablet");
+      throw new NotFoundException("Không tìm thấy tablet");
     }
-    return tablet;
+    return {
+      success: true,
+      message: "Lấy thông tin tablet thành công",
+      data: tablet,
+    };
   }
 
-  // Cập nhật thông tin tablet
   async update(
     id: string,
     updateTabletDto: UpdateTabletDto,
     files?: Express.Multer.File[]
-  ): Promise<Tablet> {
-    if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
-    // Kiểm tra tablet có tồn tại không
-    const tablet = await this.findOne(id);
-    if (!tablet) {
-      throw new NotFoundException("Không tìm thấy tablet để cập nhật");
-    }
+  ): Promise<ApiResponse<Tablet>> {
+    const result = await this.findOne(id);
+    const tablet = result.data;
 
     let colorVariants = tablet.colorVariants;
 
@@ -116,20 +121,18 @@ export class TabletService {
         hasNewImage?: string;
         stock?: number;
       }> = updateTabletDto.colorVariants;
-      let fileIndex = 0; // Theo dõi index của file trong mảng files
+      let fileIndex = 0;
 
-      // Xác định các ảnh cũ có thể cần xóa
       const oldImagesToCheck = tablet.colorVariants
         .filter((oldVariant) =>
           newColorVariants.some(
             (newVariant, idx) =>
               newVariant.color === oldVariant.color &&
-              newVariant.hasNewImage === "true" // Có ảnh mới cho màu này
+              newVariant.hasNewImage === "true"
           )
         )
         .map((variant) => variant.image);
 
-      // Kiểm tra xem ảnh cũ có được sử dụng bởi sản phẩm khác không
       const imagesInUse = await this.tabletModel
         .find({
           "colorVariants.image": { $in: oldImagesToCheck },
@@ -144,7 +147,6 @@ export class TabletService {
         (image) => !imagesInUseSet.has(image)
       );
 
-      // Xóa ảnh cũ không còn được sử dụng
       if (oldImagesToDelete.length > 0) {
         await Promise.all(
           oldImagesToDelete.map((imagePath) =>
@@ -155,17 +157,15 @@ export class TabletService {
         );
       }
 
-      // Cập nhật colorVariants với thông tin mới
       colorVariants = newColorVariants.map((variant) => {
         const existingVariant = tablet.colorVariants.find(
           (v) => v.color === variant.color
         );
         let image = variant.existingImage || existingVariant?.image || "";
 
-        // Nếu biến thể này có ảnh mới
         if (variant.hasNewImage === "true" && files && files[fileIndex]) {
           image = `/image/${files[fileIndex].filename}`;
-          fileIndex++; // Tăng index để lấy file tiếp theo
+          fileIndex++;
         }
 
         return {
@@ -180,46 +180,31 @@ export class TabletService {
       (sum, variant) => sum + variant.stock,
       0
     );
-
-    // Tính toán isPromotion và finalPrice
-    const promotion =
-      updateTabletDto.promotion !== undefined
-        ? updateTabletDto.promotion
-        : tablet.promotion;
-    const startingPrice =
-      updateTabletDto.startingPrice !== undefined
-        ? updateTabletDto.startingPrice
-        : tablet.startingPrice;
-    const isPromotion = promotion > 0;
-    const finalPrice = startingPrice * (1 - promotion / 100);
-
-    // Cập nhật document với các giá trị tính toán
     const updatedData = {
       ...updateTabletDto,
       totalStock,
-      isPromotion,
-      finalPrice,
+      isPromotion: updateTabletDto.promotion > 0,
+      finalPrice:
+        updateTabletDto.startingPrice * (1 - updateTabletDto.promotion / 100),
       colorVariants,
       isAvailable: totalStock > 0,
     };
 
-    // Cập nhật document trong MongoDB
-    const updatedTablet = await this.tabletModel
-      .findByIdAndUpdate(id, updatedData, { new: true })
-      .exec();
+    Object.assign(tablet, updatedData);
 
-    if (!updatedTablet) {
-      throw new BadRequestException("Không tìm thấy tablet để cập nhật");
-    }
+    const updateTablet = await tablet.save();
 
-    return updatedTablet;
+    return {
+      success: true,
+      message: "Cập nhật tablet thành công",
+      data: updateTablet,
+    };
   }
 
-  // Xóa một tablet
-  async remove(id: string) {
-    if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
-    // Kiểm tra tablet có tồn tại không
-    const tablet = await this.tabletModel.findById(id).exec();
+  async remove(id: string): Promise<ApiResponse<null>> {
+    if (!Types.ObjectId.isValid(id))
+      throw new BadRequestException("ID không hợp lệ");
+    const tablet = await this.tabletModel.findByIdAndDelete(id).exec();
     if (!tablet) throw new NotFoundException("Không tìm thấy tablet");
 
     const imagePaths = tablet.colorVariants.map((variant) => variant.image);
@@ -233,11 +218,14 @@ export class TabletService {
       );
     }
 
-    // Xóa document khỏi MongoDB
-    return await this.tabletModel.findByIdAndDelete(id).exec();
+    return {
+      success: true,
+      message: "Xóa tablet thành công",
+      data: null,
+    };
   }
 
-  async getAllBrand(): Promise<string[]> {
+  async getAllBrand(): Promise<ApiResponse<string[]>> {
     const laptops = await this.tabletModel.find().exec();
     const brands = new Set<string>();
     laptops.forEach((tablet) => {
@@ -245,16 +233,24 @@ export class TabletService {
         brands.add(tablet.brand);
       }
     });
-    return Array.from(brands);
+    return {
+      success: true,
+      message: "Lấy danh sách thương hiệu thành công",
+      data: Array.from(brands),
+    };
   }
 
-  async getAllTabletByBrand(brand: string): Promise<Tablet[]> {
+  async getAllTabletByBrand(brand: string): Promise<ApiResponse<Tablet[]>> {
     const laptops = await this.tabletModel.find({ brand }).exec();
     if (!laptops || laptops.length === 0) {
       throw new NotFoundException(
         "Không tìm thấy tablet nào cho thương hiệu này"
       );
     }
-    return laptops;
+    return {
+      success: true,
+      data: laptops,
+      message: "Lấy danh sách tablet theo thương hiệu thành công",
+    };
   }
 }

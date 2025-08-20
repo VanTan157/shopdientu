@@ -4,6 +4,7 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -12,7 +13,9 @@ import { User } from "./entities/user.entity";
 import { Model, Types } from "mongoose";
 import * as bcrypt from "bcrypt";
 import { MailService } from "src/mail/mail.service";
-import { error } from "console";
+import { ApiResponse } from "src/common/types/api";
+import { A, I } from "framer-motion/dist/types.d-B50aGbjN";
+import { JwtPayload } from "src/common/types/user.types";
 
 @Injectable()
 export class UsersService {
@@ -21,7 +24,7 @@ export class UsersService {
     private readonly mailService: MailService
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<ApiResponse<JwtPayload>> {
     const existingUser = await this.userModel
       .findOne({
         $or: [
@@ -33,7 +36,7 @@ export class UsersService {
       })
       .exec();
     if (existingUser) {
-      throw new ConflictException("Email or Google ID already exists");
+      throw new ConflictException("Email hoặc Google ID đã tồn tại");
     }
 
     const saltRounds = 10;
@@ -45,11 +48,9 @@ export class UsersService {
     let expireAt: Date | undefined;
     let isActive = false;
 
-    // Nếu đăng ký bằng Google, kích hoạt tài khoản ngay
     if (createUserDto.googleId) {
       isActive = true;
     } else {
-      // Nếu đăng ký thông thường, tạo mã xác nhận và gửi email
       code = Math.floor(100000 + Math.random() * 900000).toString();
       expireAt = new Date();
       expireAt.setMinutes(expireAt.getMinutes() + 15);
@@ -68,10 +69,22 @@ export class UsersService {
         code as string
       );
     }
-    return newUser.save();
+
+    const savedUser = await newUser.save();
+    const payload: JwtPayload = {
+      email: savedUser.email,
+      userId: String(savedUser._id),
+      type: savedUser.type,
+      name: savedUser.name,
+    };
+    return {
+      message: "Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.",
+      data: payload,
+      success: true,
+    };
   }
 
-  async verifyCode(email: string, code: string): Promise<User> {
+  async verifyCode(email: string, code: string): Promise<ApiResponse<User>> {
     const user = await this.userModel.findOne({ email }).exec();
     if (!user) {
       throw new BadRequestException("Email không tồn tại");
@@ -85,13 +98,16 @@ export class UsersService {
       throw new BadRequestException("Mã xác nhận đã hết hạn");
     }
 
-    // Kích hoạt tài khoản
     user.isActive = true;
-    user.code = ""; // Xóa mã sau khi xác nhận
-    user.expireAt = undefined; // Xóa thời gian hết hạn
+    user.code = "";
+    user.expireAt = undefined;
     await user.save();
 
-    return user;
+    return {
+      message: "Xác thực thành công",
+      data: user,
+      success: true,
+    };
   }
 
   async sendConfirmationCode(email: string, code: string) {
@@ -113,12 +129,7 @@ export class UsersService {
     page: number = 1,
     limit: number = 10,
     search?: string
-  ): Promise<{
-    users: User[];
-    totalItems: number;
-    totalPages: number;
-    currentPage: number;
-  }> {
+  ): Promise<ApiResponse<User[]>> {
     const currentPage = Math.max(1, page);
     const itemsPerPage = Math.max(1, limit);
     const skip = (currentPage - 1) * itemsPerPage;
@@ -141,39 +152,67 @@ export class UsersService {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
     return {
-      users,
-      totalItems,
-      totalPages,
-      currentPage,
+      message: "Lấy danh sách người dùng thành công",
+      data: users,
+      success: true,
     };
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+  async findAll(): Promise<ApiResponse<User[]>> {
+    const users = await this.userModel.find().exec();
+    return {
+      message: "Lấy danh sách người dùng thành công",
+      data: users,
+      success: true,
+    };
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string) {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("Invalid user ID11");
+      throw new BadRequestException("ID người dùng không hợp lệ");
     }
     const user = await this.userModel.findById(id).exec();
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException("Người dùng không tồn tại");
     }
-    return user;
+    return {
+      success: true,
+      data: user,
+      message: "Lấy thông tin người dùng thành công",
+    };
   }
 
-  async findByGoogleId(googleId: string): Promise<User | null> {
-    return this.userModel.findOne({ googleId }).exec();
+  async findByGoogleId(googleId: string): Promise<ApiResponse<JwtPayload>> {
+    const user = await this.userModel.findOne({ googleId }).exec();
+    if (!user) {
+      throw new NotFoundException("Người dùng với Google ID này không tồn tại");
+    }
+    return {
+      success: true,
+      message: "Lấy thông tin người dùng thành công",
+      data: {
+        email: user.email,
+        userId: String(user._id),
+        type: user.type,
+        name: user.name,
+      },
+    };
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email }).exec();
+  async findByEmail(email: string): Promise<ApiResponse<User | null>> {
+    const user = await this.userModel.findOne({ email }).exec();
+    return {
+      success: true,
+      data: user,
+      message: user
+        ? "Lấy thông tin người dùng thành công"
+        : "Người dùng không tồn tại",
+    };
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("Invalid user ID");
+      throw new NotFoundException("ID người dùng không hợp lệ");
     }
     const user = await this.userModel
       .findByIdAndUpdate(id, { $set: updateUserDto }, { new: true })
@@ -184,38 +223,43 @@ export class UsersService {
     return user;
   }
 
-  async remove(id: string): Promise<User> {
+  async remove(id: string): Promise<ApiResponse<User>> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("Invalid user ID");
+      throw new NotFoundException("ID người dùng không hợp lệ");
     }
     const user = await this.userModel.findByIdAndDelete(id).exec();
     if (!user) {
       throw new NotFoundException("User not found");
     }
-    return user;
+    return {
+      success: true,
+      data: user,
+      message: "Xóa người dùng thành công",
+    };
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateUser(email: string, password: string) {
     const user = await this.userModel.findOne({ email }).exec();
+    console.log("User found:", user);
     if (!user || !user.password) {
-      throw new UnauthorizedException("Tài khoản không tồn tại");
+      throw new NotFoundException("Tài khoản không tồn tại");
     }
     if (!user.isActive) {
-      throw new UnauthorizedException("Tài khoản chưa được kích hoạt");
+      throw new ForbiddenException("Tài khoản chưa được kích hoạt");
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new UnauthorizedException("Sai mật khẩu");
+      throw new BadRequestException("Sai mật khẩu");
     }
     return user;
   }
 
-  async changPassword(
+  async changePassword(
     id: string,
     { oldPass, newPass }: { oldPass: string; newPass: string }
-  ): Promise<{} | null> {
+  ): Promise<ApiResponse<User>> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException("Invalid user ID");
+      throw new NotFoundException("ID người dùng không hợp lệ");
     }
     const user = await this.userModel.findById(id).exec();
     if (!user) {
@@ -231,6 +275,10 @@ export class UsersService {
       { $set: { password: hashedNewPass } },
       { new: true }
     );
-    return user;
+    return {
+      success: true,
+      data: user,
+      message: "Đổi mật khẩu thành công",
+    };
   }
 }

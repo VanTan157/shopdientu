@@ -1,29 +1,52 @@
-import { Transform } from "class-transformer";
 import {
-  IsNotEmpty,
   IsString,
   IsNumber,
-  Min,
-  IsObject,
+  IsBoolean,
   IsEnum,
+  IsObject,
+  ValidateNested,
+  IsOptional,
+  Min,
+  IsMongoId,
 } from "class-validator";
-import { ProductType } from "../entities/order-item.entity";
+import { Type } from "class-transformer";
+import { Types } from "mongoose";
+import { EProductType } from "src/common/types/order.types";
+
+class ColorVariantDto {
+  @IsMongoId()
+  _id: Types.ObjectId;
+
+  @IsString()
+  color: string;
+
+  @IsString()
+  image: string;
+}
 
 export class CreateOrderItemDto {
-  @IsNotEmpty()
+  @IsMongoId()
+  userId: string;
+
+  @IsMongoId()
+  productId: string;
+
   @IsString()
-  product_id: string;
+  productName: string;
 
-  @IsNotEmpty()
-  @IsEnum(ProductType)
-  product_type: ProductType;
+  @IsEnum(EProductType)
+  productType: EProductType;
 
-  @IsNotEmpty()
-  @Transform(({ value }) => parseInt(value, 10)) // Chuyển chuỗi thành số nguyên
-  @IsNumber({}, { message: "quantity must be a number" })
-  @Min(1, { message: "quantity must be at least 1" })
+  @IsNumber()
+  @Min(0)
+  unitPrice: number;
+
+  @IsNumber()
+  @Min(1)
   quantity: number;
 
   @IsObject()
-  colorVariant: { _id: string; color: string; image: string };
+  @ValidateNested()
+  @Type(() => ColorVariantDto)
+  colorVariant: ColorVariantDto;
 }

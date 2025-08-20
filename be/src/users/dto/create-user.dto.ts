@@ -1,5 +1,12 @@
-import { IsString, IsEmail, IsNotEmpty, IsOptional } from "class-validator";
+import {
+  IsString,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+} from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
+import { EUserType } from "src/common/types/user.types";
 
 export class CreateUserDto {
   @ApiProperty({ description: "Tên của người dùng", example: "John Doe" })
@@ -25,12 +32,11 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: "Loại người dùng",
-    example: "USER",
-    default: "USER",
+    default: EUserType.USER,
   })
-  @IsString()
+  @IsEnum(EUserType)
   @IsOptional()
-  type?: string;
+  type?: EUserType;
 
   @IsString()
   @IsOptional()

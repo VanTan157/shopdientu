@@ -18,26 +18,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { loadingStore } from "@/app/store/loading.store";
-
-const defaultSpecifications = {
-  driverType: "",
-  driverSize: 0,
-  frequencyRange: "",
-  sensitivity: 0,
-  impedance: 0,
-  noiseCancellation: "",
-  batteryLife: 0,
-  chargingTime: 0,
-  chargingPort: "",
-  microphone: "",
-  audioQuality: "",
-};
-
-const defaultDimensions = {
-  length: 0,
-  width: 0,
-  height: 0,
-};
+import { IHeadphone } from "@/lib/types/headphone";
 
 const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
   const router = useRouter();
@@ -46,24 +27,34 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
   const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    brand: "",
-    type: "",
     startingPrice: 0,
     promotion: 0,
     description: "",
-    specifications: { ...defaultSpecifications },
+    brand: "",
+    specifications: {
+      driverType: "",
+      driverSize: 0,
+      frequencyRange: "",
+      impedance: 0,
+      noiseCancellation: "",
+      batteryLife: 0,
+      chargingTime: 0,
+      chargingPort: "",
+      microphone: false,
+      connectivity: "",
+    },
     colorVariants: [{ color: "", image: null as File | null, stock: 0 }],
-    weight: 0,
-    dimensions: { ...defaultDimensions },
-    connectivity: [] as string[],
     accessories: [] as string[],
-    warranty: "",
     tags: [] as string[],
-    slug: "",
-    sku: "",
+    dimensions: {
+      length: 0,
+      width: 0,
+      height: 0,
+      weight: 0,
+    },
+    warranty: "",
   });
   const [tagInput, setTagInput] = useState("");
-  const [connectivityInput, setConnectivityInput] = useState("");
   const [accessoryInput, setAccessoryInput] = useState("");
   const [imagePreview, setImagePreview] = useState([] as string[]);
 
@@ -76,36 +67,17 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
       stop();
       return;
     }
-    if (!formData.brand.trim()) {
-      toast.error("Thương hiệu không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.type.trim()) {
-      toast.error("Loại tai nghe không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.slug.trim()) {
-      toast.error("Đường dẫn SEO không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.sku.trim()) {
-      toast.error("Mã hàng hóa không được để trống!");
-      stop();
-      return;
-    }
-    if (
-      isNaN(Number(formData.startingPrice)) ||
-      Number(formData.startingPrice) <= 0
-    ) {
+    if (isNaN(Number(formData.startingPrice)) || formData.startingPrice <= 0) {
       toast.error("Giá gốc phải là số lớn hơn 0!");
       stop();
       return;
     }
-    if (isNaN(Number(formData.promotion)) || Number(formData.promotion) < 0) {
-      toast.error("Khuyến mãi phải là số không âm!");
+    if (
+      isNaN(Number(formData.promotion)) ||
+      formData.promotion < 0 ||
+      formData.promotion > 100
+    ) {
+      toast.error("Khuyến mãi phải là số từ 0 đến 100!");
       stop();
       return;
     }
@@ -114,19 +86,40 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
       stop();
       return;
     }
-    if (!formData.warranty.trim()) {
-      toast.error("Bảo hành không được để trống!");
+    if (!formData.brand.trim()) {
+      toast.error("Vui lòng chọn thương hiệu!");
+      stop();
+      return;
+    }
+    const specs = formData.specifications;
+    if (
+      !specs.driverType.trim() ||
+      specs.driverSize <= 0 ||
+      !specs.frequencyRange.trim() ||
+      specs.impedance <= 0 ||
+      !specs.noiseCancellation.trim() ||
+      specs.batteryLife <= 0 ||
+      specs.chargingTime <= 0 ||
+      !specs.chargingPort.trim() ||
+      !specs.connectivity.trim()
+    ) {
+      toast.error("Tất cả thông số kỹ thuật phải được điền đầy đủ!");
+      stop();
+      return;
+    }
+    if (
+      formData.dimensions.length <= 0 ||
+      formData.dimensions.width <= 0 ||
+      formData.dimensions.height <= 0 ||
+      formData.dimensions.weight <= 0
+    ) {
+      toast.error("Kích thước và trọng lượng phải lớn hơn 0!");
       stop();
       return;
     }
     if (
       formData.colorVariants.some(
-        (v) =>
-          !v.color.trim() ||
-          v.stock === undefined ||
-          isNaN(Number(v.stock)) ||
-          Number(v.stock) < 0 ||
-          !v.image
+        (v) => !v.color.trim() || v.stock < 0 || !v.image
       )
     ) {
       toast.error(
@@ -135,12 +128,16 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
       stop();
       return;
     }
+    if (!formData.warranty.trim()) {
+      toast.error("Thông tin bảo hành không được để trống!");
+      stop();
+      return;
+    }
 
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("brand", formData.brand);
-      formDataToSend.append("type", formData.type);
       formDataToSend.append("startingPrice", formData.startingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
@@ -148,74 +145,79 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
         "specifications",
         JSON.stringify(formData.specifications)
       );
-      formDataToSend.append("weight", formData.weight.toString());
       formDataToSend.append("dimensions", JSON.stringify(formData.dimensions));
-      formDataToSend.append(
-        "connectivity",
-        JSON.stringify(formData.connectivity)
-      );
       formDataToSend.append(
         "accessories",
         JSON.stringify(formData.accessories)
       );
       formDataToSend.append("warranty", formData.warranty);
       formDataToSend.append("tags", JSON.stringify(formData.tags));
-      formDataToSend.append("sku", formData.sku);
-      formDataToSend.append("slug", formData.slug);
-
-      // Gửi colorVariants (không gửi image ở đây, chỉ gửi color và stock)
       formDataToSend.append(
         "colorVariants",
         JSON.stringify(
-          formData.colorVariants.map((v) => ({
-            color: v.color,
-            stock: v.stock,
+          formData.colorVariants.map((variant) => ({
+            color: variant.color,
+            stock: variant.stock,
           }))
         )
       );
 
-      // Gửi từng ảnh với key "images"
       formData.colorVariants.forEach((variant) => {
         if (variant.image) {
           formDataToSend.append("images", variant.image);
         }
       });
 
-      const response = await apiPost<any, FormData>(
+      const response = await apiPost<IHeadphone, FormData>(
         "/headphones",
-        formDataToSend
+        formDataToSend,
+        undefined,
+        ["headphones"]
       );
 
-      if (response.error) throw new Error(response.error);
-
-      toast.success("Thêm tai nghe thành công!");
-      router.refresh();
-      setIsOpen(false);
-      setFormData({
-        name: "",
-        brand: "",
-        type: "",
-        startingPrice: 0,
-        promotion: 0,
-        description: "",
-        specifications: { ...defaultSpecifications },
-        colorVariants: [{ color: "", image: null, stock: 0 }],
-        weight: 0,
-        dimensions: { ...defaultDimensions },
-        connectivity: [],
-        accessories: [],
-        warranty: "",
-        tags: [],
-        slug: "",
-        sku: "",
-      });
-      setTagInput("");
-      setConnectivityInput("");
-      setAccessoryInput("");
-      setImagePreview([]);
-      setIsAddingNewBrand(false);
+      if (response.error) {
+        toast.error(response.error);
+      } else {
+        toast.success("Thêm sản phẩm thành công!");
+        router.refresh();
+        setIsOpen(false);
+        setFormData({
+          name: "",
+          startingPrice: 0,
+          promotion: 0,
+          description: "",
+          brand: "",
+          specifications: {
+            driverType: "",
+            driverSize: 0,
+            frequencyRange: "",
+            impedance: 0,
+            noiseCancellation: "",
+            batteryLife: 0,
+            chargingTime: 0,
+            chargingPort: "",
+            microphone: false,
+            connectivity: "",
+          },
+          colorVariants: [{ color: "", image: null, stock: 0 }],
+          accessories: [],
+          tags: [],
+          dimensions: {
+            length: 0,
+            width: 0,
+            height: 0,
+            weight: 0,
+          },
+          warranty: "",
+        });
+        setTagInput("");
+        setAccessoryInput("");
+        setImagePreview([]);
+        setIsAddingNewBrand(false);
+      }
     } catch (error) {
-      toast.error("Có lỗi khi thêm tai nghe!");
+      console.error("Error creating headphone:", error);
+      toast.error("Có lỗi xảy ra khi tạo tai nghe mới");
     } finally {
       stop();
     }
@@ -229,6 +231,7 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
         { color: "", image: null, stock: 0 },
       ],
     });
+    setImagePreview([...imagePreview, ""]);
   };
 
   const removeColorVariant = (index: number) => {
@@ -246,19 +249,6 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
     }
   };
 
-  const handleAddConnectivity = () => {
-    if (
-      connectivityInput &&
-      !formData.connectivity.includes(connectivityInput)
-    ) {
-      setFormData({
-        ...formData,
-        connectivity: [...formData.connectivity, connectivityInput],
-      });
-      setConnectivityInput("");
-    }
-  };
-
   const handleAddAccessory = () => {
     if (accessoryInput && !formData.accessories.includes(accessoryInput)) {
       setFormData({
@@ -269,451 +259,393 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
     }
   };
 
+  const removeTag = (index: number) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter((_, i) => i !== index),
+    });
+  };
+
+  const removeAccessory = (index: number) => {
+    setFormData({
+      ...formData,
+      accessories: formData.accessories.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview((prev) => {
+          const newPreview = [...prev];
+          newPreview[index] = reader.result as string;
+          return newPreview;
+        });
+      };
+      reader.readAsDataURL(file);
+
+      setFormData((prev) => {
+        const newVariants = [...prev.colorVariants];
+        newVariants[index] = { ...newVariants[index], image: file };
+        return { ...prev, colorVariants: newVariants };
+      });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
-          <Plus className="w-5 h-5" />
-          Thêm tai nghe mới
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Plus className="mr-2 h-4 w-4" />
+          Thêm tai nghe
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[90%] !max-w-[90%] max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl">
-        <DialogHeader className="border-b pb-4">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto !max-w-[90%] bg-white">
+        <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-gray-800">
             Thêm tai nghe mới
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-6 p-6">
-          {/* Tên */}
-          <div>
-            <Label htmlFor="name" className="text-gray-700 font-medium">
-              Tên tai nghe
-            </Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              placeholder="Nhập tên tai nghe"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Thương hiệu */}
-          <div>
-            <Label htmlFor="brand" className="text-gray-700 font-medium">
-              Thương hiệu
-            </Label>
-            <div className="flex gap-2 mt-1">
+        <div className="space-y-6">
+          {/* Thông tin cơ bản */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-700">
+              Thông tin cơ bản
+            </h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label htmlFor="name">Tên tai nghe</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Nhập tên tai nghe"
+                />
+              </div>
+              {/* Brand */}
               {!isAddingNewBrand ? (
-                <>
-                  <select
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                <div>
+                  <Label
+                    htmlFor="brand"
+                    className="text-gray-700 font-medium mb-2"
                   >
-                    <option value="">Chọn thương hiệu</option>
-                    {brands?.map((brand) => (
-                      <option key={brand} value={brand}>
-                        {brand}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddingNewBrand(true)}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                  >
-                    Thêm thương hiệu mới
-                  </Button>
-                </>
+                    Thương hiệu
+                  </Label>
+                  <div className="flex gap-2">
+                    <select
+                      id="brand"
+                      value={formData.brand}
+                      onChange={(e) =>
+                        setFormData({ ...formData, brand: e.target.value })
+                      }
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Chọn thương hiệu</option>
+                      {brands?.map((brand) => (
+                        <option key={brand} value={brand}>
+                          {brand}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAddingNewBrand(true)}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                    >
+                      Tạo brand mới
+                    </Button>
+                  </div>
+                </div>
               ) : (
-                <>
-                  <Input
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
-                    }
-                    placeholder="Nhập thương hiệu mới"
-                    className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsAddingNewBrand(false);
-                      setFormData({ ...formData, brand: "" });
-                    }}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                <div>
+                  <Label
+                    htmlFor="brand"
+                    className="text-gray-700 font-medium mb-2"
                   >
-                    Hủy
-                  </Button>
-                </>
+                    Thương hiệu mới
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="brand"
+                      value={formData.brand}
+                      onChange={(e) =>
+                        setFormData({ ...formData, brand: e.target.value })
+                      }
+                      placeholder="Nhập thương hiệu mới"
+                      className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        setIsAddingNewBrand(false);
+                        setFormData({ ...formData, brand: "" });
+                      }}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Hủy
+                    </Button>
+                  </div>
+                </div>
               )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startingPrice">Giá gốc (VNĐ)</Label>
+                  <Input
+                    id="startingPrice"
+                    type="number"
+                    value={formData.startingPrice || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        startingPrice: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="promotion">Khuyến mãi (%)</Label>
+                  <Input
+                    id="promotion"
+                    type="number"
+                    value={formData.promotion || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        promotion: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="description">Mô tả</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="Nhập mô tả sản phẩm"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label htmlFor="warranty">Bảo hành</Label>
+                <Input
+                  id="warranty"
+                  value={formData.warranty}
+                  onChange={(e) =>
+                    setFormData({ ...formData, warranty: e.target.value })
+                  }
+                  placeholder="VD: 12 tháng"
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Loại tai nghe */}
-          <div>
-            <Label htmlFor="type" className="text-gray-700 font-medium">
-              Loại tai nghe
-            </Label>
-            <Input
-              id="type"
-              value={formData.type}
-              onChange={(e) =>
-                setFormData({ ...formData, type: e.target.value })
-              }
-              placeholder="Nhập loại tai nghe (Over-ear, In-ear, On-ear...)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Đường dẫn SEO */}
-          <div>
-            <Label htmlFor="slug" className="text-gray-700 font-medium">
-              Đường dẫn SEO
-            </Label>
-            <Input
-              id="slug"
-              value={formData.slug}
-              onChange={(e) =>
-                setFormData({ ...formData, slug: e.target.value })
-              }
-              placeholder="Nhập đường dẫn SEO (ví dụ: sony-wh-1000xm5)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Mã hàng hóa */}
-          <div>
-            <Label htmlFor="sku" className="text-gray-700 font-medium">
-              Mã hàng hóa
-            </Label>
-            <Input
-              id="sku"
-              value={formData.sku}
-              onChange={(e) =>
-                setFormData({ ...formData, sku: e.target.value })
-              }
-              placeholder="Nhập mã hàng hóa (ví dụ: WH1000XM5)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Giá gốc */}
-          <div>
-            <Label
-              htmlFor="startingPrice"
-              className="text-gray-700 font-medium"
-            >
-              Giá gốc (VNĐ)
-            </Label>
-            <Input
-              id="startingPrice"
-              type="text"
-              value={formData.startingPrice || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  startingPrice: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập giá gốc"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Khuyến mãi */}
-          <div>
-            <Label htmlFor="promotion" className="text-gray-700 font-medium">
-              Khuyến mãi (%)
-            </Label>
-            <Input
-              id="promotion"
-              type="text"
-              value={formData.promotion || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  promotion: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập % khuyến mãi (nếu có)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Mô tả */}
-          <div>
-            <Label htmlFor="description" className="text-gray-700 font-medium">
-              Mô tả
-            </Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Nhập mô tả"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Bảo hành */}
-          <div>
-            <Label htmlFor="warranty" className="text-gray-700 font-medium">
-              Bảo hành
-            </Label>
-            <Input
-              id="warranty"
-              value={formData.warranty}
-              onChange={(e) =>
-                setFormData({ ...formData, warranty: e.target.value })
-              }
-              placeholder="Nhập thời gian bảo hành (ví dụ: 12 tháng)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
           </div>
 
           {/* Thông số kỹ thuật */}
-          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-700">
               Thông số kỹ thuật
-            </Label>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Loại driver
-              </Label>
-              <Input
-                placeholder="Loại driver"
-                value={formData.specifications.driverType}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      driverType: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Kích thước driver (mm)
-              </Label>
-              <Input
-                placeholder="Kích thước driver (mm)"
-                type="number"
-                value={formData.specifications.driverSize || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      driverSize: parseFloat(e.target.value) || 0,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Dải tần số (Hz)
-              </Label>
-              <Input
-                placeholder="Dải tần số (Hz)"
-                value={formData.specifications.frequencyRange}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      frequencyRange: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Độ nhạy (dB)
-              </Label>
-              <Input
-                placeholder="Độ nhạy (dB)"
-                type="number"
-                value={formData.specifications.sensitivity || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      sensitivity: parseFloat(e.target.value) || 0,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Trở kháng (Ohms)
-              </Label>
-              <Input
-                placeholder="Trở kháng (Ohms)"
-                type="number"
-                value={formData.specifications.impedance || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      impedance: parseFloat(e.target.value) || 0,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Công nghệ chống ồn
-              </Label>
-              <Input
-                placeholder="Công nghệ chống ồn"
-                value={formData.specifications.noiseCancellation}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      noiseCancellation: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Thời lượng pin (giờ)
-              </Label>
-              <Input
-                placeholder="Thời lượng pin (giờ)"
-                type="number"
-                value={formData.specifications.batteryLife || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      batteryLife: parseFloat(e.target.value) || 0,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Thời gian sạc (giờ)
-              </Label>
-              <Input
-                placeholder="Thời gian sạc (giờ)"
-                type="number"
-                value={formData.specifications.chargingTime || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      chargingTime: parseFloat(e.target.value) || 0,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Loại cổng sạc
-              </Label>
-              <Input
-                placeholder="Loại cổng sạc"
-                value={formData.specifications.chargingPort}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      chargingPort: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Loại micro
-              </Label>
-              <Input
-                placeholder="Loại micro"
-                value={formData.specifications.microphone}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      microphone: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Chất lượng âm thanh
-              </Label>
-              <Input
-                placeholder="Chất lượng âm thanh"
-                value={formData.specifications.audioQuality}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      audioQuality: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="driverType">Loại driver</Label>
+                <Input
+                  id="driverType"
+                  value={formData.specifications.driverType}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        driverType: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="VD: Dynamic"
+                />
+              </div>
+              <div>
+                <Label htmlFor="driverSize">Kích thước driver (mm)</Label>
+                <Input
+                  id="driverSize"
+                  type="number"
+                  value={formData.specifications.driverSize || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        driverSize: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  placeholder="40"
+                />
+              </div>
+              <div>
+                <Label htmlFor="frequencyRange">Dải tần số</Label>
+                <Input
+                  id="frequencyRange"
+                  value={formData.specifications.frequencyRange}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        frequencyRange: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="20Hz - 20kHz"
+                />
+              </div>
+              <div>
+                <Label htmlFor="impedance">Trở kháng (Ω)</Label>
+                <Input
+                  id="impedance"
+                  type="number"
+                  value={formData.specifications.impedance || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        impedance: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  placeholder="32"
+                />
+              </div>
+              <div>
+                <Label htmlFor="noiseCancellation">Chống ồn</Label>
+                <Input
+                  id="noiseCancellation"
+                  value={formData.specifications.noiseCancellation}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        noiseCancellation: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="ANC, Passive"
+                />
+              </div>
+              <div>
+                <Label htmlFor="batteryLife">Thời lượng pin (giờ)</Label>
+                <Input
+                  id="batteryLife"
+                  type="number"
+                  value={formData.specifications.batteryLife || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        batteryLife: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  placeholder="20"
+                />
+              </div>
+              <div>
+                <Label htmlFor="chargingTime">Thời gian sạc (giờ)</Label>
+                <Input
+                  id="chargingTime"
+                  type="number"
+                  value={formData.specifications.chargingTime || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        chargingTime: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  placeholder="2"
+                />
+              </div>
+              <div>
+                <Label htmlFor="chargingPort">Cổng sạc</Label>
+                <Input
+                  id="chargingPort"
+                  value={formData.specifications.chargingPort}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        chargingPort: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="USB-C, Lightning"
+                />
+              </div>
+              <div>
+                <Label htmlFor="connectivity">Kết nối</Label>
+                <Input
+                  id="connectivity"
+                  value={formData.specifications.connectivity}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        connectivity: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="Bluetooth 5.0, 3.5mm jack"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="microphone"
+                  checked={formData.specifications.microphone}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      specifications: {
+                        ...formData.specifications,
+                        microphone: e.target.checked,
+                      },
+                    })
+                  }
+                />
+                <Label htmlFor="microphone">Có microphone</Label>
+              </div>
             </div>
           </div>
 
           {/* Kích thước */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold mb-4">
-              Kích thước (cm)
-            </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-700">
+              Kích thước & Trọng lượng
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-gray-700 font-medium mb-2">
-                  Chiều dài
-                </Label>
+                <Label htmlFor="length">Chiều dài (mm)</Label>
                 <Input
-                  placeholder="Chiều dài"
-                  type="text"
+                  id="length"
+                  type="number"
                   value={formData.dimensions.length || ""}
                   onChange={(e) =>
                     setFormData({
@@ -724,16 +656,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium mb-2">
-                  Chiều rộng
-                </Label>
+                <Label htmlFor="width">Chiều rộng (mm)</Label>
                 <Input
-                  placeholder="Chiều rộng"
-                  type="text"
+                  id="width"
+                  type="number"
                   value={formData.dimensions.width || ""}
                   onChange={(e) =>
                     setFormData({
@@ -744,16 +674,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium mb-2">
-                  Chiều cao
-                </Label>
+                <Label htmlFor="height">Chiều cao (mm)</Label>
                 <Input
-                  placeholder="Chiều cao"
-                  type="text"
+                  id="height"
+                  type="number"
                   value={formData.dimensions.height || ""}
                   onChange={(e) =>
                     setFormData({
@@ -764,190 +692,155 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="weight">Trọng lượng (g)</Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  value={formData.dimensions.weight || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        weight: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  placeholder="0"
                 />
               </div>
             </div>
           </div>
 
-          {/* Trọng lượng */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label htmlFor="weight" className="text-gray-700 font-medium">
-              Trọng lượng (gram)
-            </Label>
-            <Input
-              id="weight"
-              type="text"
-              value={formData.weight || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  weight: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập trọng lượng"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
           {/* Biến thể màu */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">Biến thể màu</Label>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-700">
+                Biến thể màu
+              </h3>
+            </div>
             {formData.colorVariants.map((variant, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 bg-white p-3 rounded-md shadow-sm"
-              >
-                <Input
-                  placeholder="Tên màu"
-                  value={variant.color}
-                  onChange={(e) => {
-                    const newVariants = [...formData.colorVariants];
-                    newVariants[index].color = e.target.value;
-                    setFormData({ ...formData, colorVariants: newVariants });
-                  }}
-                  className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <div className="flex-1">
-                  {imagePreview[index] && (
-                    <Image
-                      src={imagePreview[index]}
-                      alt={variant.color || "Preview"}
-                      width={100}
-                      height={100}
-                      className="object-contain rounded-md"
-                    />
+              <div key={index} className="border p-4 rounded-lg space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Màu {index + 1}</span>
+                  {formData.colorVariants.length > 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => removeColorVariant(index)}
+                      className="bg-red-500 hover:bg-red-600 text-white text-sm px-2 py-1"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   )}
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] || null;
-                      const newVariants = [...formData.colorVariants];
-                      newVariants[index].image = file;
-                      setFormData({ ...formData, colorVariants: newVariants });
-                      if (file) {
-                        setImagePreview((prev) => {
-                          const updatedPreviews = [...prev];
-                          updatedPreviews[index] = URL.createObjectURL(file);
-                          return updatedPreviews;
-                        });
-                      }
-                    }}
-                    className="mt-2"
-                  />
                 </div>
-                <Input
-                  type="text"
-                  placeholder="Tồn kho"
-                  value={variant.stock || ""}
-                  onChange={(e) => {
-                    const newVariants = [...formData.colorVariants];
-                    newVariants[index].stock = parseInt(e.target.value) || 0;
-                    setFormData({ ...formData, colorVariants: newVariants });
-                  }}
-                  className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                />
-                {formData.colorVariants.length > 1 && (
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => removeColorVariant(index)}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
+                <div className="flex gap-4">
+                  <div>
+                    <Label htmlFor={`color-${index}`}>Tên màu</Label>
+                    <Input
+                      id={`color-${index}`}
+                      value={variant.color}
+                      onChange={(e) => {
+                        const newVariants = [...formData.colorVariants];
+                        newVariants[index] = {
+                          ...newVariants[index],
+                          color: e.target.value,
+                        };
+                        setFormData({
+                          ...formData,
+                          colorVariants: newVariants,
+                        });
+                      }}
+                      placeholder="VD: Đen, Trắng"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Label htmlFor={`image-${index}`}>Ảnh sản phẩm</Label>
+                    <Input
+                      id={`image-${index}`}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, index)}
+                    />
+                    {imagePreview[index] && (
+                      <div className="mt-2">
+                        <Image
+                          src={imagePreview[index]}
+                          alt={`Preview ${index}`}
+                          width={100}
+                          height={100}
+                          className="object-cover rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor={`stock-${index}`}>Số lượng tồn kho</Label>
+                    <Input
+                      id={`stock-${index}`}
+                      type="number"
+                      value={variant.stock || ""}
+                      onChange={(e) => {
+                        const newVariants = [...formData.colorVariants];
+                        newVariants[index] = {
+                          ...newVariants[index],
+                          stock: parseInt(e.target.value) || 0,
+                        };
+                        setFormData({
+                          ...formData,
+                          colorVariants: newVariants,
+                        });
+                      }}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
               </div>
             ))}
             <Button
-              variant="outline"
+              type="button"
               onClick={addColorVariant}
-              className="mt-2 border-gray-300 text-gray-700 hover:bg-gray-100"
+              className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="mr-1 h-3 w-3" />
               Thêm màu
             </Button>
           </div>
 
-          {/* Kết nối */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">Kết nối</Label>
-            <div className="flex gap-2">
-              <Input
-                value={connectivityInput}
-                onChange={(e) => setConnectivityInput(e.target.value)}
-                placeholder="Nhập kết nối và nhấn Thêm"
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <Button
-                onClick={handleAddConnectivity}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Thêm
-              </Button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {formData.connectivity.map((conn, index) => (
-                <span
-                  key={index}
-                  className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
-                >
-                  {conn}
-                  <button
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        connectivity: formData.connectivity.filter(
-                          (_, i) => i !== index
-                        ),
-                      })
-                    }
-                    className="text-red-600"
-                  >
-                    x
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
           {/* Phụ kiện */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">Phụ kiện</Label>
-            <div className="flex gap-2">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-700">Phụ kiện</h3>
+            <div className="flex space-x-2">
               <Input
                 value={accessoryInput}
                 onChange={(e) => setAccessoryInput(e.target.value)}
-                placeholder="Nhập phụ kiện và nhấn Thêm"
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Nhập phụ kiện"
+                onKeyPress={(e) => e.key === "Enter" && handleAddAccessory()}
               />
               <Button
+                type="button"
                 onClick={handleAddAccessory}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2"
               >
-                Thêm
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {formData.accessories.map((acc, index) => (
+            <div className="flex flex-wrap gap-2">
+              {formData.accessories.map((accessory, index) => (
                 <span
                   key={index}
-                  className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
+                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm flex items-center"
                 >
-                  {acc}
+                  {accessory}
                   <button
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        accessories: formData.accessories.filter(
-                          (_, i) => i !== index
-                        ),
-                      })
-                    }
-                    className="text-red-600"
+                    type="button"
+                    onClick={() => removeAccessory(index)}
+                    className="ml-2 text-blue-600 hover:text-blue-800"
                   >
-                    x
+                    ×
                   </button>
                 </span>
               ))}
@@ -955,53 +848,59 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
           </div>
 
           {/* Tags */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">Tags</Label>
-            <div className="flex gap-2">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-700">Tags</h3>
+            <div className="flex space-x-2">
               <Input
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                placeholder="Nhập tag và nhấn Thêm"
-                onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Nhập tag"
+                onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
               />
               <Button
+                type="button"
                 onClick={handleAddTag}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2"
               >
-                Thêm
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {formData.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
+                  className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm flex items-center"
                 >
                   {tag}
                   <button
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        tags: formData.tags.filter((_, i) => i !== index),
-                      })
-                    }
-                    className="text-red-600"
+                    type="button"
+                    onClick={() => removeTag(index)}
+                    className="ml-2 text-green-600 hover:text-green-800"
                   >
-                    x
+                    ×
                   </button>
                 </span>
               ))}
             </div>
           </div>
 
-          {/* Nút submit */}
-          <Button
-            onClick={handleAddHeadphone}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-          >
-            Thêm tai nghe
-          </Button>
+          {/* Buttons */}
+          <div className="flex justify-end space-x-4 pt-4">
+            <Button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="bg-gray-500 hover:bg-gray-600 text-white"
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAddHeadphone}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Thêm tai nghe
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

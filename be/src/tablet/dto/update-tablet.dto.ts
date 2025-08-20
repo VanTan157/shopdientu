@@ -2,268 +2,194 @@ import {
   IsString,
   IsNumber,
   IsArray,
-  IsOptional,
-  ValidateNested,
-  IsBoolean,
-  IsDate,
   IsObject,
+  ValidateNested,
+  Min,
 } from "class-validator";
 import { Transform, Type } from "class-transformer";
 
-// DTO cho biến thể màu sắc
-class ColorVariantDto {
-  // Tên màu (bắt buộc, ví dụ: "Silver")
+class UpdateTabletCameraDto {
   @IsString()
-  @IsOptional()
+  rear: string;
+
+  @IsString()
+  front: string;
+}
+
+class UpdateTabletSpecificationsDto {
+  @IsNumber()
+  @Min(0)
+  screenSize: number;
+
+  @IsString()
+  resolution: string;
+
+  @IsNumber()
+  @Min(0)
+  refreshRate: number;
+
+  @IsString()
+  simType: string;
+
+  @IsNumber()
+  @Min(0)
+  ram: number;
+
+  @IsNumber()
+  @Min(0)
+  storage: number;
+
+  @IsNumber()
+  @Min(0)
+  battery: number;
+
+  @IsString()
+  os: string;
+
+  @IsObject()
+  @ValidateNested()
+  @Type(() => UpdateTabletCameraDto)
+  camera: UpdateTabletCameraDto;
+}
+
+class UpdateColorVariantDto {
+  @IsString()
   color: string;
 
-  // Đường dẫn ảnh (tùy chọn, sẽ được cập nhật sau khi upload)
   @IsString()
-  @IsOptional()
-  image?: string;
+  image: string;
 
-  // Số lượng tồn kho của màu (bắt buộc, ví dụ: 20)
   @IsNumber()
-  @IsOptional()
+  @Min(0)
   stock: number;
 
   @IsString()
-  @IsOptional()
-  hasNewImage?: string;
+  hasNewImage: string;
 }
 
-// DTO cho thông số kỹ thuật
-class SpecificationsDto {
-  // Kích thước màn hình (tùy chọn, inch)
+class UpdateDimensionsDto {
   @IsNumber()
-  @IsOptional()
-  screenSize?: number;
+  @Min(0)
+  length: number;
 
-  // Độ phân giải màn hình (tùy chọn)
-  @IsString()
-  @IsOptional()
-  resolution?: string;
-
-  // Bộ vi xử lý (tùy chọn)
-  @IsString()
-  @IsOptional()
-  cpu?: string;
-
-  // Card đồ họa (tùy chọn)
-  @IsString()
-  @IsOptional()
-  gpu?: string;
-
-  // Dung lượng RAM (tùy chọn, GB)
   @IsNumber()
-  @IsOptional()
-  ram?: number;
+  @Min(0)
+  width: number;
 
-  // Dung lượng lưu trữ (tùy chọn, GB)
   @IsNumber()
-  @IsOptional()
-  storage?: number;
+  @Min(0)
+  height: number;
 
-  // Dung lượng pin (tùy chọn, Wh)
   @IsNumber()
-  @IsOptional()
-  battery?: number;
-
-  // Hệ điều hành (tùy chọn)
-  @IsString()
-  @IsOptional()
-  os?: string;
-
-  // Tần số quét màn hình (tùy chọn, Hz)
-  @IsString()
-  @IsOptional()
-  refreshRate?: string;
-
-  // camera
-  @IsString()
-  @IsOptional()
-  cameraFront?: string;
-
-  // camera  (tùy chọn)
-  @IsString()
-  @IsOptional()
-  cameraRear?: string;
-
-  //Hỗ trợ sim
-  @IsBoolean()
-  @IsOptional()
-  simSupport?: boolean;
-
-  // Hỗ trợ bút cảm ứng (tùy chọn)
-  @IsBoolean()
-  @IsOptional()
-  stylusSupport?: boolean;
-
-  // Danh sách cổng kết nối (tùy chọn)
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  ports?: string[];
-
-  // Thông tin âm thanh (tùy chọn)
-  @IsString()
-  @IsOptional()
-  audio?: string;
+  @Min(0)
+  weight: number;
 }
 
-// DTO cho kích thước
-class DimensionsDto {
-  // Chiều dài (tùy chọn, cm)
-  @IsNumber()
-  @IsOptional()
-  length?: number;
-
-  // Chiều rộng (tùy chọn, cm)
-  @IsNumber()
-  @IsOptional()
-  width?: number;
-
-  // Chiều cao (tùy chọn, cm)
-  @IsNumber()
-  @IsOptional()
-  height?: number;
-}
-
-// DTO để tạo Laptop
 export class UpdateTabletDto {
-  // Tên laptop (bắt buộc)
   @IsString()
-  @IsOptional()
-  name: string;
-
-  // Hãng sản xuất (bắt buộc)
-  @IsString()
-  @IsOptional()
   brand: string;
 
-  // Danh mục laptop (bắt buộc)
   @IsString()
-  @IsOptional()
-  category: string;
+  name: string;
 
-  // Mô tả sản phẩm (tùy chọn)
-  @IsString()
-  @IsOptional()
-  description?: string;
-
-  // Giá khởi điểm (VNĐ)
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  })
   @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseFloat(value), { toClassOnly: true })
+  @Min(0)
   startingPrice: number;
 
-  // Phần trăm khuyến mãi (bắt buộc)
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  })
   @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseFloat(value), { toClassOnly: true })
+  @Min(0)
   promotion: number;
 
-  // Trạng thái khuyến mãi
-  @IsBoolean()
-  @IsOptional()
-  isPromotion: boolean;
+  @IsString()
+  description: string;
 
-  // Giá cuối cùng
-  @IsBoolean()
-  @IsOptional()
-  finalPrice: number;
-
-  // Thông số kỹ thuật (tùy chọn)
-  @IsOptional()
-  @ValidateNested()
-  @Transform(
-    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
-    { toClassOnly: true }
-  )
-  @Type(() => SpecificationsDto)
-  specifications?: SpecificationsDto;
-
-  // Danh sách biến thể màu
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
   @IsArray()
-  @IsObject({ each: true })
-  @IsOptional()
-  @Type(() => ColorVariantDto)
-  colorVariants: ColorVariantDto[];
+  @ValidateNested({ each: true })
+  @Type(() => UpdateColorVariantDto)
+  colorVariants: UpdateColorVariantDto[];
 
-  // Tổng số lượng tồn kho
-  @IsBoolean()
-  @IsOptional()
-  totalStock: number;
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @IsArray()
+  @IsString({ each: true })
+  accessories: string[];
 
-  // Trạng thái sẵn có (bắt buộc)
-  @IsBoolean()
-  @IsOptional()
-  isAvailable: boolean;
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @IsArray()
+  @IsString({ each: true })
+  tags: string[];
 
-  // Trọng lượng (tùy chọn, kg)
-  @IsNumber()
-  @IsOptional()
-  @Transform(({ value }) => parseFloat(value), { toClassOnly: true })
-  weight?: number;
-
-  // Kích thước (tùy chọn)
-  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
   @IsObject()
-  @Transform(
-    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
-    { toClassOnly: true }
-  )
-  @Type(() => DimensionsDto)
-  dimensions?: DimensionsDto;
+  @ValidateNested()
+  @Type(() => UpdateDimensionsDto)
+  dimensions: UpdateDimensionsDto;
 
-  // Thời gian bảo hành (tùy chọn)
   @IsString()
-  @IsOptional()
-  warranty?: string;
+  warranty: string;
 
-  // Ngày phát hành (tùy chọn)
-  @IsDate()
-  @IsOptional()
-  @Type(() => Date)
-  releaseDate?: Date;
-
-  // Danh sách thẻ (tùy chọn)
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  @Transform(
-    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
-    { toClassOnly: true }
-  )
-  tags?: string[];
-
-  // Kết nối không dây (tùy chọn)
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  @Transform(
-    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
-    { toClassOnly: true }
-  )
-  connectivity?: string[];
-
-  // Phụ kiện đi kèm (tùy chọn)
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  @Transform(
-    ({ value }) => (typeof value === "string" ? JSON.parse(value) : value),
-    { toClassOnly: true }
-  )
-  accessories?: string[];
-
-  // Đường dẫn SEO (bắt buộc)
-  @IsString()
-  @IsOptional()
-  slug: string;
-
-  // Mã hàng hóa (bắt buộc)
-  @IsString()
-  @IsOptional()
-  sku: string;
+  @Transform(({ value }) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @IsObject()
+  @ValidateNested()
+  @Type(() => UpdateTabletSpecificationsDto)
+  specifications: UpdateTabletSpecificationsDto;
 }

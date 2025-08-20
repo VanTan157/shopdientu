@@ -1,6 +1,5 @@
 "use client";
 
-import { Mobile } from "@/lib/types/mobile";
 import { ShoppingBag } from "lucide-react";
 import { apiPost } from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -25,8 +24,9 @@ import {
 import { useAddress } from "@/hooks/useAddress";
 import { loadingStore } from "@/app/store/loading.store";
 import { EProductType } from "@/lib/types/order";
+import { IMobile } from "@/lib/types/mobile";
 
-const BtnBuyNow = ({ product, index }: { product: Mobile; index: number }) => {
+const BtnBuyNow = ({ product, index }: { product: IMobile; index: number }) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [phoneNumber, setPhoneNumber] = useState<string>("");

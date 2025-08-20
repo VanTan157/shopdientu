@@ -5,7 +5,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Tablet } from "@/lib/types/tablet";
+import { ITablet } from "@/lib/types/tablet";
 import Image from "next/image";
 import React from "react";
 
@@ -13,7 +13,7 @@ const ViewLaptopDetail = ({
   tablet,
   children,
 }: {
-  tablet: Tablet;
+  tablet: ITablet;
   children: React.ReactNode;
 }) => {
   return (
@@ -32,15 +32,15 @@ const ViewLaptopDetail = ({
             </h1>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <p className="text-gray-700">
-                <strong className="font-medium">Thương hiệu:</strong>{" "}
+                <strong className="font-medium">Thương hiệu: </strong>{" "}
                 {tablet.brand}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Danh mục:</strong>{" "}
-                {tablet.category}
+                <strong className="font-medium">Tổng tồn kho: </strong>{" "}
+                {tablet.totalStock}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">Giá gốc:</strong>{" "}
+                <strong className="font-medium">Giá gốc: </strong>{" "}
                 {tablet.startingPrice.toLocaleString("vi-VN")} ₫
               </p>
               <p className="text-gray-700">
@@ -55,19 +55,13 @@ const ViewLaptopDetail = ({
                 <strong className="font-medium">Trạng thái:</strong>{" "}
                 {tablet.isAvailable ? "Có sẵn" : "Hết hàng"}
               </p>
-              <p className="text-gray-700 col-span-1 sm:col-span-2 whitespace-pre-wrap">
-                <strong className="font-medium">Mô tả:</strong>{" "}
-                {tablet.description || "Không có"}
-              </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Bảo hành:</strong>{" "}
                 {tablet.warranty || "N/A"}
               </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">SKU:</strong> {tablet.sku}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Slug:</strong> {tablet.slug}
+              <p className="text-gray-700 col-span-1 sm:col-span-2 whitespace-pre-wrap">
+                <strong className="font-medium">Mô tả:</strong>{" "}
+                {tablet.description || "Không có"}
               </p>
             </div>
           </div>
@@ -78,71 +72,45 @@ const ViewLaptopDetail = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <p className="text-gray-700">
                 <strong className="font-medium">Kích thước màn hình:</strong>{" "}
-                {tablet.specifications.screenSize
+                {tablet.specifications?.screenSize
                   ? `${tablet.specifications.screenSize} inch`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Độ phân giải:</strong>{" "}
-                {tablet.specifications.resolution || "N/A"}
+                {tablet.specifications?.resolution || "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Tần số quét:</strong>{" "}
-                {tablet.specifications.refreshRate || "N/A"}
+                {tablet.specifications?.refreshRate
+                  ? `${tablet.specifications.refreshRate} Hz`
+                  : "N/A"}
               </p>
               <p className="text-gray-700">
-                <strong className="font-medium">CPU:</strong>{" "}
-                {tablet.specifications.cpu || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">GPU:</strong>{" "}
-                {tablet.specifications.gpu || "N/A"}
+                <strong className="font-medium">Loại SIM:</strong>{" "}
+                {tablet.specifications?.simType || "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">RAM:</strong>{" "}
-                {tablet.specifications.ram
+                {tablet.specifications?.ram
                   ? `${tablet.specifications.ram} GB`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Bộ nhớ:</strong>{" "}
-                {tablet.specifications.storage
+                {tablet.specifications?.storage
                   ? `${tablet.specifications.storage} GB`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Pin:</strong>{" "}
-                {tablet.specifications.battery
-                  ? `${tablet.specifications.battery} Wh`
+                {tablet.specifications?.battery
+                  ? `${tablet.specifications.battery} mAh`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Hệ điều hành:</strong>{" "}
-                {tablet.specifications.os || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Cổng kết nối:</strong>{" "}
-                {tablet.specifications.ports?.join(", ") || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Âm thanh:</strong>{" "}
-                {tablet.specifications.audio || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Hỗ trợ SIM:</strong>{" "}
-                {tablet.specifications.simSupport ? "Có" : "Không"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Hỗ trợ bút cảm ứng:</strong>{" "}
-                {tablet.specifications.stylusSupport ? "Có" : "Không"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Âm thanh:</strong>{" "}
-                {tablet.specifications.audio || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Cổng sạc:</strong>{" "}
-                {tablet.specifications?.ports || "N/A"}
+                {tablet.specifications?.os || "N/A"}
               </p>
             </div>
           </div>
@@ -151,11 +119,11 @@ const ViewLaptopDetail = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <p className="text-gray-700">
                 <strong className="font-medium">Camera sau:</strong>{" "}
-                {tablet.specifications.cameraRear || "N/A"}
+                {tablet.specifications?.camera?.rear || "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Camera trước:</strong>{" "}
-                {tablet.specifications.cameraFront || "N/A"}
+                {tablet.specifications?.camera?.front || "N/A"}
               </p>
             </div>
           </div>
@@ -172,18 +140,11 @@ const ViewLaptopDetail = ({
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Trọng lượng:</strong>{" "}
-                {tablet.weight ? `${tablet.weight} kg` : "N/A"}
+                {tablet.dimensions?.weight
+                  ? `${tablet.dimensions.weight} g`
+                  : "N/A"}
               </p>
             </div>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-xl text-gray-900 mb-3">
-              Kết nối
-            </h3>
-            <p className="text-gray-700">
-              <strong className="font-medium">Kết nối:</strong>{" "}
-              {tablet.connectivity?.join(", ") || "Không có"}
-            </p>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">
@@ -226,7 +187,7 @@ const ViewLaptopDetail = ({
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">Tags</h3>
             <p className="text-gray-700">
-              {tablet.tags.join(", ") || "Không có"}
+              {tablet.tags?.join(", ") || "Không có"}
             </p>
           </div>
         </div>

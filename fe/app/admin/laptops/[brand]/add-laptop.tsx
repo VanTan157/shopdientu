@@ -1,7 +1,6 @@
 "use client";
 
 import { apiPost } from "@/lib/api";
-import { Laptop } from "@/lib/types/laptop";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +18,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { loadingStore } from "@/app/store/loading.store";
+import { ILaptop } from "@/lib/types/laptop";
 
 const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
   const router = useRouter();
@@ -28,41 +28,36 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
   const [formData, setFormData] = useState({
     name: "",
     brand: "",
-    category: "",
     startingPrice: 0,
     promotion: 0,
     description: "",
     specifications: {
-      screenSize: "",
+      screenSize: 0,
       resolution: "",
+      refreshRate: 0,
       cpu: "",
       gpu: "",
-      ram: "",
-      storage: "",
-      battery: "",
+      ram: 0,
+      storage: 0,
+      battery: 0,
       os: "",
-      refreshRate: "",
-      keyboard: "",
-      ports: [] as string[],
-      webcam: "",
-      audio: "",
+      camera: {
+        rear: "",
+        front: "",
+      },
     },
     colorVariants: [{ color: "", image: null as File | null, stock: 0 }],
-    weight: 0,
     dimensions: {
       length: 0,
       width: 0,
       height: 0,
+      weight: 0,
     },
-    connectivity: [] as string[],
     accessories: [] as string[],
     warranty: "",
     tags: [] as string[],
-    slug: "",
-    sku: "",
   });
   const [tagInput, setTagInput] = useState("");
-  const [connectivityInput, setConnectivityInput] = useState("");
   const [accessoryInput, setAccessoryInput] = useState("");
   const [imagePreview, setImagePreview] = useState([] as string[]);
 
@@ -74,36 +69,17 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
       stop();
       return;
     }
-    if (!formData.brand.trim()) {
-      toast.error("Thương hiệu không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.category.trim()) {
-      toast.error("Danh mục không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.slug.trim()) {
-      toast.error("Đường dẫn SEO không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.sku.trim()) {
-      toast.error("Mã hàng hóa không được để trống!");
-      stop();
-      return;
-    }
-    if (
-      isNaN(Number(formData.startingPrice)) ||
-      Number(formData.startingPrice) <= 0
-    ) {
+    if (isNaN(Number(formData.startingPrice)) || formData.startingPrice <= 0) {
       toast.error("Giá gốc phải là số lớn hơn 0!");
       stop();
       return;
     }
-    if (isNaN(Number(formData.promotion)) || Number(formData.promotion) < 0) {
-      toast.error("Khuyến mãi phải là số không âm!");
+    if (
+      isNaN(Number(formData.promotion)) ||
+      formData.promotion < 0 ||
+      formData.promotion > 100
+    ) {
+      toast.error("Khuyến mãi phải là số từ 0 đến 100!");
       stop();
       return;
     }
@@ -112,57 +88,33 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
       stop();
       return;
     }
-    if (!formData.warranty.trim()) {
-      toast.error("Bảo hành không được để trống!");
+    if (!formData.brand.trim()) {
+      toast.error("Vui lòng chọn thương hiệu!");
       stop();
       return;
     }
     const specs = formData.specifications;
     if (
-      !specs.screenSize.trim() ||
+      specs.screenSize <= 0 ||
       !specs.resolution.trim() ||
-      !specs.refreshRate.trim() ||
+      specs.refreshRate <= 0 ||
       !specs.cpu.trim() ||
       !specs.gpu.trim() ||
-      !specs.ram.trim() ||
-      !specs.storage.trim() ||
-      !specs.battery.trim() ||
+      specs.ram <= 0 ||
+      specs.storage <= 0 ||
+      specs.battery <= 0 ||
       !specs.os.trim() ||
-      !specs.keyboard.trim() ||
-      !specs.webcam.trim() ||
-      !specs.audio.trim() ||
-      !specs.ports.length ||
-      specs.ports.some((p) => !p.trim())
+      !specs.camera.rear.trim() ||
+      !specs.camera.front.trim()
     ) {
-      toast.error("Tất cả thông số kỹ thuật phải được điền đầy đủ!");
-      stop();
-      return;
-    }
-    if (
-      isNaN(Number(formData.dimensions.length)) ||
-      Number(formData.dimensions.length) <= 0 ||
-      isNaN(Number(formData.dimensions.width)) ||
-      Number(formData.dimensions.width) <= 0 ||
-      isNaN(Number(formData.dimensions.height)) ||
-      Number(formData.dimensions.height) <= 0
-    ) {
-      toast.error("Kích thước phải là số lớn hơn 0!");
-      stop();
-      return;
-    }
-    if (isNaN(Number(formData.weight)) || Number(formData.weight) <= 0) {
-      toast.error("Trọng lượng phải là số lớn hơn 0!");
+      toast.error("Vui lòng nhập đầy đủ thông số kỹ thuật!");
       stop();
       return;
     }
     if (
       formData.colorVariants.some(
         (v) =>
-          !v.color.trim() ||
-          v.stock === undefined ||
-          isNaN(Number(v.stock)) ||
-          Number(v.stock) < 0 ||
-          !v.image
+          !v.color.trim() || v.stock < 0 || isNaN(Number(v.stock)) || !v.image
       )
     ) {
       toast.error(
@@ -171,12 +123,16 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
       stop();
       return;
     }
+    if (formData.dimensions.weight <= 0) {
+      toast.error("Trọng lượng phải lớn hơn 0!");
+      stop();
+      return;
+    }
 
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("brand", formData.brand);
-      formDataToSend.append("category", formData.category);
       formDataToSend.append("startingPrice", formData.startingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
@@ -184,86 +140,81 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
         "specifications",
         JSON.stringify(formData.specifications)
       );
-      formDataToSend.append("weight", formData.weight.toString());
       formDataToSend.append("dimensions", JSON.stringify(formData.dimensions));
-      formDataToSend.append(
-        "connectivity",
-        JSON.stringify(formData.connectivity)
-      );
+      formDataToSend.append("warranty", formData.warranty);
       formDataToSend.append(
         "accessories",
         JSON.stringify(formData.accessories)
       );
-      formDataToSend.append("warranty", formData.warranty);
       formDataToSend.append("tags", JSON.stringify(formData.tags));
+      formDataToSend.append(
+        "colorVariants",
+        JSON.stringify(
+          formData.colorVariants.map((variant) => ({
+            color: variant.color,
+            stock: variant.stock,
+          }))
+        )
+      );
 
-      formData.colorVariants.forEach((variant, index) => {
-        formDataToSend.append(`colorVariants[${index}][color]`, variant.color);
-        formDataToSend.append(
-          `colorVariants[${index}][stock]`,
-          variant.stock.toString()
-        );
+      formData.colorVariants.forEach((variant) => {
         if (variant.image) {
           formDataToSend.append("images", variant.image);
         }
       });
 
-      formDataToSend.append("sku", formData.sku);
-      formDataToSend.append("slug", formData.slug);
-
-      const response = await apiPost<Laptop, FormData>(
+      const response = await apiPost<ILaptop, FormData>(
         "/laptops",
-        formDataToSend
+        formDataToSend,
+        undefined,
+        ["laptops"]
       );
 
-      if (response.error) throw new Error(response.error);
+      if (response.error) toast.error(response.error);
 
       toast.success("Thêm laptop thành công!");
       router.refresh();
       setIsOpen(false);
+      // Reset form
       setFormData({
         name: "",
         brand: "",
-        category: "",
         startingPrice: 0,
         promotion: 0,
         description: "",
         specifications: {
-          screenSize: "",
+          screenSize: 0,
           resolution: "",
+          refreshRate: 0,
           cpu: "",
           gpu: "",
-          ram: "",
-          storage: "",
-          battery: "",
+          ram: 0,
+          storage: 0,
+          battery: 0,
           os: "",
-          refreshRate: "",
-          keyboard: "",
-          ports: [],
-          webcam: "",
-          audio: "",
+          camera: {
+            rear: "",
+            front: "",
+          },
         },
         colorVariants: [{ color: "", image: null, stock: 0 }],
-        weight: 0,
         dimensions: {
           length: 0,
           width: 0,
           height: 0,
+          weight: 0,
         },
-        connectivity: [],
         accessories: [],
         warranty: "",
         tags: [],
-        slug: "",
-        sku: "",
       });
       setTagInput("");
-      setConnectivityInput("");
       setAccessoryInput("");
       setImagePreview([]);
       setIsAddingNewBrand(false);
     } catch (error) {
       toast.error("Có lỗi khi thêm laptop!");
+      console.error(error);
     } finally {
       stop();
     }
@@ -291,19 +242,6 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
     if (tagInput && !formData.tags.includes(tagInput)) {
       setFormData({ ...formData, tags: [...formData.tags, tagInput] });
       setTagInput("");
-    }
-  };
-
-  const handleAddConnectivity = () => {
-    if (
-      connectivityInput &&
-      !formData.connectivity.includes(connectivityInput)
-    ) {
-      setFormData({
-        ...formData,
-        connectivity: [...formData.connectivity, connectivityInput],
-      });
-      setConnectivityInput("");
     }
   };
 
@@ -405,54 +343,6 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
             </div>
           </div>
 
-          {/* Danh mục */}
-          <div>
-            <Label htmlFor="category" className="text-gray-700 font-medium">
-              Danh mục
-            </Label>
-            <Input
-              id="category"
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
-              }
-              placeholder="Nhập danh mục (ví dụ: Ultrabook, Gaming)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Đường dẫn SEO */}
-          <div>
-            <Label htmlFor="slug" className="text-gray-700 font-medium">
-              Đường dẫn SEO
-            </Label>
-            <Input
-              id="slug"
-              value={formData.slug}
-              onChange={(e) =>
-                setFormData({ ...formData, slug: e.target.value })
-              }
-              placeholder="Nhập đường dẫn SEO (ví dụ: laptop-dell-xps)"
-              className="mt-1 border-gray-300 focus:ring-cond-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Mã hàng hóa */}
-          <div>
-            <Label htmlFor="sku" className="text-gray-700 font-medium">
-              Mã hàng hóa
-            </Label>
-            <Input
-              id="sku"
-              value={formData.sku}
-              onChange={(e) =>
-                setFormData({ ...formData, sku: e.target.value })
-              }
-              placeholder="Nhập mã hàng hóa (ví dụ: LT-DEL-001)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
           {/* Giá gốc */}
           <div>
             <Label
@@ -539,13 +429,13 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
               </Label>
               <Input
                 placeholder="Kích thước màn hình (inch)"
-                value={formData.specifications.screenSize}
+                value={formData.specifications.screenSize || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      screenSize: e.target.value,
+                      screenSize: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -577,13 +467,13 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
               </Label>
               <Input
                 placeholder="Tần số quét (Hz)"
-                value={formData.specifications.refreshRate}
+                value={formData.specifications.refreshRate || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      refreshRate: e.target.value,
+                      refreshRate: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -625,16 +515,18 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">RAM</Label>
+              <Label className="text-gray-700 font-medium w-[20%]">
+                RAM (GB)
+              </Label>
               <Input
                 placeholder="RAM (GB)"
-                value={formData.specifications.ram}
+                value={formData.specifications.ram || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      ram: e.target.value,
+                      ram: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -643,17 +535,17 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
             </div>
             <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
-                Bộ nhớ
+                Bộ nhớ (GB)
               </Label>
               <Input
                 placeholder="Bộ nhớ (GB)"
-                value={formData.specifications.storage}
+                value={formData.specifications.storage || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      storage: e.target.value,
+                      storage: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -661,16 +553,18 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">Pin</Label>
+              <Label className="text-gray-700 font-medium w-[20%]">
+                Pin (mAh)
+              </Label>
               <Input
-                placeholder="Pin (Wh)"
-                value={formData.specifications.battery}
+                placeholder="Pin (mAh)"
+                value={formData.specifications.battery || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      battery: e.target.value,
+                      battery: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -696,19 +590,27 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
+          </div>
+
+          {/* Camera */}
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+            <Label className="text-gray-900 font-semibold">Camera</Label>
             <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
-                Cổng kết nối
+                Camera sau
               </Label>
               <Input
-                placeholder="Bàn phím"
-                value={formData.specifications.keyboard}
+                placeholder="Camera sau"
+                value={formData.specifications.camera.rear}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      keyboard: e.target.value,
+                      camera: {
+                        ...formData.specifications.camera,
+                        rear: e.target.value,
+                      },
                     },
                   })
                 }
@@ -717,55 +619,20 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
             </div>
             <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
-                Cổng kết nối
+                Camera trước
               </Label>
               <Input
-                placeholder="Cổng kết nối (phân cách bằng dấu phẩy)"
-                value={formData.specifications.ports.join(", ")}
+                placeholder="Camera trước"
+                value={formData.specifications.camera.front}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      ports: e.target.value.split(",").map((p) => p.trim()),
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Webcam
-              </Label>
-              <Input
-                placeholder="Webcam"
-                value={formData.specifications.webcam}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      webcam: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Âm thanh
-              </Label>
-              <Input
-                placeholder="Âm thanh"
-                value={formData.specifications.audio}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      audio: e.target.value,
+                      camera: {
+                        ...formData.specifications.camera,
+                        front: e.target.value,
+                      },
                     },
                   })
                 }
@@ -774,15 +641,15 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
             </div>
           </div>
 
-          {/* Kích thước */}
+          {/* Kích thước và trọng lượng */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
             <Label className="text-gray-900 font-semibold mb-4">
-              Kích thước (cm)
+              Kích thước và trọng lượng
             </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-gray-700 font-medium mb-2">
-                  Chiều dài
+                  Chiều dài (mm)
                 </Label>
                 <Input
                   placeholder="Chiều dài"
@@ -802,7 +669,7 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
               </div>
               <div>
                 <Label className="text-gray-700 font-medium mb-2">
-                  Chiều rộng
+                  Chiều rộng (mm)
                 </Label>
                 <Input
                   placeholder="Chiều rộng"
@@ -822,7 +689,7 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
               </div>
               <div>
                 <Label className="text-gray-700 font-medium mb-2">
-                  Chiều cao
+                  Chiều cao (mm)
                 </Label>
                 <Input
                   placeholder="Chiều cao"
@@ -840,27 +707,27 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              <div>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Trọng lượng (kg)
+                </Label>
+                <Input
+                  placeholder="Trọng lượng"
+                  type="text"
+                  value={formData.dimensions.weight || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        weight: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Trọng lượng */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label htmlFor="weight" className="text-gray-700 font-medium">
-              Trọng lượng (kg)
-            </Label>
-            <Input
-              id="weight"
-              type="text"
-              value={formData.weight || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  weight: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập trọng lượng"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
           </div>
 
           {/* Biến thể màu */}
@@ -941,48 +808,6 @@ const AddLaptopForm = ({ brands }: { brands?: string[] }) => {
               <Plus className="w-4 h-4 mr-2" />
               Thêm màu
             </Button>
-          </div>
-
-          {/* Kết nối */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">Kết nối</Label>
-            <div className="flex gap-2">
-              <Input
-                value={connectivityInput}
-                onChange={(e) => setConnectivityInput(e.target.value)}
-                placeholder="Nhập kết nối và nhấn Thêm"
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <Button
-                onClick={handleAddConnectivity}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Thêm
-              </Button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {formData.connectivity.map((conn, index) => (
-                <span
-                  key={index}
-                  className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
-                >
-                  {conn}
-                  <button
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        connectivity: formData.connectivity.filter(
-                          (_, i) => i !== index
-                        ),
-                      })
-                    }
-                    className="text-red-600"
-                  >
-                    x
-                  </button>
-                </span>
-              ))}
-            </div>
           </div>
 
           {/* Phụ kiện */}

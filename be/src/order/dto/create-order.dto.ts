@@ -1,15 +1,16 @@
 // order/dto/create-order.dto.ts
 import { IsNotEmpty, IsString, IsArray, IsOptional } from "class-validator";
+import { EOrderStatus } from "src/common/types/order.types";
 
 export class CreateOrderDto {
   @IsNotEmpty()
   @IsArray()
   @IsString({ each: true })
-  orderitem_ids: string[];
+  orderitemIds: string[];
 
   @IsNotEmpty()
   @IsString()
-  phone_number: string;
+  phoneNumber: string;
 
   @IsNotEmpty()
   @IsString()
@@ -17,5 +18,5 @@ export class CreateOrderDto {
 
   @IsOptional()
   @IsString()
-  status?: string; // Tùy chọn, sẽ dùng default nếu không cung cấp
+  status?: EOrderStatus;
 }

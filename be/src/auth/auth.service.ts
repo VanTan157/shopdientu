@@ -1,10 +1,17 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { UsersService } from "../users/users.service";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { ChangePasswordDto, UpdateProfileDto } from "./dto/update-profile.dto";
-import { Request, Response } from "express";
+import { Request } from "express";
 import * as bcrypt from "bcrypt";
+import { EUserType, JwtPayload } from "src/common/types/user.types";
+import { ApiResponse } from "src/common/types/api";
 
 @Injectable()
 export class AuthService {
@@ -13,17 +20,12 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async login(loginUserDto: LoginUserDto, res: Response) {
+  async login(loginUserDto: LoginUserDto) {
     const { email, password, remember } = loginUserDto;
     const user = await this.usersService.validateUser(email, password);
-
-    if (!user) {
-      throw new UnauthorizedException("Invalid credentials");
-    }
-
-    const payload = {
+    const payload: JwtPayload = {
       email: user.email,
-      userId: user._id,
+      userId: String(user._id),
       type: user.type,
       name: user.name,
     };
@@ -44,112 +46,131 @@ export class AuthService {
       expiresIn: refreshTokenExpiresIn,
     });
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: accessTokenMaxAge,
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: refreshTokenMaxAge,
-    });
-
     return {
-      message: "Login successful",
-      user: {
-        email: user.email,
-        name: user.name,
-        type: user.type,
-        userId: user._id,
-      },
+      success: true,
+      message: "Đăng nhập thành công",
+      data: payload,
+      cookies: [
+        {
+          name: "accessToken",
+          value: accessToken,
+          options: {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: accessTokenMaxAge,
+          },
+        },
+        {
+          name: "refreshToken",
+          value: refreshToken,
+          options: {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: refreshTokenMaxAge,
+          },
+        },
+      ],
     };
   }
 
-  async googleLogin(user: any, res: Response) {
+  async googleLogin(user: any) {
     if (!user || !user.googleId || !user.email) {
-      throw new UnauthorizedException("Invalid Google user data");
+      throw new BadRequestException("Dữ liệu người dùng Google không hợp lệ");
     }
 
-    let dbUser = await this.usersService.findByGoogleId(user.googleId);
-    if (!dbUser) {
-      dbUser = await this.usersService.create({
+    let result = await this.usersService.findByGoogleId(user.googleId);
+    if (!result) {
+      result = await this.usersService.create({
         googleId: user.googleId,
         email: user.email,
         name: user.name,
-        type: "USER",
+        type: EUserType.USER,
       });
     }
 
-    const payload = {
+    const dbUser = result.data;
+
+    const payload: JwtPayload = {
       email: dbUser.email,
-      userId: dbUser._id,
+      userId: String(dbUser.userId),
       type: dbUser.type,
       name: dbUser.name,
     };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, { expiresIn: "7d" });
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000,
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
     return {
-      user: {
-        email: dbUser.email,
-        name: dbUser.name,
-        type: dbUser.type,
-        userId: dbUser._id,
-      },
+      data: payload,
+      message: "Đăng nhập thành công",
+      success: true,
+      cookies: [
+        {
+          name: "accessToken",
+          value: accessToken,
+          options: {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000,
+          },
+        },
+        {
+          name: "refreshToken",
+          value: refreshToken,
+          options: {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+          },
+        },
+      ],
     };
   }
 
-  async refreshToken(req: Request, res: Response) {
+  async refreshToken(req: Request) {
     const refreshToken = (req as any).cookies["refreshToken"];
     if (!refreshToken) {
-      throw new UnauthorizedException("No refresh token provided");
+      throw new UnauthorizedException("Không có refresh token");
     }
-
     try {
       const payload = this.jwtService.verify(refreshToken);
-      const user = await this.usersService.findOne(payload.userId);
-      if (!user) {
-        res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
-        throw new UnauthorizedException("User not found");
-      }
+      const result = await this.usersService.findOne(payload.userId);
+      const user = result.data;
 
-      const newPayload = {
+      const newPayload: JwtPayload = {
         email: user.email,
-        userId: user._id,
+        userId: String(user._id),
         type: user.type,
         name: user.name,
       };
       const newAccessToken = this.jwtService.sign(newPayload);
 
-      res.cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 15 * 60 * 1000,
-      });
-
-      return { message: "Token refreshed successfully" };
+      return {
+        message: "Token refreshed successfully",
+        success: true,
+        data: newPayload,
+        cookies: [
+          {
+            name: "accessToken",
+            value: newAccessToken,
+            options: {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "strict",
+              maxAge: 15 * 60 * 1000,
+            },
+          },
+        ],
+      };
     } catch (e) {
-      res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
-      throw new UnauthorizedException("Invalid refresh token");
+      (req as any).res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "strict",
+      });
+      throw new UnauthorizedException("Refresh token không hợp lệ");
     }
   }
 
@@ -160,7 +181,7 @@ export class AuthService {
     return {
       success: true,
       message: "Cập nhật tên thành công",
-      user: {
+      data: {
         email: updatedUser.email,
         name: updatedUser.name,
         type: updatedUser.type,
@@ -169,16 +190,14 @@ export class AuthService {
   }
 
   async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
-    const user = await this.usersService.findOne(userId);
-    if (!user.password) {
-      throw new UnauthorizedException("Người dùng không có mật khẩu");
-    }
+    const result = await this.usersService.findOne(userId);
+    const user = result.data;
     const isMatch = await bcrypt.compare(
       changePasswordDto.oldPassword,
       user.password
     );
     if (!isMatch) {
-      throw new UnauthorizedException("Mật khẩu cũ không đúng");
+      throw new BadRequestException("Mật khẩu cũ không đúng");
     }
 
     const saltRounds = 10;
@@ -193,7 +212,7 @@ export class AuthService {
     return {
       success: true,
       message: "Đổi mật khẩu thành công",
-      user: {
+      data: {
         email: updatedUser.email,
         name: updatedUser.name,
         type: updatedUser.type,
@@ -202,12 +221,17 @@ export class AuthService {
   }
 
   async getMe(userId: string) {
-    const user = await this.usersService.findOne(userId);
+    const result = await this.usersService.findOne(userId);
+    const user = result.data;
     return {
-      email: user.email,
-      name: user.name,
-      type: user.type,
-      _id: user._id,
+      success: true,
+      message: "Lấy thông tin người dùng thành công",
+      data: {
+        email: user.email,
+        name: user.name,
+        type: user.type,
+        userId: String(user._id),
+      },
     };
   }
 }

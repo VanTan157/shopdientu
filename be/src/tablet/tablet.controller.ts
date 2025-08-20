@@ -20,20 +20,20 @@ import { TabletService } from "./tablet.service";
 import { CreateTabletDto } from "./dto/create-tablet.dto";
 import { Tablet } from "./entities/tablet.entity";
 import { UpdateTabletDto } from "./dto/update-tablet.dto";
+import { EUserType } from "src/common/types/user.types";
+import { ApiResponse } from "src/common/types/api";
 
-// Controller xử lý các request HTTP cho module Laptop
 @Controller("tablets")
 export class TabletController {
   constructor(private readonly tabletService: TabletService) {}
 
-  // Endpoint tạo laptop mới
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Post()
   @UseInterceptors(
     FilesInterceptor("images", 10, {
       storage: diskStorage({
-        destination: "./image", // Thư mục lưu trữ ảnh
+        destination: "./image",
         filename: (req, file, cb) => {
           const uniqueSuffix =
             Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -52,44 +52,41 @@ export class TabletController {
     })
   )
   create(
-    // Dữ liệu DTO từ body request
     @Body() createTabletDto: CreateTabletDto,
-    // Danh sách file ảnh được upload
     @UploadedFiles() files: Express.Multer.File[]
-  ): Promise<Tablet> {
+  ): Promise<ApiResponse<Tablet>> {
     return this.tabletService.create(createTabletDto, files);
   }
 
-  // Endpoint lấy danh sách tất cả laptop
   @Get()
-  findAll(): Promise<Tablet[]> {
+  findAll(): Promise<ApiResponse<Tablet[]>> {
     return this.tabletService.findAll();
   }
 
   @Get("get-by-promotion")
-  getByPromotion() {
+  getByPromotion(): Promise<ApiResponse<Tablet[]>> {
     return this.tabletService.findByPromotion();
   }
 
   @Get("get-all-brand")
-  getAllBranch() {
+  getAllBranch(): Promise<ApiResponse<string[]>> {
     return this.tabletService.getAllBrand();
   }
 
   @Get("get-all-tablet-by-brand/:brand")
-  getAllLaptopByBrand(@Param("brand") brand: string) {
+  getAllTabletByBrand(
+    @Param("brand") brand: string
+  ): Promise<ApiResponse<Tablet[]>> {
     return this.tabletService.getAllTabletByBrand(brand);
   }
 
-  // Endpoint lấy thông tin một laptop theo ID
   @Get(":id")
-  findOne(@Param("id") id: string): Promise<Tablet> {
+  findOne(@Param("id") id: string): Promise<ApiResponse<Tablet>> {
     return this.tabletService.findOne(id);
   }
 
-  // Endpoint cập nhật laptop
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Patch(":id")
   @UseInterceptors(
     FilesInterceptor("images", 10, {
@@ -113,21 +110,17 @@ export class TabletController {
     })
   )
   update(
-    // ID của laptop từ URL
     @Param("id") id: string,
-    // Dữ liệu DTO từ body request
     @Body() updateTabletDto: UpdateTabletDto,
-    // Danh sách file ảnh mới (nếu có)
     @UploadedFiles() files: Express.Multer.File[]
-  ): Promise<Tablet> {
+  ): Promise<ApiResponse<Tablet>> {
     return this.tabletService.update(id, updateTabletDto, files);
   }
 
-  // Endpoint xóa laptop
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Delete(":id")
-  remove(@Param("id") id: string) {
+  remove(@Param("id") id: string): Promise<ApiResponse<null>> {
     return this.tabletService.remove(id);
   }
 }

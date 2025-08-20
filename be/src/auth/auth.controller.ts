@@ -8,6 +8,7 @@ import {
   UseGuards,
   Put,
   Get,
+  UseInterceptors,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LoginUserDto } from "./dto/login-user.dto";
@@ -15,6 +16,7 @@ import { Response, Request } from "express";
 import { AuthGuard } from "./auth.guard";
 import { ChangePasswordDto, UpdateProfileDto } from "./dto/update-profile.dto";
 import { AuthGuard as PassportAuthGuard } from "@nestjs/passport";
+import { CookieInterceptor } from "src/common/interceptors/cookie.interceptor";
 
 interface UserPayload {
   userId: string;
@@ -31,22 +33,26 @@ export class AuthController {
   @Post("me")
   async getProfile(@Req() req: Request) {
     if (!req.user) {
-      throw new UnauthorizedException("User not authenticated");
+      throw new UnauthorizedException("Người dùng chưa xác thực");
     }
-    return req.user;
+    return {
+      success: true,
+      message: "Lấy thông tin người dùng thành công",
+      data: req.user,
+    };
   }
 
+  @UseInterceptors(CookieInterceptor)
   @Post("login")
-  async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response) {
-    const result = await this.authService.login(loginUserDto, res);
-    return res.json(result);
+  async login(@Body() loginUserDto: LoginUserDto) {
+    return this.authService.login(loginUserDto);
   }
 
+  @UseInterceptors(CookieInterceptor)
   @UseGuards(AuthGuard)
   @Post("refresh")
-  async refresh(@Req() req: Request, @Res() res: Response) {
-    const result = await this.authService.refreshToken(req, res);
-    return res.json(result);
+  refresh(@Req() req: Request) {
+    return this.authService.refreshToken(req);
   }
 
   @UseGuards(AuthGuard)
@@ -54,7 +60,7 @@ export class AuthController {
   logout(@Res() res: Response) {
     res.clearCookie("accessToken", { httpOnly: true, sameSite: "strict" });
     res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict" });
-    return res.json({ message: "Logged out successfully" });
+    return res.json({ message: "Đăng xuất thành công", success: true });
   }
 
   @UseGuards(AuthGuard)
@@ -65,7 +71,7 @@ export class AuthController {
   ) {
     const user = req.user as UserPayload;
     if (!user?.userId) {
-      throw new UnauthorizedException("Invalid user payload");
+      throw new UnauthorizedException("Thông tin người dùng không hợp lệ");
     }
     return this.authService.updateProfile(user.userId, updateProfileDto);
   }
@@ -78,7 +84,7 @@ export class AuthController {
   ) {
     const user = req.user as UserPayload;
     if (!user?.userId) {
-      throw new UnauthorizedException("Invalid user payload");
+      throw new UnauthorizedException("Thông tin người dùng không hợp lệ");
     }
     return this.authService.changePassword(user.userId, changePasswordDto);
   }
@@ -88,7 +94,7 @@ export class AuthController {
   async getMe(@Req() req: Request) {
     const user = req.user as UserPayload;
     if (!user?.userId) {
-      throw new UnauthorizedException("Invalid user paylod");
+      throw new UnauthorizedException("Thông tin người dùng không hợp lệ");
     }
     return this.authService.getMe(user.userId);
   }
@@ -99,16 +105,23 @@ export class AuthController {
 
   @Get("google/callback")
   @UseGuards(PassportAuthGuard("google"))
-  async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
+  @UseInterceptors(CookieInterceptor)
+  async googleAuthRedirect(@Req() req: Request) {
     try {
       if (!req.user) {
-        return res.redirect("http://localhost:3000?error=google_auth_failed");
+        return (req as any).res.redirect(
+          "http://localhost:3000?error=google_auth_failed"
+        );
       }
-      await this.authService.googleLogin(req.user, res);
-      return res.redirect("http://localhost:3000/login?success=google_auth");
+      await this.authService.googleLogin(req.user);
+      return (req as any).res.redirect(
+        "http://localhost:3000/login?success=google_auth"
+      );
     } catch (error) {
       console.error("Google callback error:", error);
-      return res.redirect("http://localhost:3000?error=server_error");
+      return (req as any).res.redirect(
+        "http://localhost:3000?error=server_error"
+      );
     }
   }
 }

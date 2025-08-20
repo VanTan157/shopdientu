@@ -1,31 +1,32 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
+import { EProductType } from "src/common/types/order.types";
 
-export enum ProductType {
-  LAPTOP = "laptop",
-  MOBILE = "mobile",
-  HEADPHONE = "headphone",
-  TABLET = "tablet",
-}
 @Schema({ timestamps: true })
 export class OrderItem extends Document {
-  @Prop({ type: Types.ObjectId, ref: "User", required: true })
-  user_id: Types.ObjectId;
+  @Prop({ required: true })
+  userId: string;
 
-  @Prop({ type: Types.ObjectId, required: true })
-  product_id: Types.ObjectId;
+  @Prop({ required: true })
+  productId: string;
 
-  @Prop({ type: String, enum: ProductType, required: true })
-  product_type: ProductType;
+  @Prop({ required: true })
+  productName: string;
+
+  @Prop({ required: true })
+  productType: EProductType;
+
+  @Prop({ required: true })
+  unitPrice: number;
 
   @Prop({ required: true, min: 1 })
   quantity: number;
 
   @Prop({ required: true })
-  unit_price: number;
+  totalPrice: number;
 
-  @Prop({ required: true })
-  total_price: number;
+  @Prop({ required: true, default: false })
+  isInCart: boolean;
 
   @Prop({
     type: {

@@ -1,9 +1,5 @@
 "use client";
 
-import { apiPost } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -11,14 +7,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { apiPost } from "@/lib/api";
 import { Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-import { Tablet } from "@/lib/types/tablet";
 import { loadingStore } from "@/app/store/loading.store";
+import { ITablet } from "@/lib/types/tablet";
 
 const AddTabletForm = ({ brands }: { brands?: string[] }) => {
   const router = useRouter();
@@ -28,45 +28,43 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
   const [formData, setFormData] = useState({
     name: "",
     brand: "",
-    category: "",
     startingPrice: 0,
     promotion: 0,
     description: "",
     specifications: {
-      screenSize: "",
+      screenSize: 0,
       resolution: "",
-      cpu: "",
-      gpu: "",
-      ram: "",
-      storage: "",
-      battery: "",
+      refreshRate: 0,
+      simType: "",
+      ram: 0,
+      storage: 0,
+      battery: 0,
       os: "",
-      refreshRate: "",
-      cameraFront: "",
-      cameraRear: "",
-      simSupport: false,
-      stylusSupport: false,
-      ports: [] as string[],
-      audio: "",
+      camera: {
+        rear: "",
+        front: "",
+      },
     },
     colorVariants: [{ color: "", image: null as File | null, stock: 0 }],
-    weight: 0,
     dimensions: {
       length: 0,
       width: 0,
       height: 0,
+      weight: 0,
     },
-    connectivity: [] as string[],
     accessories: [] as string[],
     warranty: "",
     tags: [] as string[],
-    slug: "",
-    sku: "",
   });
   const [tagInput, setTagInput] = useState("");
-  const [connectivityInput, setConnectivityInput] = useState("");
   const [accessoryInput, setAccessoryInput] = useState("");
   const [imagePreview, setImagePreview] = useState([] as string[]);
+
+  useEffect(() => {
+    return () => {
+      imagePreview.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imagePreview]);
 
   const handleAddTablet = async () => {
     start();
@@ -77,21 +75,6 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
     }
     if (!formData.brand.trim()) {
       toast.error("Thương hiệu không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.category.trim()) {
-      toast.error("Danh mục không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.slug.trim()) {
-      toast.error("Đường dẫn SEO không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.sku.trim()) {
-      toast.error("Mã hàng hóa không được để trống!");
       stop();
       return;
     }
@@ -120,39 +103,32 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
     }
     const specs = formData.specifications;
     if (
-      !specs.screenSize.trim() ||
+      !specs.screenSize ||
       !specs.resolution.trim() ||
-      !specs.refreshRate.trim() ||
-      !specs.cpu.trim() ||
-      !specs.gpu.trim() ||
-      !specs.ram.trim() ||
-      !specs.storage.trim() ||
-      !specs.battery.trim() ||
+      !specs.refreshRate ||
+      !specs.simType.trim() ||
+      !specs.ram ||
+      !specs.storage ||
+      !specs.battery ||
       !specs.os.trim() ||
-      !specs.cameraFront.trim() ||
-      !specs.cameraRear.trim() ||
-      !specs.audio.trim() ||
-      !specs.ports.length ||
-      specs.ports.some((p) => !p.trim())
+      !specs.camera.rear.trim() ||
+      !specs.camera.front.trim()
     ) {
       toast.error("Tất cả thông số kỹ thuật phải được điền đầy đủ!");
       stop();
       return;
     }
     if (
-      isNaN(Number(formData.dimensions.length)) ||
-      Number(formData.dimensions.length) <= 0 ||
+      isNaN(Number(formData.dimensions.height)) ||
+      Number(formData.dimensions.height) <= 0 ||
       isNaN(Number(formData.dimensions.width)) ||
       Number(formData.dimensions.width) <= 0 ||
-      isNaN(Number(formData.dimensions.height)) ||
-      Number(formData.dimensions.height) <= 0
+      isNaN(Number(formData.dimensions.length)) ||
+      Number(formData.dimensions.length) <= 0 ||
+      isNaN(Number(formData.dimensions.weight)) ||
+      Number(formData.dimensions.weight) <= 0
     ) {
-      toast.error("Kích thước phải là số lớn hơn 0!");
-      stop();
-      return;
-    }
-    if (isNaN(Number(formData.weight)) || Number(formData.weight) <= 0) {
-      toast.error("Trọng lượng phải là số lớn hơn 0!");
+      toast.error("Kích thước và trọng lượng phải là số lớn hơn 0!");
       stop();
       return;
     }
@@ -177,7 +153,6 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("brand", formData.brand);
-      formDataToSend.append("category", formData.category);
       formDataToSend.append("startingPrice", formData.startingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
@@ -185,88 +160,80 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
         "specifications",
         JSON.stringify(formData.specifications)
       );
-      formDataToSend.append("weight", formData.weight.toString());
       formDataToSend.append("dimensions", JSON.stringify(formData.dimensions));
-      formDataToSend.append(
-        "connectivity",
-        JSON.stringify(formData.connectivity)
-      );
       formDataToSend.append(
         "accessories",
         JSON.stringify(formData.accessories)
       );
       formDataToSend.append("warranty", formData.warranty);
       formDataToSend.append("tags", JSON.stringify(formData.tags));
+      formDataToSend.append(
+        "colorVariants",
+        JSON.stringify(
+          formData.colorVariants.map((variant) => ({
+            color: variant.color,
+            stock: variant.stock,
+          }))
+        )
+      );
 
-      formData.colorVariants.forEach((variant, index) => {
-        formDataToSend.append(`colorVariants[${index}][color]`, variant.color);
-        formDataToSend.append(
-          `colorVariants[${index}][stock]`,
-          variant.stock.toString()
-        );
+      formData.colorVariants.forEach((variant) => {
         if (variant.image) {
           formDataToSend.append("images", variant.image);
         }
       });
 
-      formDataToSend.append("sku", formData.sku);
-      formDataToSend.append("slug", formData.slug);
-
-      const response = await apiPost<Tablet, FormData>(
+      const response = await apiPost<ITablet, FormData>(
         "/tablets",
-        formDataToSend
+        formDataToSend,
+        undefined,
+        ["tablets"]
       );
 
-      if (response.error) throw new Error(response.error);
-
-      toast.success("Thêm sản phẩm thành công!");
-      router.refresh();
-      setIsOpen(false);
-      setFormData({
-        name: "",
-        brand: "",
-        category: "",
-        startingPrice: 0,
-        promotion: 0,
-        description: "",
-        specifications: {
-          screenSize: "",
-          resolution: "",
-          cpu: "",
-          gpu: "",
-          ram: "",
-          storage: "",
-          battery: "",
-          os: "",
-          refreshRate: "",
-          cameraFront: "",
-          cameraRear: "",
-          simSupport: false,
-          stylusSupport: false,
-          ports: [],
-          audio: "",
-        },
-        colorVariants: [{ color: "", image: null, stock: 0 }],
-        weight: 0,
-        dimensions: {
-          length: 0,
-          width: 0,
-          height: 0,
-        },
-        connectivity: [],
-        accessories: [],
-        warranty: "",
-        tags: [],
-        slug: "",
-        sku: "",
-      });
-      setTagInput("");
-      setConnectivityInput("");
-      setAccessoryInput("");
-      setImagePreview([]);
-      setIsAddingNewBrand(false);
+      if (response.error) {
+        toast.error(response.error);
+      } else {
+        toast.success("Thêm sản phẩm thành công!");
+        router.refresh();
+        setIsOpen(false);
+        setFormData({
+          name: "",
+          brand: "",
+          startingPrice: 0,
+          promotion: 0,
+          description: "",
+          specifications: {
+            screenSize: 0,
+            resolution: "",
+            refreshRate: 0,
+            simType: "",
+            ram: 0,
+            storage: 0,
+            battery: 0,
+            os: "",
+            camera: {
+              rear: "",
+              front: "",
+            },
+          },
+          dimensions: {
+            length: 0,
+            width: 0,
+            height: 0,
+            weight: 0,
+          },
+          accessories: [],
+          warranty: "",
+          tags: [],
+          colorVariants: [{ color: "", image: null, stock: 0 }],
+        });
+        setTagInput("");
+        setAccessoryInput("");
+        setImagePreview([]);
+      }
     } catch (error) {
-      toast.error("Có lỗi khi thêm sản phẩm!");
+      console.error("Error creating tablet:", error);
+      toast.error("Có lỗi xảy ra khi tạo tablet mới");
     } finally {
       stop();
     }
@@ -280,6 +247,7 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
         { color: "", image: null, stock: 0 },
       ],
     });
+    setImagePreview([...imagePreview, ""]);
   };
 
   const removeColorVariant = (index: number) => {
@@ -297,19 +265,6 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
     }
   };
 
-  const handleAddConnectivity = () => {
-    if (
-      connectivityInput &&
-      !formData.connectivity.includes(connectivityInput)
-    ) {
-      setFormData({
-        ...formData,
-        connectivity: [...formData.connectivity, connectivityInput],
-      });
-      setConnectivityInput("");
-    }
-  };
-
   const handleAddAccessory = () => {
     if (accessoryInput && !formData.accessories.includes(accessoryInput)) {
       setFormData({
@@ -323,22 +278,22 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
-          <Plus className="w-5 h-5" />
-          Thêm máy tính bảng mới
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Plus className="w-4 h-4 mr-2" />
+          Thêm Tablet
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[90%] !max-w-[90%] max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl">
         <DialogHeader className="border-b pb-4">
           <DialogTitle className="text-2xl font-bold text-gray-800">
-            Thêm máy tính bảng mới
+            Thêm Tablet Mới
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6 p-6">
           {/* Tên */}
           <div>
             <Label htmlFor="name" className="text-gray-700 font-medium">
-              Tên laptop
+              Tên tablet
             </Label>
             <Input
               id="name"
@@ -346,114 +301,61 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              placeholder="Nhập tên laptop"
+              placeholder="Nhập tên tablet"
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* Thương hiệu */}
           <div>
-            <Label htmlFor="brand" className="text-gray-700 font-medium">
-              Thương hiệu
-            </Label>
-            <div className="flex gap-2 mt-1">
-              {!isAddingNewBrand ? (
-                <>
-                  <select
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
+            <Label className="text-gray-700 font-medium">Thương hiệu</Label>
+            {!isAddingNewBrand && brands && brands.length > 0 ? (
+              <div className="space-y-2">
+                <select
+                  value={formData.brand}
+                  onChange={(e) => {
+                    if (e.target.value === "add_new") {
+                      setIsAddingNewBrand(true);
+                      setFormData({ ...formData, brand: "" });
+                    } else {
+                      setFormData({ ...formData, brand: e.target.value });
                     }
-                    className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Chọn thương hiệu</option>
-                    {brands?.map((brand) => (
-                      <option key={brand} value={brand}>
-                        {brand}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddingNewBrand(true)}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                  >
-                    Thêm thương hiệu mới
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Input
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) =>
-                      setFormData({ ...formData, brand: e.target.value })
-                    }
-                    placeholder="Nhập thương hiệu mới"
-                    className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Chọn thương hiệu</option>
+                  {brands.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                  <option value="add_new">+ Thêm thương hiệu mới</option>
+                </select>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Input
+                  value={formData.brand}
+                  onChange={(e) =>
+                    setFormData({ ...formData, brand: e.target.value })
+                  }
+                  placeholder="Nhập thương hiệu mới"
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {brands && brands.length > 0 && (
                   <Button
                     variant="outline"
                     onClick={() => {
                       setIsAddingNewBrand(false);
                       setFormData({ ...formData, brand: "" });
                     }}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                    className="text-sm"
                   >
-                    Hủy
+                    Chọn từ danh sách có sẵn
                   </Button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Danh mục */}
-          <div>
-            <Label htmlFor="category" className="text-gray-700 font-medium">
-              Danh mục
-            </Label>
-            <Input
-              id="category"
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
-              }
-              placeholder="Nhập danh mục (ví dụ: Ultrabook, Gaming)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Đường dẫn SEO */}
-          <div>
-            <Label htmlFor="slug" className="text-gray-700 font-medium">
-              Đường dẫn SEO
-            </Label>
-            <Input
-              id="slug"
-              value={formData.slug}
-              onChange={(e) =>
-                setFormData({ ...formData, slug: e.target.value })
-              }
-              placeholder="Nhập đường dẫn SEO (ví dụ: laptop-dell-xps)"
-              className="mt-1 border-gray-300 focus:ring-cond-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Mã hàng hóa */}
-          <div>
-            <Label htmlFor="sku" className="text-gray-700 font-medium">
-              Mã hàng hóa
-            </Label>
-            <Input
-              id="sku"
-              value={formData.sku}
-              onChange={(e) =>
-                setFormData({ ...formData, sku: e.target.value })
-              }
-              placeholder="Nhập mã hàng hóa (ví dụ: LT-DEL-001)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Giá gốc */}
@@ -526,7 +428,7 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
               onChange={(e) =>
                 setFormData({ ...formData, warranty: e.target.value })
               }
-              placeholder="Nhập thời gian bảo hành (ví dụ: 12 tháng)"
+              placeholder="Nhập thời gian bảo hành"
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -536,27 +438,35 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
             <Label className="text-gray-900 font-semibold">
               Thông số kỹ thuật
             </Label>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Kích thước man hình (inch)
+
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="screenSize"
+                className="text-gray-700 font-medium w-[20%]"
+              >
+                Kích thước màn hình (inch)
               </Label>
               <Input
                 placeholder="Kích thước màn hình (inch)"
-                value={formData.specifications.screenSize}
+                type="text"
+                value={formData.specifications.screenSize || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      screenSize: e.target.value,
+                      screenSize: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="resolution"
+                className="text-gray-700 font-medium w-[20%]"
+              >
                 Độ phân giải
               </Label>
               <Input
@@ -574,114 +484,122 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="refreshRate"
+                className="text-gray-700 font-medium w-[20%]"
+              >
                 Tần số quét (Hz)
               </Label>
               <Input
                 placeholder="Tần số quét (Hz)"
-                value={formData.specifications.refreshRate}
+                type="text"
+                value={formData.specifications.refreshRate || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      refreshRate: e.target.value,
+                      refreshRate: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">CPU</Label>
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="simType"
+                className="text-gray-700 font-medium w-[20%]"
+              >
+                Loại SIM
+              </Label>
               <Input
-                placeholder="CPU"
-                value={formData.specifications.cpu}
+                placeholder="Loại SIM"
+                value={formData.specifications.simType}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      cpu: e.target.value,
+                      simType: e.target.value,
                     },
                   })
                 }
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">GPU</Label>
-              <Input
-                placeholder="GPU"
-                value={formData.specifications.gpu}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      gpu: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">RAM</Label>
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="ram"
+                className="text-gray-700 font-medium w-[20%]"
+              >
+                RAM (GB)
+              </Label>
               <Input
                 placeholder="RAM (GB)"
-                value={formData.specifications.ram}
+                type="text"
+                value={formData.specifications.ram || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      ram: e.target.value,
+                      ram: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Bộ nhớ
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="storage"
+                className="text-gray-700 font-medium w-[20%]"
+              >
+                Bộ nhớ (GB)
               </Label>
               <Input
                 placeholder="Bộ nhớ (GB)"
-                value={formData.specifications.storage}
+                type="text"
+                value={formData.specifications.storage || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      storage: e.target.value,
+                      storage: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">Pin</Label>
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="battery"
+                className="text-gray-700 font-medium w-[20%]"
+              >
+                Pin (mAh)
+              </Label>
               <Input
-                placeholder="Pin (Wh)"
-                value={formData.specifications.battery}
+                placeholder="Pin (mAh)"
+                type="text"
+                value={formData.specifications.battery || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      battery: e.target.value,
+                      battery: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="os" className="text-gray-700 font-medium w-[20%]">
                 Hệ điều hành
               </Label>
               <Input
@@ -699,136 +617,70 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Camera trước
-              </Label>
-              <Input
-                placeholder="Camera trước"
-                value={formData.specifications.cameraFront}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      cameraFront: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="cameraRear"
+                className="text-gray-700 font-medium w-[20%]"
+              >
                 Camera sau
               </Label>
               <Input
                 placeholder="Camera sau"
-                value={formData.specifications.cameraRear}
+                value={formData.specifications.camera.rear}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      cameraRear: e.target.value,
+                      camera: {
+                        ...formData.specifications.camera,
+                        rear: e.target.value,
+                      },
                     },
                   })
                 }
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Cổng kết nối
+            <div className="flex items-center space-x-2">
+              <Label
+                htmlFor="cameraFront"
+                className="text-gray-700 font-medium w-[20%]"
+              >
+                Camera trước
               </Label>
               <Input
-                placeholder="Cổng kết nối (phân cách bằng dấu phẩy)"
-                value={formData.specifications.ports.join(", ")}
+                placeholder="Camera trước"
+                value={formData.specifications.camera.front}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      ports: e.target.value.split(",").map((p) => p.trim()),
+                      camera: {
+                        ...formData.specifications.camera,
+                        front: e.target.value,
+                      },
                     },
                   })
                 }
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Âm thanh
-              </Label>
-              <Input
-                placeholder="Âm thanh"
-                value={formData.specifications.audio}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      audio: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="simSupport" className="text-gray-700">
-                Hỗ trợ SIM
-              </Label>
-              <Input
-                type="checkbox"
-                id="simSupport"
-                className="w-5 h-5"
-                checked={formData.specifications.simSupport}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      simSupport: e.target.checked,
-                    },
-                  })
-                }
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="stylusSupport" className="text-gray-700">
-                Hỗ trợ bút cảm ứng
-              </Label>
-              <Input
-                type="checkbox"
-                id="stylusSupport"
-                className="w-5 h-5"
-                checked={formData.specifications.stylusSupport}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      stylusSupport: e.target.checked,
-                    },
-                  })
-                }
               />
             </div>
           </div>
 
-          {/* Kích thước */}
+          {/* Kích thước và trọng lượng */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
             <Label className="text-gray-900 font-semibold mb-4">
-              Kích thước (mm)
+              Kích thước và trọng lượng
             </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div>
                 <Label
                   htmlFor="length"
                   className="text-gray-700 font-medium mb-2"
                 >
-                  Chiều dài
+                  Chiều dài (mm)
                 </Label>
                 <Input
                   placeholder="Chiều dài"
@@ -851,7 +703,7 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
                   htmlFor="width"
                   className="text-gray-700 font-medium mb-2"
                 >
-                  Chiều rộng
+                  Chiều rộng (mm)
                 </Label>
                 <Input
                   placeholder="Chiều rộng"
@@ -874,7 +726,7 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
                   htmlFor="height"
                   className="text-gray-700 font-medium mb-2"
                 >
-                  Chiều cao
+                  Chiều cao (mm)
                 </Label>
                 <Input
                   placeholder="Chiều cao"
@@ -892,27 +744,30 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              <div>
+                <Label
+                  htmlFor="weight"
+                  className="text-gray-700 font-medium mb-2"
+                >
+                  Trọng lượng (g)
+                </Label>
+                <Input
+                  placeholder="Trọng lượng"
+                  type="text"
+                  value={formData.dimensions.weight || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        weight: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Trọng lượng */}
-          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-            <Label htmlFor="weight" className="text-gray-700 font-medium">
-              Trọng lượng (kg)
-            </Label>
-            <Input
-              id="weight"
-              type="text"
-              value={formData.weight || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  weight: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập trọng lượng"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
           </div>
 
           {/* Biến thể màu */}
@@ -937,10 +792,10 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
                   {imagePreview[index] && (
                     <Image
                       src={imagePreview[index]}
-                      alt={variant.color || "Preview"}
+                      alt={variant.color}
                       width={100}
                       height={100}
-                      className="object-contain rounded-md"
+                      className="object-contain rounded-md mb-2"
                     />
                   )}
                   <Input
@@ -959,7 +814,6 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
                         });
                       }
                     }}
-                    className="mt-2"
                   />
                 </div>
                 <Input
@@ -993,48 +847,6 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
               <Plus className="w-4 h-4 mr-2" />
               Thêm màu
             </Button>
-          </div>
-
-          {/* Kết nối */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">Kết nối</Label>
-            <div className="flex gap-2">
-              <Input
-                value={connectivityInput}
-                onChange={(e) => setConnectivityInput(e.target.value)}
-                placeholder="Nhập kết nối và nhấn Thêm"
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <Button
-                onClick={handleAddConnectivity}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Thêm
-              </Button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {formData.connectivity.map((conn, index) => (
-                <span
-                  key={index}
-                  className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
-                >
-                  {conn}
-                  <button
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        connectivity: formData.connectivity.filter(
-                          (_, i) => i !== index
-                        ),
-                      })
-                    }
-                    className="text-red-600"
-                  >
-                    x
-                  </button>
-                </span>
-              ))}
-            </div>
           </div>
 
           {/* Phụ kiện */}
@@ -1120,12 +932,22 @@ const AddTabletForm = ({ brands }: { brands?: string[] }) => {
             </div>
           </div>
 
-          <Button
-            onClick={handleAddTablet}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-          >
-            Thêm máy tính bảng
-          </Button>
+          {/* Nút submit */}
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100"
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleAddTablet}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Thêm tablet
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

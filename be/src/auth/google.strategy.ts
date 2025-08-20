@@ -2,7 +2,6 @@ import { PassportStrategy } from "@nestjs/passport";
 import { Strategy, VerifyCallback } from "passport-google-oauth20";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { Request } from "express";
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
@@ -25,13 +24,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
     });
   }
 
-  async validate(
-    req: Request,
-    accessToken: string,
-    refreshToken: string,
-    profile: any,
-    done: VerifyCallback
-  ): Promise<any> {
+  async validate(profile: any, done: VerifyCallback): Promise<any> {
     try {
       if (!profile.emails || !profile.emails[0]?.value) {
         return done(new Error("Email not provided by Google"), false);

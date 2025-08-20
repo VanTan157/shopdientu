@@ -1,9 +1,8 @@
 import { apiGet } from "@/lib/api";
 import LaptopTable from "./tablet-table";
-
-import AddLaptopForm from "./add-tablet";
-import { Tablet } from "@/lib/types/tablet";
 import AddTabletForm from "./add-tablet";
+import { ITablet } from "@/lib/types/tablet";
+import { toast } from "sonner";
 
 export default async function Page({
   params,
@@ -11,9 +10,13 @@ export default async function Page({
   params: Promise<{ brand: string }>;
 }) {
   const { brand } = await params;
-  const res = await apiGet<Tablet[]>(
+  const res = await apiGet<ITablet[]>(
     `/tablets/get-all-tablet-by-brand/${brand}`
   );
+  if (res.error) {
+    toast.error(res.message);
+    return;
+  }
   const brands = await apiGet<string[]>("/tablets/get-all-brand");
   if (!res) return <div>Loading...</div>;
   if (!res.data) return <div>Product not found</div>;

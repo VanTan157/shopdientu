@@ -1,5 +1,3 @@
-import { CartItem } from "./order-item";
-
 export type OrderStatus =
   | "Tất cả"
   | "Đang chờ xác nhận"
@@ -10,26 +8,12 @@ export type OrderStatus =
 
 export interface Order {
   _id: string;
-  user_id: string;
-  orderitem_ids: CartItem[];
-  total_amount: number;
-  phone_number: string;
+  userId: string;
+  orderitemIds: string;
+  totalAmount: number;
+  phoneNumber: string;
   address: string;
-  status:
-    | "Đang chờ xác nhận"
-    | "Đã xác nhận"
-    | "Đang vận chuyển"
-    | "Hoàn thành"
-    | "Đã hủy";
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
-export interface ApiResponse<T> {
-  data: T | null;
-  error: string | null;
-  status: number;
+  status: EOrderStatus;
 }
 
 export enum EOrderStatus {

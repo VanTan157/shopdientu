@@ -5,12 +5,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Laptop } from "@/lib/types/laptop";
+import { ILaptop } from "@/lib/types/laptop";
 import Image from "next/image";
 import React from "react";
 
 interface ViewLaptopDetailProps {
-  laptop: Laptop;
+  laptop: ILaptop;
   children: React.ReactNode;
 }
 
@@ -33,10 +33,6 @@ const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
               <p className="text-gray-700">
                 <strong className="font-medium">Thương hiệu:</strong>{" "}
                 {laptop.brand}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Danh mục:</strong>{" "}
-                {laptop.category}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Giá gốc:</strong>{" "}
@@ -62,11 +58,6 @@ const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
                 <strong className="font-medium">Bảo hành:</strong>{" "}
                 {laptop.warranty || "N/A"}
               </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Ngày phát hành:</strong>{" "}
-                {new Date(laptop.releaseDate).toLocaleDateString("vi-VN") ||
-                  "N/A"}
-              </p>
             </div>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
@@ -86,7 +77,9 @@ const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Tần số quét:</strong>{" "}
-                {laptop.specifications.refreshRate || "N/A"}
+                {laptop.specifications.refreshRate
+                  ? `${laptop.specifications.refreshRate} Hz`
+                  : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">CPU:</strong>{" "}
@@ -111,33 +104,27 @@ const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
               <p className="text-gray-700">
                 <strong className="font-medium">Pin:</strong>{" "}
                 {laptop.specifications.battery
-                  ? `${laptop.specifications.battery} Wh`
+                  ? `${laptop.specifications.battery} mAh`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Hệ điều hành:</strong>{" "}
                 {laptop.specifications.os || "N/A"}
               </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Bàn phím:</strong>{" "}
-                {laptop.specifications.keyboard || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Cổng kết nối:</strong>{" "}
-                {laptop.specifications.ports?.join(", ") || "N/A"}
-              </p>
-              <p className="text-gray-700">
-                <strong className="font-medium">Âm thanh:</strong>{" "}
-                {laptop.specifications.audio || "N/A"}
-              </p>
             </div>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">Camera</h3>
-            <p className="text-gray-700">
-              <strong className="font-medium">Webcam:</strong>{" "}
-              {laptop.specifications.webcam || "N/A"}
-            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <p className="text-gray-700">
+                <strong className="font-medium">Camera sau:</strong>{" "}
+                {laptop.specifications.camera.rear || "N/A"}
+              </p>
+              <p className="text-gray-700">
+                <strong className="font-medium">Camera trước:</strong>{" "}
+                {laptop.specifications.camera.front || "N/A"}
+              </p>
+            </div>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">
@@ -147,23 +134,16 @@ const ViewLaptopDetail = ({ laptop, children }: ViewLaptopDetailProps) => {
               <p className="text-gray-700">
                 <strong className="font-medium">Kích thước:</strong>{" "}
                 {laptop.dimensions
-                  ? `${laptop.dimensions.length} x ${laptop.dimensions.width} x ${laptop.dimensions.height} cm`
+                  ? `${laptop.dimensions.length} x ${laptop.dimensions.width} x ${laptop.dimensions.height} mm`
                   : "N/A"}
               </p>
               <p className="text-gray-700">
                 <strong className="font-medium">Trọng lượng:</strong>{" "}
-                {laptop.weight ? `${laptop.weight} kg` : "N/A"}
+                {laptop.dimensions?.weight
+                  ? `${laptop.dimensions.weight} kg`
+                  : "N/A"}
               </p>
             </div>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-xl text-gray-900 mb-3">
-              Kết nối
-            </h3>
-            <p className="text-gray-700">
-              <strong className="font-medium">Kết nối:</strong>{" "}
-              {laptop.connectivity?.join(", ") || "Không có"}
-            </p>
           </div>
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">

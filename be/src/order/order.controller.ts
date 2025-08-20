@@ -17,6 +17,8 @@ import { Request } from "express";
 import { AuthGuard } from "src/auth/auth.guard";
 import { RolesGuard } from "src/auth/roles.guard";
 import { Roles } from "src/auth/roles.decorator";
+import { EOrderStatus } from "src/common/types/order.types";
+import { EUserType } from "src/common/types/user.types";
 
 interface User {
   userId: string;
@@ -43,39 +45,35 @@ export class OrderController {
   }
 
   @Get("find-by-status")
-  findByStatus(
-    @Req() req: Request,
-    @Query("status") status: string // Add query parameter for status
-  ) {
+  findByStatus(@Req() req: Request, @Query("status") status: EOrderStatus) {
     const userId = (req.user as User).userId;
     return this.orderService.getByStatus(userId, status);
   }
 
   @UseGuards(RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Get("find-all-by-status")
-  findAllByStatus(
-    @Query("status") status: string // Add query parameter for status
-  ) {
-    return this.orderService.getAllByStatus(status);
+  findAllByStatus(@Req() req: Request, @Query("status") status: EOrderStatus) {
+    const userId = (req.user as User).userId;
+    return this.orderService.getByStatus(userId, status);
   }
 
   @UseGuards(RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Get()
   findAll() {
     return this.orderService.findAll();
   }
 
   @UseGuards(RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.orderService.findOne(id);
   }
 
   // @UseGuards(RolesGuard)
-  // @Roles("ADMIN")
+  // @Roles(EUserType.ADMIN)
   @Patch(":id")
   update(@Param("id") id: string, @Body() updateOrderDto: UpdateOrderDto) {
     return this.orderService.update(id, updateOrderDto);

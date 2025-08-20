@@ -22,6 +22,6 @@ import { TabletModule } from "src/tablet/tablet.module";
   ],
   controllers: [OrderItemsController],
   providers: [OrderItemsService],
-  exports: [OrderItemsService], // Đã export OrderItemsService
+  exports: [OrderItemsService],
 })
 export class OrderItemsModule {}

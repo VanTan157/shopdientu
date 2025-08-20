@@ -5,13 +5,10 @@ export interface LoginFormInputs {
 }
 
 export interface LoginResponse {
-  message: string;
-  user: {
-    userId: string;
-    email: string;
-    name: string;
-    type: "ADMIN" | "USER";
-  };
+  userId: string;
+  email: string;
+  name: string;
+  type: "ADMIN" | "USER";
 }
 
 export interface RegisterFormInputs {

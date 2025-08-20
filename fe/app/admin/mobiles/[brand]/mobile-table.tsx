@@ -1,6 +1,5 @@
 "use client";
 
-import { Mobile } from "@/lib/types/mobile";
 import {
   Table,
   TableBody,
@@ -9,20 +8,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import ViewMobileDetail from "./view-mobile-detail";
 import DeleteMobile from "./delete-mobile";
 import EditMobile from "./edit-mobile";
+import { IMobile } from "@/lib/types/mobile";
 
-const MobileTable = ({ mobiles }: { mobiles: Mobile[] }) => {
+const MobileTable = ({ mobiles }: { mobiles: IMobile[] }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [filterPromotion, setFilterPromotion] = useState<string>("");
 
-  // Logic tìm kiếm và lọc
   const filteredMobiles = mobiles.filter((mobile) => {
     const matchesSearch = mobile.name
       .toLowerCase()
@@ -31,7 +29,7 @@ const MobileTable = ({ mobiles }: { mobiles: Mobile[] }) => {
       filterStatus === "" || mobile.isAvailable.toString() === filterStatus;
     const matchesPromotion =
       filterPromotion === "" ||
-      mobile.IsPromotion.toString() === filterPromotion;
+      mobile.isPromotion.toString() === filterPromotion;
     return matchesSearch && matchesStatus && matchesPromotion;
   });
   if (mobiles.length === 0) {
@@ -45,7 +43,6 @@ const MobileTable = ({ mobiles }: { mobiles: Mobile[] }) => {
   }
   return (
     <div>
-      {/* Thanh tìm kiếm và bộ lọc */}
       <div className="bg-white shadow-md rounded-lg p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -99,13 +96,13 @@ const MobileTable = ({ mobiles }: { mobiles: Mobile[] }) => {
                 <TableCell className="text-center">{index + 1}</TableCell>
                 <TableCell className="text-center">{mobile.name}</TableCell>
                 <TableCell className="text-center">
-                  {mobile.StartingPrice.toLocaleString("vi-VN")} ₫
+                  {mobile.startingPrice.toLocaleString("vi-VN")} ₫
                 </TableCell>
                 <TableCell className="text-center">
                   {mobile.finalPrice.toLocaleString("vi-VN")} ₫
                 </TableCell>
                 <TableCell className="text-center">
-                  {mobile.IsPromotion ? `${mobile.promotion}%` : "Không"}
+                  {mobile.isPromotion ? `${mobile.promotion}%` : "Không"}
                 </TableCell>
                 <TableCell className="text-center">
                   {mobile.isAvailable ? "Có sẵn" : "Hết hàng"}

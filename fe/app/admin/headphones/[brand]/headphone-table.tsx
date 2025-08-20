@@ -16,14 +16,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Headphone } from "@/lib/types/headphone";
 import { Edit, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
 import ViewHeadphoneDetail from "./view-headphone-detail";
 import EditHeadphone from "./edit-headphone";
 import DeleteHeadphone from "./delete-headphone";
+import { IHeadphone } from "@/lib/types/headphone";
 
-const HeadphoneTable = ({ headphones }: { headphones: Headphone[] }) => {
+const HeadphoneTable = ({ headphones }: { headphones: IHeadphone[] }) => {
   const [searchName, setSearchName] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("Tất cả");
   const [filterPromotion, setFilterPromotion] = useState<string>("Tất cả");

@@ -11,15 +11,12 @@ const BtnLogout = () => {
   const handleLogout = async () => {
     start();
     const res = await apiPost(`/auth/logout`, {});
-    if (res.data) {
-      toast.success("Đăng xuất thành công");
+    if (res.success) {
+      toast.success(res.message);
       router.push("/");
       router.refresh();
-    }
-    if (res.error) {
-      toast.success("Có lỗi xảy ra khi đăng xuất");
-      router.push("/");
-      router.refresh();
+    } else {
+      toast.error(res.message);
     }
     stop();
   };

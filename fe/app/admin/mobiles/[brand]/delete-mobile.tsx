@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { apiDelete } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React from "react";
 import { toast } from "sonner";
 
 const DeleteMobile = ({
@@ -24,18 +24,16 @@ const DeleteMobile = ({
   const { start, stop } = loadingStore();
 
   const handleDeleteMobile = async (mobileId: string) => {
-    start(); // Bắt đầu loading
+    start();
     const res = await apiDelete(`/mobiles/${mobileId}`);
 
-    if (res.data) {
+    if (res.success) {
       router.refresh();
       toast.success("Xóa sản phẩm thành công!");
-    } else if (res.error) {
-      toast.error(res.error);
     } else {
-      toast.error("Có lỗi khi xóa sản phẩm!");
-    } // Làm mới trang sau khi xóa
-    stop(); // Kết thúc loading
+      toast.error(res.message || "Xóa sản phẩm thất bại!");
+    }
+    stop();
   };
 
   return (

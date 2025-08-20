@@ -20,20 +20,20 @@ import { HeadphoneService } from "./headphone.service";
 import { CreateHeadphoneDto } from "./dto/create-headphone.dto";
 import { Headphone } from "./entities/headphone.entity";
 import { UpdateHeadphoneDto } from "./dto/update-headphone.dto";
+import { EUserType } from "src/common/types/user.types";
+import { ApiResponse } from "src/common/types/api";
 
-// Controller xử lý các request HTTP cho module headphone
 @Controller("headphones")
 export class HeadphoneController {
   constructor(private readonly headphoneService: HeadphoneService) {}
 
-  // Endpoint tạo headphone mới
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Post()
   @UseInterceptors(
     FilesInterceptor("images", 10, {
       storage: diskStorage({
-        destination: "./image", // Thư mục lưu trữ ảnh
+        destination: "./image",
         filename: (req, file, cb) => {
           const uniqueSuffix =
             Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -52,42 +52,42 @@ export class HeadphoneController {
     })
   )
   create(
-    // Dữ liệu DTO từ body request
     @Body() createheadphoneDto: CreateHeadphoneDto,
-    // Danh sách file ảnh được upload
     @UploadedFiles() files: Express.Multer.File[]
-  ): Promise<Headphone> {
+  ): Promise<ApiResponse<Headphone>> {
     return this.headphoneService.create(createheadphoneDto, files);
   }
 
   // Endpoint lấy danh sách tất cả headphone
   @Get()
-  findAll(): Promise<Headphone[]> {
+  findAll(): Promise<ApiResponse<Headphone[]>> {
     return this.headphoneService.findAll();
   }
 
   @Get("get-all-brand")
-  getAllBranch() {
+  getAllBranch(): Promise<ApiResponse<string[]>> {
     return this.headphoneService.getAllBrand();
   }
 
   @Get("get-by-promotion")
-  getByPromotion() {
+  getByPromotion(): Promise<ApiResponse<Headphone[]>> {
     return this.headphoneService.findByPromotion();
   }
 
   @Get("get-all-headphone-by-brand/:brand")
-  getAllheadphoneByBrand(@Param("brand") brand: string) {
+  getAllheadphoneByBrand(
+    @Param("brand") brand: string
+  ): Promise<ApiResponse<Headphone[]>> {
     return this.headphoneService.getAllheadphoneByBrand(brand);
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string): Promise<Headphone> {
+  findOne(@Param("id") id: string): Promise<ApiResponse<Headphone>> {
     return this.headphoneService.findOne(id);
   }
 
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Patch(":id")
   @UseInterceptors(
     FilesInterceptor("images", 10, {
@@ -111,21 +111,17 @@ export class HeadphoneController {
     })
   )
   update(
-    // ID của headphone từ URL
     @Param("id") id: string,
-    // Dữ liệu DTO từ body request
     @Body() updateheadphoneDto: UpdateHeadphoneDto,
-    // Danh sách file ảnh mới (nếu có)
     @UploadedFiles() files: Express.Multer.File[]
-  ): Promise<Headphone> {
+  ): Promise<ApiResponse<Headphone>> {
     return this.headphoneService.update(id, updateheadphoneDto, files);
   }
 
-  // Endpoint xóa headphone
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles("ADMIN")
+  @Roles(EUserType.ADMIN)
   @Delete(":id")
-  remove(@Param("id") id: string) {
+  remove(@Param("id") id: string): Promise<ApiResponse<null>> {
     return this.headphoneService.remove(id);
   }
 }

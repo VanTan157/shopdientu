@@ -7,7 +7,6 @@ import { Laptop, LaptopSchema } from "./entities/laptop.entity";
 // Module Laptop, tổ chức các thành phần liên quan
 @Module({
   imports: [
-    // Đăng ký schema Laptop với Mongoose
     MongooseModule.forFeature([{ name: Laptop.name, schema: LaptopSchema }]),
   ],
   controllers: [LaptopController], // Đăng ký controller

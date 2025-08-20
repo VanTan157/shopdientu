@@ -6,40 +6,34 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import * as fs from "fs";
-import * as path from "path";
 import { promisify } from "util";
 import { Headphone } from "./entities/headphone.entity";
 import { CreateHeadphoneDto } from "./dto/create-headphone.dto";
 import { UpdateHeadphoneDto } from "./dto/update-headphone.dto";
+import { ApiResponse } from "src/common/types/api";
 
 const unlinkAsync = promisify(fs.unlink);
 
-// Service xử lý logic nghiệp vụ cho module headphone
 @Injectable()
 export class HeadphoneService {
   constructor(
-    // Inject model headphone để tương tác với MongoDB
     @InjectModel(Headphone.name)
     private readonly headphoneModel: Model<Headphone>
   ) {}
 
-  // Tạo mới một headphone
   async create(
     createHeadphoneDto: CreateHeadphoneDto,
     files: Express.Multer.File[]
-  ): Promise<Headphone> {
-    // Kiểm tra số lượng file ảnh có khớp với số lượng biến thể màu không
+  ): Promise<ApiResponse<Headphone>> {
     if (files.length !== createHeadphoneDto.colorVariants.length) {
       throw new BadRequestException(
         "Số lượng file ảnh phải khớp với số lượng biến thể màu"
       );
     }
-
-    // Xử lý các file ảnh được upload
     const colorVariants = createHeadphoneDto.colorVariants.map(
       (variant, index) => {
         if (!files[index]) {
-          throw new NotFoundException(`Thiếu ảnh cho màu ${variant.color}`);
+          throw new BadRequestException(`Thiếu ảnh cho màu ${variant.color}`);
         }
         return {
           color: variant.color,
@@ -49,20 +43,17 @@ export class HeadphoneService {
       }
     );
 
-    // Tính toán totalStock từ colorVariants
     const calculatedTotalStock = colorVariants.reduce(
       (sum, variant) => sum + variant.stock,
       0
     );
 
-    // Tính toán isPromotion và finalPrice
     const isPromotion = createHeadphoneDto.promotion > 0;
     const finalPrice =
       createHeadphoneDto.startingPrice *
       (1 - createHeadphoneDto.promotion / 100);
     const isAvailable = calculatedTotalStock > 0;
 
-    // Tạo document mới
     const headphone = new this.headphoneModel({
       ...createHeadphoneDto,
       colorVariants,
@@ -71,42 +62,53 @@ export class HeadphoneService {
       finalPrice,
       isAvailable,
     });
-
-    // Lưu document vào MongoDB
-    return await headphone.save();
+    await headphone.save();
+    return {
+      success: true,
+      message: "Tạo mới headphone thành công",
+      data: headphone,
+    };
   }
 
-  // Lấy danh sách tất cả headphone
-  async findAll(): Promise<Headphone[]> {
-    return await this.headphoneModel.find().exec();
+  async findAll(): Promise<ApiResponse<Headphone[]>> {
+    const headphones = await this.headphoneModel.find().exec();
+    return {
+      success: true,
+      message: "Lấy danh sách headphone thành công",
+      data: headphones,
+    };
   }
 
-  async findByPromotion() {
-    return await this.headphoneModel.find({ isPromotion: true });
+  async findByPromotion(): Promise<ApiResponse<Headphone[]>> {
+    const headphones = await this.headphoneModel.find({ isPromotion: true });
+    return {
+      success: true,
+      message: "Lấy danh sách headphone khuyến mãi thành công",
+      data: headphones,
+    };
   }
 
-  // Lấy thông tin một headphone theo ID
-  async findOne(id: string): Promise<Headphone> {
+  async findOne(id: string): Promise<ApiResponse<Headphone>> {
     if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
     const headphone = await this.headphoneModel.findById({ _id: id }).exec();
     if (!headphone) {
-      throw new BadRequestException("Không tìm thấy headphone");
+      throw new NotFoundException("Không tìm thấy headphone");
     }
-    return headphone;
+    return {
+      success: true,
+      message: "Lấy thông tin headphone thành công",
+      data: headphone,
+    };
   }
 
-  // Cập nhật thông tin headphone
   async update(
     id: string,
     updateHeadphoneDto: UpdateHeadphoneDto,
     files?: Express.Multer.File[]
-  ): Promise<Headphone> {
-    if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
-    // Kiểm tra headphone có tồn tại không
-    const headphone = await this.findOne(id);
-    if (!headphone) {
-      throw new NotFoundException("Không tìm thấy headphone để cập nhật");
-    }
+  ): Promise<ApiResponse<Headphone>> {
+    const result = await this.findOne(id);
+
+    const headphone = result.data;
 
     let colorVariants = headphone.colorVariants;
 
@@ -117,20 +119,18 @@ export class HeadphoneService {
         hasNewImage?: string;
         stock?: number;
       }> = updateHeadphoneDto.colorVariants;
-      let fileIndex = 0; // Theo dõi index của file trong mảng files
+      let fileIndex = 0;
 
-      // Xác định các ảnh cũ có thể cần xóa
       const oldImagesToCheck = headphone.colorVariants
         .filter((oldVariant) =>
           newColorVariants.some(
             (newVariant, idx) =>
               newVariant.color === oldVariant.color &&
-              newVariant.hasNewImage === "true" // Có ảnh mới cho màu này
+              newVariant.hasNewImage === "true"
           )
         )
         .map((variant) => variant.image);
 
-      // Kiểm tra xem ảnh cũ có được sử dụng bởi sản phẩm khác không
       const imagesInUse = await this.headphoneModel
         .find({
           "colorVariants.image": { $in: oldImagesToCheck },
@@ -145,7 +145,6 @@ export class HeadphoneService {
         (image) => !imagesInUseSet.has(image)
       );
 
-      // Xóa ảnh cũ không còn được sử dụng
       if (oldImagesToDelete.length > 0) {
         await Promise.all(
           oldImagesToDelete.map((imagePath) =>
@@ -156,17 +155,15 @@ export class HeadphoneService {
         );
       }
 
-      // Cập nhật colorVariants với thông tin mới
       colorVariants = newColorVariants.map((variant) => {
         const existingVariant = headphone.colorVariants.find(
           (v) => v.color === variant.color
         );
         let image = variant.existingImage || existingVariant?.image || "";
 
-        // Nếu biến thể này có ảnh mới
         if (variant.hasNewImage === "true" && files && files[fileIndex]) {
           image = `/image/${files[fileIndex].filename}`;
-          fileIndex++; // Tăng index để lấy file tiếp theo
+          fileIndex++;
         }
 
         return {
@@ -182,47 +179,32 @@ export class HeadphoneService {
       0
     );
 
-    // Tính toán isPromotion và finalPrice
-    const promotion =
-      updateHeadphoneDto.promotion !== undefined
-        ? updateHeadphoneDto.promotion
-        : headphone.promotion;
-    const startingPrice =
-      updateHeadphoneDto.startingPrice !== undefined
-        ? updateHeadphoneDto.startingPrice
-        : headphone.startingPrice;
-    const isPromotion = promotion > 0;
-    const finalPrice = startingPrice * (1 - promotion / 100);
-
-    // Cập nhật document với các giá trị tính toán
     const updatedData = {
       ...updateHeadphoneDto,
       totalStock,
-      isPromotion,
-      finalPrice,
+      isPromotion: updateHeadphoneDto.promotion > 0,
+      promotion: updateHeadphoneDto.promotion,
+      finalPrice:
+        updateHeadphoneDto.startingPrice *
+        (1 - updateHeadphoneDto.promotion / 100),
       colorVariants,
       isAvailable: totalStock > 0,
     };
 
-    // Cập nhật document trong MongoDB
-    const updatedheadphone = await this.headphoneModel
-      .findByIdAndUpdate(id, updatedData, { new: true })
-      .exec();
+    Object.assign(headphone, updatedData);
 
-    if (!updatedheadphone) {
-      throw new BadRequestException("Không tìm thấy headphone để cập nhật");
-    }
+    const updatedheadphone = await headphone.save();
 
-    return updatedheadphone;
+    return {
+      success: true,
+      message: "Cập nhật headphone thành công",
+      data: updatedheadphone,
+    };
   }
 
-  // Xóa một headphone
-  async remove(id: string) {
-    if (!Types.ObjectId.isValid(id)) throw new Error("ID không hợp lệ");
-    // Kiểm tra headphone có tồn tại không
-    const headphone = await this.headphoneModel.findById(id).exec();
-    if (!headphone) throw new NotFoundException("Không tìm thấy headphone");
-
+  async remove(id: string): Promise<ApiResponse<null>> {
+    const result = await this.findOne(id);
+    const headphone = result.data;
     const imagePaths = headphone.colorVariants.map((variant) => variant.image);
     if (imagePaths.length > 0) {
       await Promise.all(
@@ -234,11 +216,16 @@ export class HeadphoneService {
       );
     }
 
-    // Xóa document khỏi MongoDB
-    return await this.headphoneModel.findByIdAndDelete(id).exec();
+    await this.headphoneModel.findByIdAndDelete(id).exec();
+
+    return {
+      success: true,
+      message: "Xóa headphone thành công",
+      data: null,
+    };
   }
 
-  async getAllBrand(): Promise<string[]> {
+  async getAllBrand(): Promise<ApiResponse<string[]>> {
     const headphones = await this.headphoneModel.find().exec();
     const brands = new Set<string>();
     headphones.forEach((headphone) => {
@@ -246,16 +233,26 @@ export class HeadphoneService {
         brands.add(headphone.brand);
       }
     });
-    return Array.from(brands);
+    return {
+      success: true,
+      message: "Lấy danh sách thương hiệu thành công",
+      data: Array.from(brands),
+    };
   }
 
-  async getAllheadphoneByBrand(brand: string): Promise<Headphone[]> {
+  async getAllheadphoneByBrand(
+    brand: string
+  ): Promise<ApiResponse<Headphone[]>> {
     const headphones = await this.headphoneModel.find({ brand }).exec();
     if (!headphones || headphones.length === 0) {
       throw new NotFoundException(
         "Không tìm thấy headphone nào cho thương hiệu này"
       );
     }
-    return headphones;
+    return {
+      success: true,
+      message: "Lấy danh sách headphone theo thương hiệu thành công",
+      data: headphones,
+    };
   }
 }

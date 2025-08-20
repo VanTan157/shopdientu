@@ -1,35 +1,30 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
+import { EOrderStatus } from "src/common/types/order.types";
 
 @Schema({ timestamps: true })
 export class Order extends Document {
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
-  user_id: Types.ObjectId;
+  userId: Types.ObjectId;
 
   @Prop([{ type: Types.ObjectId, ref: "OrderItem", required: true }])
-  orderitem_ids: Types.ObjectId[];
+  orderitemIds: Types.ObjectId[];
 
   @Prop({ required: true })
-  total_amount: number;
+  totalAmount: number;
 
   @Prop({ required: true })
-  phone_number: string;
+  phoneNumber: string;
 
   @Prop({ required: true })
   address: string;
 
   @Prop({
     required: true,
-    enum: [
-      "Đang chờ xác nhận",
-      "Đã xác nhận",
-      "Đang vận chuyển",
-      "Hoàn thành",
-      "Đã hủy",
-    ],
-    default: "Đang chờ xác nhận",
+    enum: EOrderStatus,
+    default: EOrderStatus.PENDING,
   })
-  status: string;
+  status: EOrderStatus;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

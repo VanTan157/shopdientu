@@ -5,13 +5,13 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { apiPost } from "@/lib/api";
-import { useRouter } from "next/navigation";
-import { RegisterFormInputs, RegisterResponse } from "@/lib/types/auth";
+import { RegisterFormInputs } from "@/lib/types/auth";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Verify } from "./verify";
-import { da } from "date-fns/locale";
+import { User } from "next-auth";
+import { loadingStore } from "@/app/store/loading.store";
 
 const RegisterForm = () => {
   const {
@@ -23,29 +23,25 @@ const RegisterForm = () => {
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [open, setOpen] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
+  const { start, stop } = loadingStore();
 
-  // Hàm xử lý submit form
   const onSubmit: SubmitHandler<RegisterFormInputs> = async (data) => {
-    setLoading(true);
+    start();
     const { confirmPassword, ...registerData } = data;
-    const response = await apiPost<RegisterResponse, typeof registerData>(
+    const response = await apiPost<User, typeof registerData>(
       "/users",
       registerData
     );
 
-    if (response.error) {
-      toast.error(response.error);
-    } else {
-      (Object.keys(data) as (keyof RegisterFormInputs)[]).forEach((key) => {
-        data[key] = "";
-      });
+    if (response.success) {
+      toast.success(response.message);
       setOpen(true);
+    } else {
+      toast.error(response.message);
     }
-    setLoading(false);
+    stop();
   };
 
-  // Lấy giá trị password để so sánh với confirmPassword
   const password = watch("password");
 
   return (
@@ -187,31 +183,7 @@ const RegisterForm = () => {
             <Button
               type="submit"
               className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md"
-              disabled={loading}
             >
-              {loading && (
-                <span className="inline-block mr-2 align-middle">
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                    />
-                  </svg>
-                </span>
-              )}
               Đăng ký
             </Button>
           </form>

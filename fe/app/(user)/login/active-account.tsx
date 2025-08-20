@@ -31,12 +31,11 @@ export default function ActiveAccount({
       const res = await apiPost("/users/send-code-again", {
         email,
       });
-      if (res.error) {
-        toast.error(res.error);
-        stop();
-        return;
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
       }
-      toast.success("Chúng tôi đã gửi lại mã xác thực đến email của bạn");
     } catch (error) {
       toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
     }
@@ -49,17 +48,17 @@ export default function ActiveAccount({
       const res = await apiPost(`/users/send-code-again`, {
         email,
       });
-      if (res.error) {
-        toast.error(res.error);
-        stop();
-        return;
+      if (res.success) {
+        setSent(true);
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
       }
-      toast.success("Chúng tôi đã gửi mã xác thực đến email của bạn");
-      setSent(true);
     } catch (error) {
       toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+    } finally {
+      stop();
     }
-    stop();
   };
 
   const handleVerify = async () => {
@@ -69,19 +68,17 @@ export default function ActiveAccount({
         email,
         code,
       });
-      console.log(res);
-      if (res.error) {
-        stop();
-        toast.error(res.error);
-        return;
+      if (res.success) {
+        toast.success(res.message);
+        setOpen(false);
+      } else {
+        toast.error(res.message);
       }
-      toast.success("Kích hoạt tài khoản thành công");
-      stop();
-      setOpen(false);
     } catch (error) {
       toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+    } finally {
+      stop();
     }
-    stop();
   };
 
   return (

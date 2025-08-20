@@ -27,13 +27,11 @@ const DeleteHeadphone = ({
     start();
     const res = await apiDelete(`/headphones/${headphoneId}`);
 
-    if (res.data) {
+    if (res.success) {
       router.refresh();
-      toast.success("Xóa tai nghe thành công!");
-    } else if (res.error) {
-      toast.error(res.error);
+      toast.success("Xóa sản phẩm thành công!");
     } else {
-      toast.error("Có lỗi khi xóa tai nghe!");
+      toast.error(res.message || "Xóa sản phẩm thất bại!");
     }
     stop();
   };

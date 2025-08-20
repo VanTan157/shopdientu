@@ -1,10 +1,10 @@
 import { apiGet } from "@/lib/api";
-import { Mobile } from "@/lib/types/mobile";
-
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import AddMobileForm from "./add-mobile";
 import MobileTable from "./mobile-table";
+import { IMobile } from "@/lib/types/mobile";
+import { toast } from "sonner";
 
 const AdminMobilePage = async ({
   params,
@@ -13,11 +13,16 @@ const AdminMobilePage = async ({
 }) => {
   const { brand } = await params;
 
-  const res = await apiGet<Mobile[]>(
+  const res = await apiGet<IMobile[]>(
     `/mobiles/get-all-mobile-by-brand/${brand}`,
     undefined,
     ["mobiles"]
   );
+
+  if (res.error) {
+    toast.error(res.message);
+    return;
+  }
 
   const mobiles = res.data;
   const brands = await apiGet<string[]>("/mobiles/get-all-brand");

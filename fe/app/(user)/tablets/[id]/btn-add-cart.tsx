@@ -3,7 +3,7 @@
 
 import { ShoppingCart } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button"; // Từ shadcn/ui
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +11,9 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
-} from "@/components/ui/dialog"; // Từ shadcn/ui
-import { Input } from "@/components/ui/input"; // Từ shadcn/ui
-import { Label } from "@/components/ui/label"; // Từ shadcn/ui
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { apiPost } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -21,6 +21,7 @@ import { useCartStore } from "@/app/store/cart-store";
 import { Tablet } from "@/lib/types/tablet";
 import { loadingStore } from "@/app/store/loading.store";
 import { EProductType } from "@/lib/types/order";
+import { orderItem } from "@/lib/types/order-item";
 
 const BtnAddToCart = ({
   product,
@@ -36,27 +37,22 @@ const BtnAddToCart = ({
   const { start, stop } = loadingStore();
 
   const handleAddToCart = async () => {
-    try {
-      start();
-      const res = await apiPost("/order-items", {
-        product_id: product._id,
-        product_type: EProductType.TABLET,
-        quantity,
-        colorVariant: product.colorVariants[index],
-      });
-      router.refresh();
-      if (res.data) {
-        setOpen(false);
-        setCartItemCount(cartItemCount + 1);
-        toast.success("Thêm vào giỏ hàng thành công!");
-      } else {
-        toast.error(res.error || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
-      }
-    } catch (error: any) {
-      toast.error(error?.message || "Có lỗi xảy ra khi thêm vào giỏ hàng!");
-    } finally {
-      stop();
+    start();
+    const res = await apiPost<orderItem, any>("/order-items", {
+      product_id: product._id,
+      product_type: EProductType.TABLET,
+      quantity,
+      colorVariant: product.colorVariants[index],
+    });
+    router.refresh();
+    if (res.success) {
+      setOpen(false);
+      setCartItemCount(cartItemCount + 1);
+      toast.success(res.message);
+    } else {
+      toast.error(res.message);
     }
+    stop();
   };
 
   return (

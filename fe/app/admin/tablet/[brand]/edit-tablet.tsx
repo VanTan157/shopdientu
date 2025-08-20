@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tablet } from "@/lib/types/tablet";
 import { apiPatch } from "@/lib/api";
 import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -18,12 +17,13 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { loadingStore } from "@/app/store/loading.store";
+import { ITablet } from "@/lib/types/tablet";
 
 const EditTablet = ({
   tablet,
   children,
 }: {
-  tablet: Tablet;
+  tablet: ITablet;
   children: React.ReactNode;
 }) => {
   const router = useRouter();
@@ -32,26 +32,22 @@ const EditTablet = ({
   const [formData, setFormData] = useState({
     name: tablet.name || "",
     brand: tablet.brand || "",
-    category: tablet.category || "",
     startingPrice: tablet.startingPrice || 0,
     promotion: tablet.promotion || 0,
     description: tablet.description || "",
     specifications: {
-      screenSize: tablet.specifications.screenSize || 0,
-      resolution: tablet.specifications.resolution || "",
-      cpu: tablet.specifications.cpu || "",
-      gpu: tablet.specifications.gpu || "",
-      ram: tablet.specifications.ram || 0,
-      storage: tablet.specifications.storage || 0,
-      battery: tablet.specifications.battery || 0,
-      os: tablet.specifications.os || "",
-      refreshRate: tablet.specifications.refreshRate || "",
-      cameraFront: tablet.specifications.cameraFront || "",
-      cameraRear: tablet.specifications.cameraRear || "",
-      simSupport: tablet.specifications.simSupport || false,
-      stylusSupport: tablet.specifications.stylusSupport || false,
-      ports: tablet.specifications.ports || [],
-      audio: tablet.specifications.audio || "",
+      screenSize: tablet.specifications?.screenSize || 0,
+      resolution: tablet.specifications?.resolution || "",
+      refreshRate: tablet.specifications?.refreshRate || 0,
+      simType: tablet.specifications?.simType || "",
+      ram: tablet.specifications?.ram || 0,
+      storage: tablet.specifications?.storage || 0,
+      battery: tablet.specifications?.battery || 0,
+      os: tablet.specifications?.os || "",
+      camera: {
+        rear: tablet.specifications?.camera?.rear || "",
+        front: tablet.specifications?.camera?.front || "",
+      },
     },
     colorVariants: tablet.colorVariants.map((variant) => ({
       color: variant.color || "",
@@ -60,18 +56,15 @@ const EditTablet = ({
       existingImage: variant.image || "",
       hasNewImage: "false",
     })),
-    weight: tablet.weight || 0,
     dimensions: {
       length: tablet.dimensions?.length || 0,
       width: tablet.dimensions?.width || 0,
       height: tablet.dimensions?.height || 0,
+      weight: tablet.dimensions?.weight || 0,
     },
-    connectivity: tablet.connectivity || [],
     accessories: tablet.accessories || [],
     warranty: tablet.warranty || "",
     tags: tablet.tags || [],
-    slug: tablet.slug || "",
-    sku: tablet.sku || "",
   });
   const [imagePreview, setImagePreview] = useState<string[]>(
     tablet.colorVariants.map((variant) =>
@@ -81,7 +74,6 @@ const EditTablet = ({
     )
   );
   const [tagInput, setTagInput] = useState("");
-  const [connectivityInput, setConnectivityInput] = useState("");
   const [accessoryInput, setAccessoryInput] = useState("");
 
   useEffect(() => {
@@ -101,11 +93,6 @@ const EditTablet = ({
     }
     if (!formData.brand.trim()) {
       toast.error("Thương hiệu không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.category.trim()) {
-      toast.error("Danh mục không được để trống!");
       stop();
       return;
     }
@@ -133,16 +120,6 @@ const EditTablet = ({
       stop();
       return;
     }
-    if (!formData.slug.trim()) {
-      toast.error("Slug không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.sku.trim()) {
-      toast.error("SKU không được để trống!");
-      stop();
-      return;
-    }
     if (
       !Array.isArray(formData.colorVariants) ||
       formData.colorVariants.length === 0 ||
@@ -159,7 +136,6 @@ const EditTablet = ({
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("brand", formData.brand);
-      formDataToSend.append("category", formData.category);
       formDataToSend.append("startingPrice", formData.startingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
@@ -169,17 +145,14 @@ const EditTablet = ({
           ...formData.specifications,
           screenSize:
             parseFloat(formData.specifications.screenSize.toString()) || 0,
+          refreshRate:
+            parseFloat(formData.specifications.refreshRate.toString()) || 0,
           ram: parseFloat(formData.specifications.ram.toString()) || 0,
           storage: parseFloat(formData.specifications.storage.toString()) || 0,
           battery: parseFloat(formData.specifications.battery.toString()) || 0,
         })
       );
-      formDataToSend.append("weight", formData.weight.toString());
       formDataToSend.append("dimensions", JSON.stringify(formData.dimensions));
-      formDataToSend.append(
-        "connectivity",
-        JSON.stringify(formData.connectivity.filter((c) => c.trim()))
-      );
       formDataToSend.append(
         "accessories",
         JSON.stringify(formData.accessories.filter((a) => a.trim()))
@@ -189,39 +162,41 @@ const EditTablet = ({
         "tags",
         JSON.stringify(formData.tags.filter((t) => t.trim()))
       );
-      formDataToSend.append("slug", formData.slug);
-      formDataToSend.append("sku", formData.sku);
 
-      formData.colorVariants.forEach((variant, index) => {
-        formDataToSend.append(`colorVariants[${index}][color]`, variant.color);
-        formDataToSend.append(
-          `colorVariants[${index}][stock]`,
-          variant.stock.toString()
-        );
-        formDataToSend.append(
-          `colorVariants[${index}][existingImage]`,
-          variant.existingImage
-        );
-        formDataToSend.append(
-          `colorVariants[${index}][hasNewImage]`,
-          variant.hasNewImage
-        );
+      formDataToSend.append(
+        "colorVariants",
+        JSON.stringify(
+          formData.colorVariants.map((variant) => ({
+            color: variant.color,
+            stock: variant.stock,
+            existingImage: variant.existingImage,
+            hasNewImage: variant.hasNewImage,
+          }))
+        )
+      );
+
+      formData.colorVariants.forEach((variant) => {
         if (variant.image) {
           formDataToSend.append("images", variant.image);
         }
       });
 
-      const response = await apiPatch<Tablet, FormData>(
+      const response = await apiPatch<ITablet, FormData>(
         `/tablets/${tablet._id}`,
-        formDataToSend
+        formDataToSend,
+        undefined,
+        ["tablets"]
       );
 
-      if (response.error) throw new Error(response.error);
-
-      toast.success("Cập nhật máy tính bảng thành công!");
-      router.refresh();
-      setIsOpen(false);
+      if (response.error) {
+        toast.error(response.error);
+      } else {
+        toast.success("Cập nhật máy tính bảng thành công!");
+        router.refresh();
+        setIsOpen(false);
+      }
     } catch (error) {
+      console.error("Error updating tablet:", error);
       toast.error("Có lỗi khi cập nhật máy tính bảng!");
     } finally {
       stop();
@@ -261,16 +236,7 @@ const EditTablet = ({
   };
 
   const handleAddConnectivity = () => {
-    if (
-      connectivityInput.trim() &&
-      !formData.connectivity.includes(connectivityInput.trim())
-    ) {
-      setFormData({
-        ...formData,
-        connectivity: [...formData.connectivity, connectivityInput.trim()],
-      });
-      setConnectivityInput("");
-    }
+    // Không cần connectivity trong tablet entity mới
   };
 
   const handleAddAccessory = () => {
@@ -324,22 +290,6 @@ const EditTablet = ({
                 setFormData({ ...formData, brand: e.target.value })
               }
               placeholder="Nhập thương hiệu"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Danh mục */}
-          <div>
-            <Label htmlFor="category" className="text-gray-700 font-medium">
-              Danh mục
-            </Label>
-            <Input
-              id="category"
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
-              }
-              placeholder="Nhập danh mục"
               className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -419,38 +369,6 @@ const EditTablet = ({
             />
           </div>
 
-          {/* Slug */}
-          <div>
-            <Label htmlFor="slug" className="text-gray-700 font-medium">
-              Đường dẫn SEO (slug)
-            </Label>
-            <Input
-              id="slug"
-              value={formData.slug}
-              onChange={(e) =>
-                setFormData({ ...formData, slug: e.target.value })
-              }
-              placeholder="Nhập slug (ví dụ: ipad-pro-2024)"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* SKU */}
-          <div>
-            <Label htmlFor="sku" className="text-gray-700 font-medium">
-              Mã hàng hóa (SKU)
-            </Label>
-            <Input
-              id="sku"
-              value={formData.sku}
-              onChange={(e) =>
-                setFormData({ ...formData, sku: e.target.value })
-              }
-              placeholder="Nhập mã SKU"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
           {/* Thông số kỹ thuật */}
           <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
             <Label className="text-gray-900 font-semibold">
@@ -511,13 +429,14 @@ const EditTablet = ({
               </Label>
               <Input
                 placeholder="Tần số quét (Hz)"
-                value={formData.specifications.refreshRate}
+                type="text"
+                value={formData.specifications.refreshRate || ""}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      refreshRate: e.target.value,
+                      refreshRate: parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -526,42 +445,20 @@ const EditTablet = ({
             </div>
             <div className="flex items-center space-x-2">
               <Label
-                htmlFor="cpu"
+                htmlFor="simType"
                 className="text-gray-700 font-medium  w-[20%]"
               >
-                CPU
+                Loại SIM
               </Label>
               <Input
-                placeholder="CPU"
-                value={formData.specifications.cpu}
+                placeholder="Loại SIM"
+                value={formData.specifications.simType}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      cpu: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label
-                htmlFor="gpu"
-                className="text-gray-700 font-medium w-[20%]"
-              >
-                GPU
-              </Label>
-              <Input
-                placeholder="GPU"
-                value={formData.specifications.gpu}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      gpu: e.target.value,
+                      simType: e.target.value,
                     },
                   })
                 }
@@ -668,13 +565,16 @@ const EditTablet = ({
               </Label>
               <Input
                 placeholder="Camera trước"
-                value={formData.specifications.cameraFront}
+                value={formData.specifications.camera.front}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      cameraFront: e.target.value,
+                      camera: {
+                        ...formData.specifications.camera,
+                        front: e.target.value,
+                      },
                     },
                   })
                 }
@@ -690,119 +590,36 @@ const EditTablet = ({
               </Label>
               <Input
                 placeholder="Camera sau"
-                value={formData.specifications.cameraRear}
+                value={formData.specifications.camera.rear}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      cameraRear: e.target.value,
+                      camera: {
+                        ...formData.specifications.camera,
+                        rear: e.target.value,
+                      },
                     },
                   })
                 }
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Label
-                htmlFor="ports"
-                className="text-gray-700 font-medium  w-[20%]"
-              >
-                Cổng kết nối
-              </Label>
-              <Input
-                placeholder="Cổng kết nối (phân cách bằng dấu phẩy)"
-                value={formData.specifications.ports.join(", ")}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      ports: e.target.value.split(",").map((p) => p.trim()),
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label
-                htmlFor="audio"
-                className="text-gray-700 font-medium  w-[20%]"
-              >
-                Âm thanh
-              </Label>
-              <Input
-                placeholder="Âm thanh"
-                value={formData.specifications.audio}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      audio: e.target.value,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="simSupport"
-                checked={formData.specifications.simSupport}
-                onCheckedChange={(checked) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      simSupport: !!checked,
-                    },
-                  })
-                }
-                className="border-gray-300"
-              />
-              <Label htmlFor="simSupport" className="text-gray-700 font-medium">
-                Hỗ trợ SIM
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="stylusSupport"
-                checked={formData.specifications.stylusSupport}
-                onCheckedChange={(checked) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      stylusSupport: !!checked,
-                    },
-                  })
-                }
-                className="border-gray-300"
-              />
-              <Label
-                htmlFor="stylusSupport"
-                className="text-gray-700 font-medium"
-              >
-                Hỗ trợ bút cảm ứng
-              </Label>
             </div>
           </div>
 
           {/* Kích thước */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
             <Label className="text-gray-900 font-semibold mb-4">
-              Kích thước (mm)
+              Kích thước và trọng lượng
             </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div>
                 <Label
                   htmlFor="length"
                   className="text-gray-700 font-medium mb-2"
                 >
-                  Chiều dài
+                  Chiều dài (mm)
                 </Label>
                 <Input
                   placeholder="Chiều dài"
@@ -825,7 +642,7 @@ const EditTablet = ({
                   htmlFor="width"
                   className="text-gray-700 font-medium mb-2"
                 >
-                  Chiều rộng
+                  Chiều rộng (mm)
                 </Label>
                 <Input
                   placeholder="Chiều rộng"
@@ -848,7 +665,7 @@ const EditTablet = ({
                   htmlFor="height"
                   className="text-gray-700 font-medium mb-2"
                 >
-                  Chiều cao
+                  Chiều cao (mm)
                 </Label>
                 <Input
                   placeholder="Chiều cao"
@@ -866,27 +683,30 @@ const EditTablet = ({
                   className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              <div>
+                <Label
+                  htmlFor="weight"
+                  className="text-gray-700 font-medium mb-2"
+                >
+                  Trọng lượng (g)
+                </Label>
+                <Input
+                  placeholder="Trọng lượng"
+                  type="text"
+                  value={formData.dimensions.weight || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dimensions: {
+                        ...formData.dimensions,
+                        weight: parseFloat(e.target.value) || 0,
+                      },
+                    })
+                  }
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Trọng lượng */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label htmlFor="weight" className="text-gray-700 font-medium">
-              Trọng lượng (kg)
-            </Label>
-            <Input
-              id="weight"
-              type="text"
-              value={formData.weight || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  weight: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập trọng lượng"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
           </div>
 
           {/* Biến thể màu */}
@@ -972,48 +792,6 @@ const EditTablet = ({
               <Plus className="w-4 h-4 mr-2" />
               Thêm màu
             </Button>
-          </div>
-
-          {/* Kết nối */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">Kết nối</Label>
-            <div className="flex gap-2">
-              <Input
-                value={connectivityInput}
-                onChange={(e) => setConnectivityInput(e.target.value)}
-                placeholder="Nhập kết nối và nhấn Thêm"
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <Button
-                onClick={handleAddConnectivity}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Thêm
-              </Button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {formData.connectivity.map((conn, index) => (
-                <span
-                  key={index}
-                  className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
-                >
-                  {conn}
-                  <button
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        connectivity: formData.connectivity.filter(
-                          (_, i) => i !== index
-                        ),
-                      })
-                    }
-                    className="text-red-600"
-                  >
-                    x
-                  </button>
-                </span>
-              ))}
-            </div>
           </div>
 
           {/* Phụ kiện */}

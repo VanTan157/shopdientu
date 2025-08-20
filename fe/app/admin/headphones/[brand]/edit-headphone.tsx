@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Headphone } from "@/lib/types/headphone";
+import { IHeadphone } from "@/lib/types/headphone";
 import { apiPatch } from "@/lib/api";
 import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -22,21 +22,20 @@ const defaultSpecifications = {
   driverType: "",
   driverSize: 0,
   frequencyRange: "",
-  sensitivity: 0,
   impedance: 0,
   noiseCancellation: "",
   batteryLife: 0,
   chargingTime: 0,
   chargingPort: "",
-  microphone: "",
-  audioQuality: "",
+  microphone: false,
+  connectivity: "",
 };
 
 const EditHeadphone = ({
   headphone,
   children,
 }: {
-  headphone: Headphone;
+  headphone: IHeadphone;
   children: React.ReactNode;
 }) => {
   const router = useRouter();
@@ -45,7 +44,6 @@ const EditHeadphone = ({
   const [formData, setFormData] = useState({
     name: headphone.name,
     brand: headphone.brand,
-    type: headphone.type,
     startingPrice: headphone.startingPrice,
     promotion: headphone.promotion,
     description: headphone.description || "",
@@ -53,34 +51,31 @@ const EditHeadphone = ({
       ...defaultSpecifications,
       ...headphone.specifications,
     },
-    colorVariants: headphone.colorVariants.map((variant) => ({
+    colorVariants: headphone.colorVariants.map((variant: any) => ({
       color: variant.color,
       image: null as File | null,
       stock: variant.stock,
       existingImage: variant.image || "",
+      hasNewImage: "false",
     })),
-    weight: headphone.weight || 0,
     dimensions: {
       length: headphone.dimensions?.length || 0,
       width: headphone.dimensions?.width || 0,
       height: headphone.dimensions?.height || 0,
+      weight: headphone.dimensions?.weight || 0,
     },
-    connectivity: headphone.connectivity || [],
     accessories: headphone.accessories || [],
     warranty: headphone.warranty || "",
     tags: headphone.tags || [],
-    slug: headphone.slug || "",
-    sku: headphone.sku || "",
   });
   const [imagePreview, setImagePreview] = useState<string[]>(
-    headphone.colorVariants.map((variant) =>
+    headphone.colorVariants.map((variant: any) =>
       variant.image
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}${variant.image}`
         : ""
     )
   );
   const [tagInput, setTagInput] = useState("");
-  const [connectivityInput, setConnectivityInput] = useState("");
   const [accessoryInput, setAccessoryInput] = useState("");
 
   useEffect(() => {
@@ -100,21 +95,6 @@ const EditHeadphone = ({
     }
     if (!formData.brand.trim()) {
       toast.error("Thương hiệu không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.type.trim()) {
-      toast.error("Loại tai nghe không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.slug.trim()) {
-      toast.error("Đường dẫn SEO không được để trống!");
-      stop();
-      return;
-    }
-    if (!formData.sku.trim()) {
-      toast.error("Mã hàng hóa không được để trống!");
       stop();
       return;
     }
@@ -164,7 +144,6 @@ const EditHeadphone = ({
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("brand", formData.brand);
-      formDataToSend.append("type", formData.type);
       formDataToSend.append("startingPrice", formData.startingPrice.toString());
       formDataToSend.append("promotion", formData.promotion.toString());
       formDataToSend.append("description", formData.description);
@@ -172,48 +151,47 @@ const EditHeadphone = ({
         "specifications",
         JSON.stringify(formData.specifications)
       );
-      formDataToSend.append("weight", formData.weight.toString());
       formDataToSend.append("dimensions", JSON.stringify(formData.dimensions));
-      formDataToSend.append(
-        "connectivity",
-        JSON.stringify(formData.connectivity)
-      );
       formDataToSend.append(
         "accessories",
         JSON.stringify(formData.accessories)
       );
       formDataToSend.append("warranty", formData.warranty);
       formDataToSend.append("tags", JSON.stringify(formData.tags));
-      formDataToSend.append("slug", formData.slug);
-      formDataToSend.append("sku", formData.sku);
+      formDataToSend.append(
+        "colorVariants",
+        JSON.stringify(
+          formData.colorVariants.map((variant: any) => ({
+            color: variant.color,
+            stock: variant.stock,
+            existingImage: variant.existingImage,
+            hasNewImage: variant.hasNewImage,
+          }))
+        )
+      );
 
-      formData.colorVariants.forEach((variant, index) => {
-        formDataToSend.append(`colorVariants[${index}][color]`, variant.color);
-        formDataToSend.append(
-          `colorVariants[${index}][stock]`,
-          variant.stock.toString()
-        );
-        formDataToSend.append(
-          `colorVariants[${index}][existingImage]`,
-          variant.existingImage
-        );
+      formData.colorVariants.forEach((variant: any) => {
         if (variant.image) {
           formDataToSend.append("images", variant.image);
-          formDataToSend.append(`colorVariants[${index}][hasNewImage]`, "true");
         }
       });
 
-      const response = await apiPatch<Headphone, FormData>(
+      const response = await apiPatch<IHeadphone, FormData>(
         `/headphones/${headphone._id}`,
-        formDataToSend
+        formDataToSend,
+        undefined,
+        ["headphones"]
       );
 
-      if (response.error) throw new Error(response.error);
-
-      toast.success("Cập nhật tai nghe thành công!");
-      router.refresh();
-      setIsOpen(false);
+      if (response.error) {
+        toast.error(response.error);
+      } else {
+        toast.success("Cập nhật tai nghe thành công!");
+        router.refresh();
+        setIsOpen(false);
+      }
     } catch (error) {
+      console.error("Error updating headphone:", error);
       toast.error("Có lỗi khi cập nhật tai nghe!");
     } finally {
       stop();
@@ -225,7 +203,13 @@ const EditHeadphone = ({
       ...formData,
       colorVariants: [
         ...formData.colorVariants,
-        { color: "", image: null, stock: 0, existingImage: "" },
+        {
+          color: "",
+          image: null,
+          stock: 0,
+          existingImage: "",
+          hasNewImage: "false",
+        },
       ],
     });
     setImagePreview((prev) => [...prev, ""]);
@@ -247,16 +231,7 @@ const EditHeadphone = ({
   };
 
   const handleAddConnectivity = () => {
-    if (
-      connectivityInput &&
-      !formData.connectivity.includes(connectivityInput)
-    ) {
-      setFormData({
-        ...formData,
-        connectivity: [...formData.connectivity, connectivityInput],
-      });
-      setConnectivityInput("");
-    }
+    // connectivity được quản lý trong specifications.connectivity, không cần function riêng
   };
 
   const handleAddAccessory = () => {
@@ -311,53 +286,7 @@ const EditHeadphone = ({
             />
           </div>
 
-          {/* Loại tai nghe */}
-          <div>
-            <Label htmlFor="type" className="text-gray-700 font-medium">
-              Loại tai nghe
-            </Label>
-            <Input
-              id="type"
-              value={formData.type}
-              onChange={(e) =>
-                setFormData({ ...formData, type: e.target.value })
-              }
-              placeholder="Nhập loại tai nghe"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Đường dẫn SEO */}
-          <div>
-            <Label htmlFor="slug" className="text-gray-700 font-medium">
-              Đường dẫn SEO
-            </Label>
-            <Input
-              id="slug"
-              value={formData.slug}
-              onChange={(e) =>
-                setFormData({ ...formData, slug: e.target.value })
-              }
-              placeholder="Nhập đường dẫn SEO"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {/* Mã hàng hóa */}
-          <div>
-            <Label htmlFor="sku" className="text-gray-700 font-medium">
-              Mã hàng hóa
-            </Label>
-            <Input
-              id="sku"
-              value={formData.sku}
-              onChange={(e) =>
-                setFormData({ ...formData, sku: e.target.value })
-              }
-              placeholder="Nhập mã hàng hóa"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          {/* Brand field removed type, slug, sku as they don't exist in headphone entity */}
 
           {/* Giá gốc */}
           <div>
@@ -497,26 +426,7 @@ const EditHeadphone = ({
                 className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Label className="text-gray-700 font-medium w-[20%]">
-                Độ nhạy (dB)
-              </Label>
-              <Input
-                placeholder="Độ nhạy (dB)"
-                type="number"
-                value={formData.specifications.sensitivity || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    specifications: {
-                      ...formData.specifications,
-                      sensitivity: parseFloat(e.target.value) || 0,
-                    },
-                  })
-                }
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            {/* Trở kháng */}
             <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
                 Trở kháng (Ohms)
@@ -617,17 +527,17 @@ const EditHeadphone = ({
             </div>
             <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
-                Loại micro
+                Có micro
               </Label>
-              <Input
-                placeholder="Loại micro"
-                value={formData.specifications.microphone}
+              <input
+                type="checkbox"
+                checked={formData.specifications.microphone}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      microphone: e.target.value,
+                      microphone: e.target.checked,
                     },
                   })
                 }
@@ -636,17 +546,17 @@ const EditHeadphone = ({
             </div>
             <div className="flex items-center space-x-2">
               <Label className="text-gray-700 font-medium w-[20%]">
-                Chất lượng âm thanh
+                Kết nối
               </Label>
               <Input
-                placeholder="Chất lượng âm thanh"
-                value={formData.specifications.audioQuality}
+                placeholder="Bluetooth, USB-C, etc."
+                value={formData.specifications.connectivity}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     specifications: {
                       ...formData.specifications,
-                      audioQuality: e.target.value,
+                      connectivity: e.target.value,
                     },
                   })
                 }
@@ -658,7 +568,7 @@ const EditHeadphone = ({
           {/* Kích thước */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
             <Label className="text-gray-900 font-semibold mb-4">
-              Kích thước (cm)
+              Kích thước (mm)
             </Label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
@@ -732,11 +642,14 @@ const EditHeadphone = ({
             <Input
               id="weight"
               type="text"
-              value={formData.weight || ""}
+              value={formData.dimensions.weight || ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  weight: parseFloat(e.target.value) || 0,
+                  dimensions: {
+                    ...formData.dimensions,
+                    weight: parseFloat(e.target.value) || 0,
+                  },
                 })
               }
               placeholder="Nhập trọng lượng"
@@ -783,6 +696,7 @@ const EditHeadphone = ({
                       const file = e.target.files?.[0] || null;
                       const newVariants = [...formData.colorVariants];
                       newVariants[index].image = file;
+                      newVariants[index].hasNewImage = file ? "true" : "false";
                       setFormData({ ...formData, colorVariants: newVariants });
                       if (file) {
                         setImagePreview((prev) => {
@@ -828,48 +742,6 @@ const EditHeadphone = ({
             </Button>
           </div>
 
-          {/* Kết nối */}
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">Kết nối</Label>
-            <div className="flex gap-2">
-              <Input
-                value={connectivityInput}
-                onChange={(e) => setConnectivityInput(e.target.value)}
-                placeholder="Nhập kết nối và nhấn Thêm"
-                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <Button
-                onClick={handleAddConnectivity}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Thêm
-              </Button>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {formData.connectivity.map((conn, index) => (
-                <span
-                  key={index}
-                  className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
-                >
-                  {conn}
-                  <button
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        connectivity: formData.connectivity.filter(
-                          (_, i) => i !== index
-                        ),
-                      })
-                    }
-                    className="text-red-600"
-                  >
-                    x
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
           {/* Phụ kiện */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
             <Label className="text-gray-900 font-semibold">Phụ kiện</Label>
@@ -888,7 +760,7 @@ const EditHeadphone = ({
               </Button>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
-              {formData.accessories.map((acc, index) => (
+              {formData.accessories.map((acc: string, index: number) => (
                 <span
                   key={index}
                   className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
@@ -931,7 +803,7 @@ const EditHeadphone = ({
               </Button>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
-              {formData.tags.map((tag, index) => (
+              {formData.tags.map((tag: string, index: number) => (
                 <span
                   key={index}
                   className="bg-gray-200 px-2 py-1 rounded text-sm flex items-center gap-1"
@@ -941,7 +813,9 @@ const EditHeadphone = ({
                     onClick={() =>
                       setFormData({
                         ...formData,
-                        tags: formData.tags.filter((_, i) => i !== index),
+                        tags: formData.tags.filter(
+                          (_: any, i: number) => i !== index
+                        ),
                       })
                     }
                     className="text-red-600"
