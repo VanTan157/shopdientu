@@ -2,7 +2,7 @@ import { apiGet } from "@/lib/api";
 import LaptopTable from "./tablet-table";
 import AddTabletForm from "./add-tablet";
 import { ITablet } from "@/lib/types/tablet";
-import { toast } from "sonner";
+import NotFound from "../../not-found";
 
 export default async function Page({
   params,
@@ -14,9 +14,12 @@ export default async function Page({
     `/tablets/get-all-tablet-by-brand/${brand}`
   );
   if (res.error) {
-    toast.error(res.message);
+    if (res.statusCode === 404) {
+      return <NotFound />;
+    }
     return;
   }
+
   const brands = await apiGet<string[]>("/tablets/get-all-brand");
   if (!res) return <div>Loading...</div>;
   if (!res.data) return <div>Product not found</div>;
@@ -28,7 +31,7 @@ export default async function Page({
         </h1>
         <AddTabletForm brands={brands.data ?? []} />
       </div>
-      <LaptopTable tablets={res.data} />
+      <LaptopTable tablets={res.data} brands={brands.data ?? []} />
     </div>
   );
 }

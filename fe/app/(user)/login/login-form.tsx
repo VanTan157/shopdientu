@@ -12,8 +12,8 @@ import { useEffect, useState } from "react";
 import ActiveAccount from "./active-account";
 import { useUserStore } from "@/app/store/user-store";
 import { loadingStore } from "@/app/store/loading.store";
-import { IApiResponse } from "@/lib/types/api";
 import { User } from "@/lib/types/user";
+import { useAuthStore } from "@/app/store/auth-store";
 
 const LoginPage = () => {
   const {

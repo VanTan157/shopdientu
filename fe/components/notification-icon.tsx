@@ -26,31 +26,27 @@ const NotificationIcon = ({
   const { count, setCount } = useNotificationStore();
   const [notifications, setNotifications] = useState(initialNotifications);
 
-  // Cập nhật số lượng thông báo chưa đọc khi mount
   useEffect(() => {
     const unreadCount = initialNotifications.filter((n) => !n.isRead).length;
     setCount(unreadCount);
   }, [initialNotifications, setCount]);
 
-  // Lắng nghe thông báo mới từ WebSocket
   useEffect(() => {
-    //gửi userId để tham gia room
+    if (!userId) return;
+
     socket.emit("join", userId);
 
-    // Lắng nghe sự kiện newNotification
-    socket.on("newNotification", (notification: Notification) => {
-      // Thêm thông báo mới vào danh sách
-      if (!userId) return;
+    const handler = (notification: Notification) => {
       setNotifications((prev) => [notification, ...prev]);
-      // Tăng số lượng thông báo chưa đọc
-      setCount(count + 1);
-    });
-
-    // Cleanup khi unmount
-    return () => {
-      socket.off("newNotification");
+      setCount((c) => c + 1);
     };
-  }, [count, setCount]);
+
+    socket.on("newNotification", handler);
+
+    return () => {
+      socket.off("newNotification", handler);
+    };
+  }, [userId, setCount]);
 
   return (
     <HoverCard openDelay={0} closeDelay={50}>

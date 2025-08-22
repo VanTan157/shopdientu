@@ -27,12 +27,7 @@ export class NotificationsController {
   @Get("")
   async getNotifications(@Req() req): Promise<any> {
     const userId = req.user.userId;
-    const notifications = await this.notificationsService.getUserNotifications(
-      userId
-    );
-    // return notifications;
-    const unreadCount = notifications.filter((n) => !n.isRead).length;
-    return { notifications, unreadCount };
+    return this.notificationsService.getUserNotifications(userId);
   }
 
   @Post()

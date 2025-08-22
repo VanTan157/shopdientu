@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { User } from "./lib/types/user";
+import { apiGet } from "./lib/api";
 const authURL = ["/login", "/register"];
 const privateURL = ["/cart", "/me", "/order"];
 const adminURL = ["/admin"];
@@ -11,8 +12,9 @@ export async function middleware(request: NextRequest) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken");
   const url = request.nextUrl.pathname;
-  if (authURL.some((path) => url.includes(path)) && accessToken)
+  if (authURL.some((path) => url.includes(path)) && accessToken) {
     return NextResponse.redirect(new URL("/", request.url));
+  }
   if (privateURL.some((path) => url.includes(path)) && !accessToken) {
     return NextResponse.redirect(new URL("/login", request.url));
   }

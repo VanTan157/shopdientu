@@ -11,7 +11,6 @@ import { ChangePasswordDto, UpdateProfileDto } from "./dto/update-profile.dto";
 import { Request } from "express";
 import * as bcrypt from "bcrypt";
 import { EUserType, JwtPayload } from "src/common/types/user.types";
-import { ApiResponse } from "src/common/types/api";
 
 @Injectable()
 export class AuthService {
@@ -132,9 +131,6 @@ export class AuthService {
 
   async refreshToken(req: Request) {
     const refreshToken = (req as any).cookies["refreshToken"];
-    if (!refreshToken) {
-      throw new UnauthorizedException("Không có refresh token");
-    }
     try {
       const payload = this.jwtService.verify(refreshToken);
       const result = await this.usersService.findOne(payload.userId);
@@ -146,7 +142,13 @@ export class AuthService {
         type: user.type,
         name: user.name,
       };
-      const newAccessToken = this.jwtService.sign(newPayload);
+
+      const newAccessToken = this.jwtService.sign(newPayload, {
+        expiresIn: "15m",
+      });
+      const newRefreshToken = this.jwtService.sign(payload, {
+        expiresIn: "30d",
+      });
 
       return {
         message: "Token refreshed successfully",
@@ -161,6 +163,16 @@ export class AuthService {
               secure: process.env.NODE_ENV === "production",
               sameSite: "strict",
               maxAge: 15 * 60 * 1000,
+            },
+          },
+          {
+            name: "refreshToken",
+            value: newRefreshToken,
+            options: {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "strict",
+              maxAge: 7 * 24 * 60 * 60 * 1000,
             },
           },
         ],

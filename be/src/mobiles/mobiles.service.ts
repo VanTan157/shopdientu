@@ -234,6 +234,11 @@ export class MobilesService {
   }
 
   async getAllMobileByBrand(brand: string): Promise<ApiResponse<Mobile[]>> {
+    const result = await this.getAllBrand();
+    const brands = result.data;
+    if (!brands.includes(brand)) {
+      throw new NotFoundException("Không tìm thấy thương hiệu này");
+    }
     const mobiles = await this.mobileModel.find({ brand }).exec();
     if (!mobiles || mobiles.length === 0) {
       throw new NotFoundException(

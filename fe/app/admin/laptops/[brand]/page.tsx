@@ -4,6 +4,7 @@ import AddLaptopForm from "./add-laptop";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ILaptop } from "@/lib/types/laptop";
+import NotFound from "../../not-found";
 
 export default async function Page({
   params,
@@ -15,8 +16,7 @@ export default async function Page({
     `/laptops/get-all-laptop-by-brand/${brand}`
   );
   const brands = await apiGet<string[]>("/laptops/get-all-brand");
-  if (!res) return <div>Loading...</div>;
-  if (!res.data) return <div>Product not found</div>;
+  if (!res.error) return <NotFound />;
   return (
     <div className="bg-white min-h-screen mx-auto p-8">
       <div className="flex justify-between items-center mb-6">
@@ -25,7 +25,7 @@ export default async function Page({
         </h1>
         <AddLaptopForm brands={brands.data ?? []} />
       </div>
-      <LaptopTable laptops={res.data} />
+      <LaptopTable laptops={res.data ?? []} brands={brands.data ?? []} />
       <div className="mt-6">
         <Link href="/admin">
           <Button variant="outline" className="text-gray-700">

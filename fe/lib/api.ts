@@ -37,59 +37,57 @@ const getDefaultHeaders = (customHeaders?: HeadersInit): HeadersInit => ({
   ...customHeaders,
 });
 
-const refreshToken = async (): Promise<boolean> => {
+export async function fetchWithAuth<T>(
+  url: string,
+  options: RequestInit = {},
+  retry = true
+): Promise<IApiResponse<T>> {
+  const fetchOptions: RequestInit = {
+    ...options,
+    credentials: "include",
+  };
+
+  const response = await fetch(`${BASE_URL}${url}`, fetchOptions);
+
+  let data: any = null;
   try {
-    const response = await fetch(`${BASE_URL}/auth/refresh`, {
-      method: "POST",
-      headers: getDefaultHeaders(),
-      credentials: "include",
-    });
+    data = await response.json();
+  } catch (e) {}
 
-    if (!response.ok) {
-      throw new Error("Failed to refresh token");
-    }
-    return true;
-  } catch (error) {
-    console.error("Error refreshing token:", error);
-    return false;
-  }
-};
+  const isUnauthorized =
+    response.status === 401 || (data && data.statusCode === 401);
 
-const requestWithRefresh = async <T>(
-  method: string,
-  endpoint: string,
-  body?: any,
-  headers?: HeadersInit,
-  isRetry: boolean = false
-): Promise<IApiResponse<T>> => {
-  try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method,
-      headers: getDefaultHeaders(headers),
-      body: body ? JSON.stringify(body) : null,
-      credentials: "include",
-    });
+  if (isUnauthorized && retry) {
+    try {
+      const refreshResponse = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
 
-    const data: IApiResponse<T> = await response.json();
-
-    if (response.status === 401 && !isRetry) {
-      const refreshed = await refreshToken();
-      if (refreshed) {
-        return requestWithRefresh<T>(method, endpoint, body, headers, true);
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+        if (refreshData && refreshData.success) {
+          return fetchWithAuth(url, options, false);
+        }
       } else {
-        throw new Error("Unable to refresh token");
+        window.location.href = "/login";
+        return {
+          success: false,
+          message: "Đăng nhập lại để tiếp tục sử dụng trang web",
+          statusCode: 401,
+        };
       }
-    }
-
-    return data;
-  } catch (error) {
-    return {
-      message: "Lỗi không xác định",
-      error: error instanceof Error ? error.message : "Lỗi mạng",
-      statusCode: 500,
-    };
+    } catch (e) {}
   }
-};
+  if (response.ok && data.success) {
+    return data as IApiResponse<T>;
+  }
+  return {
+    message: data.message || "Lỗi không xác định",
+    statusCode: data.statusCode ?? 500,
+    error: data?.error || "Lỗi mạng",
+  };
+}
 
 export async function apiGet<T>(
   endpoint: string,
@@ -100,23 +98,19 @@ export async function apiGet<T>(
   try {
     const autoTags = detectTagsFromEndpoint(endpoint);
     const cacheTags = tags || autoTags;
-
     const fetchOptions: RequestInit = {
       method: "GET",
       headers: getDefaultHeaders(headers),
-      credentials: "include",
     };
 
     if (forceRefresh) {
-      fetchOptions.cache = "no-store";
+      (fetchOptions as any).cache = "no-store";
     } else {
-      // fetchOptions.cache = "force-cache";
-      fetchOptions.cache = "no-store";
-      fetchOptions.next = { tags: cacheTags };
+      (fetchOptions as any).cache = "force-cache";
+      (fetchOptions as any).next = { tags: cacheTags };
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, fetchOptions);
-    return response.json();
+    return fetchWithAuth<T>(endpoint, fetchOptions);
   } catch (error) {
     return {
       message: "Lỗi không xác định",
@@ -134,16 +128,15 @@ export async function apiPost<T, U>(
 ): Promise<IApiResponse<T>> {
   try {
     const isFormData = body instanceof FormData;
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const fetchOptions: RequestInit = {
       method: "POST",
       headers: isFormData ? headers : getDefaultHeaders(headers),
-      body: isFormData ? body : JSON.stringify(body),
-      credentials: "include",
-    });
+      body: isFormData ? (body as FormData) : JSON.stringify(body),
+    };
 
-    const data: IApiResponse<T> = await response.json();
+    const data = await fetchWithAuth<T>(endpoint, fetchOptions);
 
-    if (response.ok) {
+    if (data && data.success) {
       const autoTags = detectTagsFromEndpoint(endpoint);
       const revalidateTags = tags || autoTags;
       await callRevalidateAPI(revalidateTags);
@@ -167,16 +160,15 @@ export async function apiPatch<T, U>(
 ): Promise<IApiResponse<T>> {
   try {
     const isFormData = body instanceof FormData;
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const fetchOptions: RequestInit = {
       method: "PATCH",
       headers: isFormData ? headers : getDefaultHeaders(headers),
-      body: isFormData ? body : JSON.stringify(body),
-      credentials: "include",
-    });
+      body: isFormData ? (body as FormData) : JSON.stringify(body),
+    };
 
-    const data: IApiResponse<T> = await response.json();
+    const data = await fetchWithAuth<T>(endpoint, fetchOptions);
 
-    if (response.ok) {
+    if (data && data.success) {
       const autoTags = detectTagsFromEndpoint(endpoint);
       const revalidateTags = tags || autoTags;
       await callRevalidateAPI(revalidateTags);
@@ -200,16 +192,15 @@ export async function apiPut<T, U>(
   tags?: string[]
 ): Promise<IApiResponse<T>> {
   try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const fetchOptions: RequestInit = {
       method: "PUT",
       headers: getDefaultHeaders(headers),
       body: JSON.stringify(body),
-      credentials: "include",
-    });
+    };
 
-    const data: IApiResponse<T> = await response.json();
+    const data = await fetchWithAuth<T>(endpoint, fetchOptions);
 
-    if (response.ok) {
+    if (data && data.success) {
       const autoTags = detectTagsFromEndpoint(endpoint);
       const revalidateTags = tags || autoTags;
       await callRevalidateAPI(revalidateTags);
@@ -232,15 +223,14 @@ export async function apiDelete<T>(
   tags?: string[]
 ): Promise<IApiResponse<T>> {
   try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const fetchOptions: RequestInit = {
       method: "DELETE",
       headers: getDefaultHeaders(headers),
-      credentials: "include",
-    });
+    };
 
-    const data: IApiResponse<T> = await response.json();
+    const data = await fetchWithAuth<T>(endpoint, fetchOptions);
 
-    if (response.ok) {
+    if (data && data.success) {
       const autoTags = detectTagsFromEndpoint(endpoint);
       const revalidateTags = tags || autoTags;
       await callRevalidateAPI(revalidateTags);

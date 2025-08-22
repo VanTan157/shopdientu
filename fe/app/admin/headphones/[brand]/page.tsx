@@ -5,6 +5,7 @@ import { IHeadphone } from "@/lib/types/headphone";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import NotFound from "../../not-found";
 
 export default async function Page({
   params,
@@ -18,8 +19,7 @@ export default async function Page({
 
   const brands = await apiGet<string[]>("/headphones/get-all-brand");
   if (res.error) {
-    toast.error(res.message);
-    return;
+    return <NotFound />;
   }
   const headphones = res.data;
   return (
@@ -30,7 +30,10 @@ export default async function Page({
         </h1>
         <AddHeadphoneForm brands={brands.data ?? []} />
       </div>
-      <HeadphoneTable headphones={headphones || []} />
+      <HeadphoneTable
+        headphones={headphones || []}
+        brands={brands.data ?? []}
+      />
       <div className="mt-6">
         <Link href="/admin">
           <Button variant="outline" className="text-gray-700">

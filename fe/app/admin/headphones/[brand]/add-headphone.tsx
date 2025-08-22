@@ -60,8 +60,6 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
 
   const handleAddHeadphone = async () => {
     start();
-
-    // Validate dữ liệu
     if (!formData.name.trim()) {
       toast.error("Tên tai nghe không được để trống!");
       stop();
@@ -312,15 +310,20 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
-          {/* Thông tin cơ bản */}
-          <div className="space-y-4">
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-700">
               Thông tin cơ bản
             </h3>
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <Label htmlFor="name">Tên tai nghe</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="name"
+                >
+                  Tên tai nghe
+                </Label>
                 <Input
+                  required
                   id="name"
                   value={formData.name}
                   onChange={(e) =>
@@ -329,12 +332,11 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                   placeholder="Nhập tên tai nghe"
                 />
               </div>
-              {/* Brand */}
               {!isAddingNewBrand ? (
                 <div>
                   <Label
-                    htmlFor="brand"
                     className="text-gray-700 font-medium mb-2"
+                    htmlFor="brand"
                   >
                     Thương hiệu
                   </Label>
@@ -359,20 +361,21 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                       onClick={() => setIsAddingNewBrand(true)}
                       className="border-gray-300 text-gray-700 hover:bg-gray-100"
                     >
-                      Tạo brand mới
+                      Thêm thương hiệu mới
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div>
                   <Label
-                    htmlFor="brand"
                     className="text-gray-700 font-medium mb-2"
+                    htmlFor="brand"
                   >
                     Thương hiệu mới
                   </Label>
                   <div className="flex gap-2">
                     <Input
+                      required
                       id="brand"
                       value={formData.brand}
                       onChange={(e) =>
@@ -396,8 +399,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="startingPrice">Giá gốc (VNĐ)</Label>
+                  <Label
+                    className="text-gray-700 font-medium mb-2"
+                    htmlFor="startingPrice"
+                  >
+                    Giá gốc (VNĐ)
+                  </Label>
                   <Input
+                    required
                     id="startingPrice"
                     type="number"
                     value={formData.startingPrice || ""}
@@ -411,8 +420,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="promotion">Khuyến mãi (%)</Label>
+                  <Label
+                    className="text-gray-700 font-medium mb-2"
+                    htmlFor="promotion"
+                  >
+                    Khuyến mãi (%)
+                  </Label>
                   <Input
+                    required
                     id="promotion"
                     type="number"
                     value={formData.promotion || ""}
@@ -427,7 +442,12 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 </div>
               </div>
               <div>
-                <Label htmlFor="description">Mô tả</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="description"
+                >
+                  Mô tả
+                </Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -439,8 +459,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="warranty">Bảo hành</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="warranty"
+                >
+                  Bảo hành
+                </Label>
                 <Input
+                  required
                   id="warranty"
                   value={formData.warranty}
                   onChange={(e) =>
@@ -453,14 +479,20 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
           </div>
 
           {/* Thông số kỹ thuật */}
-          <div className="space-y-4">
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-700">
               Thông số kỹ thuật
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 ">
               <div>
-                <Label htmlFor="driverType">Loại driver</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="driverType"
+                >
+                  Loại driver
+                </Label>
                 <Input
+                  required
                   id="driverType"
                   value={formData.specifications.driverType}
                   onChange={(e) =>
@@ -476,8 +508,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="driverSize">Kích thước driver (mm)</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="driverSize"
+                >
+                  Kích thước driver (mm)
+                </Label>
                 <Input
+                  required
                   id="driverSize"
                   type="number"
                   value={formData.specifications.driverSize || ""}
@@ -494,8 +532,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="frequencyRange">Dải tần số</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="frequencyRange"
+                >
+                  Dải tần số
+                </Label>
                 <Input
+                  required
                   id="frequencyRange"
                   value={formData.specifications.frequencyRange}
                   onChange={(e) =>
@@ -511,8 +555,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="impedance">Trở kháng (Ω)</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="impedance"
+                >
+                  Trở kháng (Ω)
+                </Label>
                 <Input
+                  required
                   id="impedance"
                   type="number"
                   value={formData.specifications.impedance || ""}
@@ -529,8 +579,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="noiseCancellation">Chống ồn</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="noiseCancellation"
+                >
+                  Chống ồn
+                </Label>
                 <Input
+                  required
                   id="noiseCancellation"
                   value={formData.specifications.noiseCancellation}
                   onChange={(e) =>
@@ -546,8 +602,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="batteryLife">Thời lượng pin (giờ)</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="batteryLife"
+                >
+                  Thời lượng pin (giờ)
+                </Label>
                 <Input
+                  required
                   id="batteryLife"
                   type="number"
                   value={formData.specifications.batteryLife || ""}
@@ -564,8 +626,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="chargingTime">Thời gian sạc (giờ)</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="chargingTime"
+                >
+                  Thời gian sạc (giờ)
+                </Label>
                 <Input
+                  required
                   id="chargingTime"
                   type="number"
                   value={formData.specifications.chargingTime || ""}
@@ -582,8 +650,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="chargingPort">Cổng sạc</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="chargingPort"
+                >
+                  Cổng sạc
+                </Label>
                 <Input
+                  required
                   id="chargingPort"
                   value={formData.specifications.chargingPort}
                   onChange={(e) =>
@@ -599,8 +673,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="connectivity">Kết nối</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="connectivity"
+                >
+                  Kết nối
+                </Label>
                 <Input
+                  required
                   id="connectivity"
                   value={formData.specifications.connectivity}
                   onChange={(e) =>
@@ -616,7 +696,8 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div className="flex items-center space-x-2">
-                <input
+                <Input
+                  required
                   type="checkbox"
                   id="microphone"
                   checked={formData.specifications.microphone}
@@ -630,20 +711,31 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                     })
                   }
                 />
-                <Label htmlFor="microphone">Có microphone</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="microphone"
+                >
+                  Có microphone
+                </Label>
               </div>
             </div>
           </div>
 
           {/* Kích thước */}
-          <div className="space-y-4">
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-700">
               Kích thước & Trọng lượng
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="length">Chiều dài (mm)</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="length"
+                >
+                  Chiều dài (mm)
+                </Label>
                 <Input
+                  required
                   id="length"
                   type="number"
                   value={formData.dimensions.length || ""}
@@ -660,8 +752,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="width">Chiều rộng (mm)</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="width"
+                >
+                  Chiều rộng (mm)
+                </Label>
                 <Input
+                  required
                   id="width"
                   type="number"
                   value={formData.dimensions.width || ""}
@@ -678,8 +776,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="height">Chiều cao (mm)</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="height"
+                >
+                  Chiều cao (mm)
+                </Label>
                 <Input
+                  required
                   id="height"
                   type="number"
                   value={formData.dimensions.height || ""}
@@ -696,8 +800,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 />
               </div>
               <div>
-                <Label htmlFor="weight">Trọng lượng (g)</Label>
+                <Label
+                  className="text-gray-700 font-medium mb-2"
+                  htmlFor="weight"
+                >
+                  Trọng lượng (g)
+                </Label>
                 <Input
+                  required
                   id="weight"
                   type="number"
                   value={formData.dimensions.weight || ""}
@@ -717,7 +827,7 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
           </div>
 
           {/* Biến thể màu */}
-          <div className="space-y-4">
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-700">
                 Biến thể màu
@@ -739,8 +849,14 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                 </div>
                 <div className="flex gap-4">
                   <div>
-                    <Label htmlFor={`color-${index}`}>Tên màu</Label>
+                    <Label
+                      className="text-gray-700 font-medium mb-2"
+                      htmlFor={`color-${index}`}
+                    >
+                      Tên màu
+                    </Label>
                     <Input
+                      required
                       id={`color-${index}`}
                       value={variant.color}
                       onChange={(e) => {
@@ -758,13 +874,12 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                     />
                   </div>
                   <div className="flex-1">
-                    <Label htmlFor={`image-${index}`}>Ảnh sản phẩm</Label>
-                    <Input
-                      id={`image-${index}`}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageChange(e, index)}
-                    />
+                    <Label
+                      className="text-gray-700 font-medium mb-2"
+                      htmlFor={`image-${index}`}
+                    >
+                      Ảnh sản phẩm
+                    </Label>
                     {imagePreview[index] && (
                       <div className="mt-2">
                         <Image
@@ -776,10 +891,23 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
                         />
                       </div>
                     )}
+                    <Input
+                      required
+                      id={`image-${index}`}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, index)}
+                    />
                   </div>
                   <div>
-                    <Label htmlFor={`stock-${index}`}>Số lượng tồn kho</Label>
+                    <Label
+                      className="text-gray-700 font-medium mb-2"
+                      htmlFor={`stock-${index}`}
+                    >
+                      Số lượng tồn kho
+                    </Label>
                     <Input
+                      required
                       id={`stock-${index}`}
                       type="number"
                       value={variant.stock || ""}
@@ -803,16 +931,15 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
             <Button
               type="button"
               onClick={addColorVariant}
-              className="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2"
             >
-              <Plus className="mr-1 h-3 w-3" />
-              Thêm màu
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Phụ kiện */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">Phụ kiện</h3>
+            <Label className="text-gray-700 font-medium mb-2">Phụ kiện</Label>
             <div className="flex space-x-2">
               <Input
                 value={accessoryInput}
@@ -849,7 +976,7 @@ const AddHeadphoneForm = ({ brands }: { brands?: string[] }) => {
 
           {/* Tags */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">Tags</h3>
+            <Label className="text-lg font-semibold text-gray-700">Tags</Label>
             <div className="flex space-x-2">
               <Input
                 value={tagInput}

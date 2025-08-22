@@ -23,7 +23,13 @@ import EditHeadphone from "./edit-headphone";
 import DeleteHeadphone from "./delete-headphone";
 import { IHeadphone } from "@/lib/types/headphone";
 
-const HeadphoneTable = ({ headphones }: { headphones: IHeadphone[] }) => {
+const HeadphoneTable = ({
+  headphones,
+  brands,
+}: {
+  headphones: IHeadphone[];
+  brands: string[];
+}) => {
   const [searchName, setSearchName] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("Tất cả");
   const [filterPromotion, setFilterPromotion] = useState<string>("Tất cả");
@@ -118,7 +124,7 @@ const HeadphoneTable = ({ headphones }: { headphones: IHeadphone[] }) => {
                       <Eye className="w-4 h-4" />
                     </div>
                   </ViewHeadphoneDetail>
-                  <EditHeadphone headphone={headphone}>
+                  <EditHeadphone headphone={headphone} brands={brands}>
                     <div className="flex items-center justify-center border rounded-md p-2 bg-white hover:bg-gray-200 cursor-pointer">
                       <Edit className="w-4 h-4" />
                     </div>

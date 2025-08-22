@@ -146,15 +146,23 @@ const ViewLaptopDetail = ({
               </p>
             </div>
           </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-xl text-gray-900 mb-3">
-              Phụ kiện
-            </h3>
-            <p className="text-gray-700">
-              <strong className="font-medium">Phụ kiện:</strong>{" "}
-              {tablet.accessories?.join(", ") || "Không có"}
-            </p>
-          </div>
+          {tablet.accessories && tablet.accessories.length > 0 && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-xl text-gray-900 mb-3">
+                Phụ kiện
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {tablet.accessories.map((accessory, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm"
+                  >
+                    {accessory}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-xl text-gray-900 mb-3">
               Biến thể màu
@@ -184,12 +192,21 @@ const ViewLaptopDetail = ({
               <p className="text-gray-700">Không có biến thể màu</p>
             )}
           </div>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-xl text-gray-900 mb-3">Tags</h3>
-            <p className="text-gray-700">
-              {tablet.tags?.join(", ") || "Không có"}
-            </p>
-          </div>
+          {tablet.tags && tablet.tags.length > 0 && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-xl text-gray-900 mb-3">Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {tablet.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

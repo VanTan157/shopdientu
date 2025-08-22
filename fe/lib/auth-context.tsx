@@ -17,37 +17,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
 
-  // Hàm làm mới token
   const refreshToken = async () => {
     try {
       const response = await fetch(`${BASE_URL}/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // Gửi refreshToken qua cookie
+        credentials: "include",
       });
-
-      //   if (!response.ok) {
-      //     throw new Error("Failed to refresh token");
-      //   }
       setIsAuthenticated(true);
     } catch (error) {
       console.error("Error refreshing token:", error);
       setIsAuthenticated(false);
-      router.push("/login"); // Chuyển hướng về login nếu refresh thất bại
+      router.push("/login");
     }
   };
 
-  // Kiểm tra và làm mới token định kỳ
   useEffect(() => {
-    // Làm mới ngay lần đầu tiên
     refreshToken();
-
-    // Làm mới mỗi 14 phút (trước khi accessToken hết hạn 15 phút)
     const interval = setInterval(() => {
       refreshToken();
-    }, 14 * 60 * 1000); // 14 phút
+    }, 14 * 60 * 1000);
 
-    // Cleanup interval khi component unmount
     return () => clearInterval(interval);
   }, []);
 
@@ -58,7 +48,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Hook để sử dụng AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

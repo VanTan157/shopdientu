@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { AuthProvider } from "@/lib/auth-context";
-import Providers from "./providers";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { LoadingSpinner } from "@/components/loading";
 
@@ -32,14 +30,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <Toaster />
-          <GoogleOAuthProvider
-            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ""}
-          >
-            {children}
-          </GoogleOAuthProvider>
-        </AuthProvider>
+        <Toaster />
+        <GoogleOAuthProvider
+          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ""}
+        >
+          {children}
+        </GoogleOAuthProvider>
         <LoadingSpinner />
       </body>
     </html>

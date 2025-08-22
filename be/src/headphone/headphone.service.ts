@@ -243,6 +243,11 @@ export class HeadphoneService {
   async getAllheadphoneByBrand(
     brand: string
   ): Promise<ApiResponse<Headphone[]>> {
+    const result = await this.getAllBrand();
+    const brands = result.data;
+    if (!brands.includes(brand)) {
+      throw new NotFoundException("Không tìm thấy thương hiệu này");
+    }
     const headphones = await this.headphoneModel.find({ brand }).exec();
     if (!headphones || headphones.length === 0) {
       throw new NotFoundException(

@@ -5,6 +5,7 @@ import AddMobileForm from "./add-mobile";
 import MobileTable from "./mobile-table";
 import { IMobile } from "@/lib/types/mobile";
 import { toast } from "sonner";
+import NotFound from "../../not-found";
 
 const AdminMobilePage = async ({
   params,
@@ -20,8 +21,7 @@ const AdminMobilePage = async ({
   );
 
   if (res.error) {
-    toast.error(res.message);
-    return;
+    return <NotFound />;
   }
 
   const mobiles = res.data;
@@ -36,7 +36,7 @@ const AdminMobilePage = async ({
           </h1>
           <AddMobileForm brands={brands.data ?? []} />
         </div>
-        <MobileTable mobiles={mobiles || []} />
+        <MobileTable mobiles={mobiles || []} brands={brands.data ?? []} />
         <div className="mt-6">
           <Link href="/admin">
             <Button variant="outline" className="text-gray-700">

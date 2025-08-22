@@ -12,7 +12,7 @@ export class NotificationsGateway {
 
   @SubscribeMessage("join")
   handleJoin(client: Socket, userId: string) {
-    client.join(userId); // Tham gia room
+    client.join(userId);
   }
 
   sendNotification(

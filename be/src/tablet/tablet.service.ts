@@ -241,6 +241,11 @@ export class TabletService {
   }
 
   async getAllTabletByBrand(brand: string): Promise<ApiResponse<Tablet[]>> {
+    const result = await this.getAllBrand();
+    const brands = result.data;
+    if (!brands.includes(brand)) {
+      throw new NotFoundException("Không tìm thấy thương hiệu này");
+    }
     const laptops = await this.tabletModel.find({ brand }).exec();
     if (!laptops || laptops.length === 0) {
       throw new NotFoundException(

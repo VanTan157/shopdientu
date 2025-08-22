@@ -16,7 +16,13 @@ import DeleteMobile from "./delete-mobile";
 import EditMobile from "./edit-mobile";
 import { IMobile } from "@/lib/types/mobile";
 
-const MobileTable = ({ mobiles }: { mobiles: IMobile[] }) => {
+const MobileTable = ({
+  mobiles,
+  brands,
+}: {
+  mobiles: IMobile[];
+  brands: string[];
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [filterPromotion, setFilterPromotion] = useState<string>("");
@@ -113,7 +119,7 @@ const MobileTable = ({ mobiles }: { mobiles: IMobile[] }) => {
                       <Eye className="w-4 h-4" />
                     </div>
                   </ViewMobileDetail>
-                  <EditMobile mobile={mobile}>
+                  <EditMobile mobile={mobile} brands={brands}>
                     <div className="flex items-center justify-center border rounded-md p-2 bg-white hover:bg-gray-200 cursor-pointer">
                       <Edit className="w-4 h-4" />
                     </div>

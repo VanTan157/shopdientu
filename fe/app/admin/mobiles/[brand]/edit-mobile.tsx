@@ -21,14 +21,17 @@ import { IMobile } from "@/lib/types/mobile";
 
 const EditMobile = ({
   mobile,
+  brands,
   children,
 }: {
   mobile: IMobile;
+  brands: string[];
   children: React.ReactNode;
 }) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const { start, stop } = loadingStore();
+  const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
   const [formData, setFormData] = useState({
     name: mobile.name,
     startingPrice: mobile.startingPrice,
@@ -280,112 +283,179 @@ const EditMobile = ({
             Chỉnh sửa điện thoại: {mobile.name}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-6 p-6">
-          {/* Tên */}
-          <div>
-            <Label htmlFor="name" className="text-gray-700 font-medium mb-2">
-              Tên điện thoại
-            </Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              placeholder="Nhập tên điện thoại"
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+        <div className="space-y-6">
+          {/* Thông tin cơ bản */}
+          <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-700">
+              Thông tin cơ bản
+            </h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label
+                  htmlFor="name"
+                  className="text-gray-700 font-medium mb-2"
+                >
+                  Tên điện thoại
+                </Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder="Nhập tên điện thoại"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
 
-          {/* Thương hiệu */}
-          <div>
-            <Label htmlFor="brand" className="text-gray-700 font-medium">
-              Thương hiệu
-            </Label>
-            <Input
-              id="brand"
-              value={formData.brand}
-              onChange={(e) =>
-                setFormData({ ...formData, brand: e.target.value })
-              }
-              placeholder="Nhập thương hiệu"
-              className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+              <div>
+                <Label
+                  htmlFor="brand"
+                  className="text-gray-700 font-medium mb-2"
+                >
+                  Thương hiệu
+                </Label>
+                <div className="flex gap-2 mt-1">
+                  {!isAddingNewBrand ? (
+                    <>
+                      <select
+                        id="brand"
+                        value={formData.brand}
+                        onChange={(e) =>
+                          setFormData({ ...formData, brand: e.target.value })
+                        }
+                        className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {brands?.map((brand) => (
+                          <option key={brand} value={brand}>
+                            {brand}
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsAddingNewBrand(true)}
+                        className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                      >
+                        Thêm thương hiệu mới
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Input
+                        id="brand"
+                        value={formData.brand}
+                        onChange={(e) =>
+                          setFormData({ ...formData, brand: e.target.value })
+                        }
+                        placeholder="Nhập thương hiệu mới"
+                        className="flex-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          setIsAddingNewBrand(false);
+                          setFormData({ ...formData, brand: mobile.brand });
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        Hủy
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
 
-          {/* Giá gốc */}
-          <div>
-            <Label
-              htmlFor="startingPrice"
-              className="text-gray-700 font-medium mb-2"
-            >
-              Giá gốc (VNĐ)
-            </Label>
-            <Input
-              id="startingPrice"
-              type="text"
-              value={formData.startingPrice || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  startingPrice: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập giá gốc"
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+              <div>
+                <Label
+                  htmlFor="startingPrice"
+                  className="text-gray-700 font-medium mb-2"
+                >
+                  Giá gốc (VNĐ)
+                </Label>
+                <Input
+                  id="startingPrice"
+                  type="text"
+                  value={formData.startingPrice || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      startingPrice: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="Nhập giá gốc"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
 
-          {/* Khuyến mãi */}
-          <div>
-            <Label
-              htmlFor="promotion"
-              className="text-gray-700 font-medium mb-2"
-            >
-              Khuyến mãi (%)
-            </Label>
-            <Input
-              id="promotion"
-              type="text"
-              value={formData.promotion || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  promotion: parseFloat(e.target.value) || 0,
-                })
-              }
-              placeholder="Nhập % khuyến mãi (nếu có)"
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+              <div>
+                <Label
+                  htmlFor="promotion"
+                  className="text-gray-700 font-medium mb-2"
+                >
+                  Khuyến mãi (%)
+                </Label>
+                <Input
+                  id="promotion"
+                  type="text"
+                  value={formData.promotion || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      promotion: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  placeholder="Nhập % khuyến mãi (nếu có)"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
 
-          {/* Mô tả */}
-          <div>
-            <Label
-              htmlFor="description"
-              className="text-gray-700 font-medium mb-2"
-            >
-              Mô tả
-            </Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="Nhập mô tả"
-              className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-            />
+              <div>
+                <Label
+                  htmlFor="description"
+                  className="text-gray-700 font-medium mb-2"
+                >
+                  Mô tả
+                </Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="Nhập mô tả"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="warranty"
+                  className="text-gray-700 font-medium mb-2"
+                >
+                  Bảo hành
+                </Label>
+                <Input
+                  id="warranty"
+                  value={formData.warranty}
+                  onChange={(e) =>
+                    setFormData({ ...formData, warranty: e.target.value })
+                  }
+                  placeholder="Nhập thời gian bảo hành"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Thông số kỹ thuật */}
           <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold mb-2">
+            <h3 className="text-lg font-semibold text-gray-700">
               Thông số kỹ thuật
-            </Label>
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-gray-700 font-medium">
+                <Label className="text-gray-700 font-medium mb-2">
                   Kích thước màn hình (inch)
                 </Label>
                 <Input
@@ -402,11 +472,11 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">
+                <Label className="text-gray-700 font-medium mb-2">
                   Độ phân giải
                 </Label>
                 <Input
@@ -421,11 +491,11 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">
+                <Label className="text-gray-700 font-medium mb-2">
                   Tần số quét (Hz)
                 </Label>
                 <Input
@@ -441,11 +511,13 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">Loại SIM</Label>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Loại SIM
+                </Label>
                 <Input
                   placeholder="Nano SIM"
                   value={formData.specifications.simType}
@@ -458,11 +530,13 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">RAM (GB)</Label>
+                <Label className="text-gray-700 font-medium mb-2">
+                  RAM (GB)
+                </Label>
                 <Input
                   type="number"
                   placeholder="8"
@@ -476,11 +550,13 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">Bộ nhớ (GB)</Label>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Bộ nhớ (GB)
+                </Label>
                 <Input
                   type="number"
                   placeholder="256"
@@ -494,11 +570,13 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">Pin (mAh)</Label>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Pin (mAh)
+                </Label>
                 <Input
                   type="number"
                   placeholder="4000"
@@ -512,11 +590,11 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">
+                <Label className="text-gray-700 font-medium mb-2">
                   Hệ điều hành
                 </Label>
                 <Input
@@ -531,17 +609,17 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
 
             {/* Camera */}
             <div className="space-y-2">
-              <Label className="text-gray-900 font-semibold">Camera</Label>
+              <h3 className="text-lg font-semibold text-gray-700">Camera</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-gray-700 font-medium">
+                  <Label className="text-gray-700 font-medium mb-2">
                     Camera sau
                   </Label>
                   <Input
@@ -559,11 +637,11 @@ const EditMobile = ({
                         },
                       })
                     }
-                    className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-700 font-medium">
+                  <Label className="text-gray-700 font-medium mb-2">
                     Camera trước
                   </Label>
                   <Input
@@ -581,7 +659,7 @@ const EditMobile = ({
                         },
                       })
                     }
-                    className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -590,12 +668,14 @@ const EditMobile = ({
 
           {/* Kích thước và trọng lượng */}
           <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold">
-              Kích thước và trọng lượng
-            </Label>
+            <h3 className="text-lg font-semibold text-gray-700">
+              Kích thước & Trọng lượng
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-gray-700 font-medium">Dài (mm)</Label>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Dài (mm)
+                </Label>
                 <Input
                   type="number"
                   step="0.1"
@@ -610,11 +690,13 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">Rộng (mm)</Label>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Rộng (mm)
+                </Label>
                 <Input
                   type="number"
                   step="0.1"
@@ -629,11 +711,13 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">Dày (mm)</Label>
+                <Label className="text-gray-700 font-medium mb-2">
+                  Dày (mm)
+                </Label>
                 <Input
                   type="number"
                   step="0.1"
@@ -648,11 +732,11 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <Label className="text-gray-700 font-medium">
+                <Label className="text-gray-700 font-medium mb-2">
                   Trọng lượng (g)
                 </Label>
                 <Input
@@ -668,7 +752,7 @@ const EditMobile = ({
                       },
                     })
                   }
-                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -692,9 +776,9 @@ const EditMobile = ({
 
           {/* Biến thể màu */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold mb-2">
+            <h3 className="text-lg font-semibold text-gray-700">
               Biến thể màu
-            </Label>
+            </h3>
             {formData.colorVariants.map((variant, index) => (
               <div
                 key={index}
@@ -768,18 +852,17 @@ const EditMobile = ({
               </div>
             ))}
             <Button
-              variant="outline"
+              type="button"
               onClick={addColorVariant}
-              className="mt-2 border-gray-300 text-gray-700 hover:bg-gray-100"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Thêm màu
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Phụ kiện */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold mb-2">Phụ kiện</Label>
+            <h3 className="text-lg font-semibold text-gray-700">Phụ kiện</h3>
             <div className="flex gap-2">
               <Input
                 value={accessoryInput}
@@ -792,7 +875,7 @@ const EditMobile = ({
                 onClick={handleAddAccessory}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                Thêm
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -822,7 +905,7 @@ const EditMobile = ({
 
           {/* Tags */}
           <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
-            <Label className="text-gray-900 font-semibold mb-2">Tags</Label>
+            <h3 className="text-lg font-semibold text-gray-700">Tags</h3>
             <div className="flex gap-2">
               <Input
                 value={tagInput}
@@ -835,7 +918,7 @@ const EditMobile = ({
                 onClick={handleAddTag}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                Thêm
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">

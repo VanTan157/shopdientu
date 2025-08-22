@@ -23,7 +23,13 @@ import EditLaptop from "./edit-tablet";
 import DeleteLaptop from "./delete-tablet";
 import { ITablet } from "@/lib/types/tablet";
 
-const LaptopTable = ({ tablets }: { tablets: ITablet[] }) => {
+const LaptopTable = ({
+  tablets,
+  brands,
+}: {
+  tablets: ITablet[];
+  brands: string[];
+}) => {
   const [searchName, setSearchName] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("Tất cả");
   const [filterPromotion, setFilterPromotion] = useState<string>("Tất cả");
@@ -118,7 +124,7 @@ const LaptopTable = ({ tablets }: { tablets: ITablet[] }) => {
                       <Eye className="w-4 h-4" />
                     </div>
                   </ViewLaptopDetail>
-                  <EditLaptop tablet={tablet}>
+                  <EditLaptop tablet={tablet} brands={brands}>
                     <div className="flex items-center justify-center border rounded-md p-2 bg-white hover:bg-gray-200 cursor-pointer">
                       <Edit className="w-4 h-4" />
                     </div>
