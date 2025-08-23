@@ -81,10 +81,15 @@ const OrderTable = ({ orders }: { orders: Order[] }) => {
     });
     if (res.data) {
       toast.success("Cập nhật trạng thái đơn hàng thành công!");
-      await apiPost("/notifications", {
-        userId,
-        message: `Đơn hàng ${orderId} của bạn đã chuyển sang trạng thái ${status}!`,
-      });
+      await apiPost(
+        "/notifications",
+        {
+          userId,
+          message: `Đơn hàng ${orderId} của bạn đã chuyển sang trạng thái ${status}!`,
+        },
+        undefined,
+        ["notification"]
+      );
       router.refresh();
     } else if (res.error) toast.error(res.error);
     else toast.error(res.message);

@@ -28,7 +28,7 @@ export class AuthService {
       type: user.type,
       name: user.name,
     };
-    const accessTokenExpiresIn = remember ? "7d" : undefined;
+    const accessTokenExpiresIn = remember ? "7d" : "15m";
     const refreshTokenExpiresIn = remember ? "30d" : "7d";
     const accessTokenMaxAge = remember
       ? 7 * 24 * 60 * 60 * 1000
@@ -37,10 +37,9 @@ export class AuthService {
       ? 30 * 24 * 60 * 60 * 1000
       : 7 * 24 * 60 * 60 * 1000;
 
-    const accessToken = this.jwtService.sign(
-      payload,
-      accessTokenExpiresIn ? { expiresIn: accessTokenExpiresIn } : undefined
-    );
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: accessTokenExpiresIn,
+    });
     const refreshToken = this.jwtService.sign(payload, {
       expiresIn: refreshTokenExpiresIn,
     });

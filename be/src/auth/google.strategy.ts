@@ -24,21 +24,15 @@ export class GoogleStrategy extends PassportStrategy(Strategy, "google") {
     });
   }
 
-  async validate(profile: any, done: VerifyCallback): Promise<any> {
-    try {
-      if (!profile.emails || !profile.emails[0]?.value) {
-        return done(new Error("Email not provided by Google"), false);
-      }
-
-      const { id, displayName, emails } = profile;
-      const user = {
-        googleId: id,
-        email: emails[0].value,
-        name: displayName || "Unknown",
-      };
-      return done(null, user);
-    } catch (error) {
-      return done(error, false);
+  async validate(profile: any): Promise<any> {
+    if (!profile.emails || !profile.emails[0]?.value) {
+      throw new Error("Email not provided by Google");
     }
+    return {
+      userId: profile.id,
+      email: profile.emails[0].value,
+      type: "google",
+      name: profile.displayName || "Unknown",
+    };
   }
 }

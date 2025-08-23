@@ -11,11 +11,16 @@ const adminURL = ["/admin"];
 export async function middleware(request: NextRequest) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken");
+  const refreshToken = cookieStore.get("refreshToken");
   const url = request.nextUrl.pathname;
   if (authURL.some((path) => url.includes(path)) && accessToken) {
     return NextResponse.redirect(new URL("/", request.url));
   }
-  if (privateURL.some((path) => url.includes(path)) && !accessToken) {
+  if (
+    privateURL.some((path) => url.includes(path)) &&
+    !accessToken &&
+    !refreshToken
+  ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   if (adminURL.some((path) => url.includes(path))) {

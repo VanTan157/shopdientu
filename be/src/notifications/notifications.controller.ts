@@ -18,13 +18,10 @@ export class NotificationsController {
   @Get("get-all")
   async getAllNotifications(@Req() req): Promise<any> {
     const userId = req.user.userId;
-    const notifications = await this.notificationsService.getUserNotifications(
-      userId
-    );
-    return notifications;
+    return this.notificationsService.getUserNotifications(userId);
   }
 
-  @Get("")
+  @Get()
   async getNotifications(@Req() req): Promise<any> {
     const userId = req.user.userId;
     return this.notificationsService.getUserNotifications(userId);
@@ -34,16 +31,11 @@ export class NotificationsController {
   async createNotification(
     @Body() { userId, message }: { userId: string; message: string }
   ) {
-    const notification = await this.notificationsService.create(
-      userId,
-      message
-    );
-    return { message: "Notification created successfully", notification };
+    return this.notificationsService.create(userId, message);
   }
 
   @Patch("mark-as-read")
   async markAsRead(@Body() body: { id: string }) {
-    const notification = await this.notificationsService.markAsRead(body.id);
-    return { message: "Notification marked as read", notification };
+    return this.notificationsService.markAsRead(body.id);
   }
 }

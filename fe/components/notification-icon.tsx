@@ -25,28 +25,44 @@ const NotificationIcon = ({
   const router = useRouter();
   const { count, setCount } = useNotificationStore();
   const [notifications, setNotifications] = useState(initialNotifications);
-
   useEffect(() => {
     const unreadCount = initialNotifications.filter((n) => !n.isRead).length;
     setCount(unreadCount);
   }, [initialNotifications, setCount]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      return;
+    }
 
     socket.emit("join", userId);
 
-    const handler = (notification: Notification) => {
+    socket.on("newNotification", (notification) => {
       setNotifications((prev) => [notification, ...prev]);
       setCount((c) => c + 1);
-    };
-
-    socket.on("newNotification", handler);
+    });
 
     return () => {
-      socket.off("newNotification", handler);
+      socket.off("newNotification");
     };
   }, [userId, setCount]);
+
+  const markAsRead = async (notificationId: string) => {
+    const res = await apiPatch(
+      `/notifications/mark-as-read`,
+      { id: notificationId },
+      undefined,
+      ["notification"]
+    );
+    if (res.success) {
+      setCount(count - 1);
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notificationId ? { ...n, isRead: true } : n))
+      );
+      router.refresh();
+    }
+    console.log(res);
+  };
 
   return (
     <HoverCard openDelay={0} closeDelay={50}>
@@ -75,28 +91,9 @@ const NotificationIcon = ({
                 className={`p-3 text-sm hover:bg-gray-50 transition-colors ${
                   notification.isRead ? "bg-white" : "bg-blue-50"
                 }`}
-                onClick={async () => {
+                onClick={() => {
                   if (!notification.isRead) {
-                    try {
-                      const res = await apiPatch(
-                        `/notifications/mark-as-read`,
-                        { id: notification._id }
-                      );
-                      setCount(count - 1);
-                      setNotifications((prev) =>
-                        prev.map((n) =>
-                          n._id === notification._id
-                            ? { ...n, isRead: true }
-                            : n
-                        )
-                      );
-                      router.refresh();
-                    } catch (error) {
-                      console.error(
-                        "Error marking notification as read:",
-                        error
-                      );
-                    }
+                    markAsRead(notification._id);
                   }
                 }}
               >

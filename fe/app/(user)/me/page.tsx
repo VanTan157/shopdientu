@@ -1,4 +1,3 @@
-import { apiGet } from "@/lib/api";
 import { cookies } from "next/headers";
 import { User } from "@/lib/types/user";
 import { Button } from "@/components/ui/button";

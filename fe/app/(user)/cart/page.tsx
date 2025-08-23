@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import CartPage from "./cart-page";
 import { toast } from "sonner";
 import { IOrderItem } from "@/lib/types/order-item";
+import NotFound from "../not-found";
 
 const Cart = async () => {
   const cookieStore = await cookies();
@@ -14,8 +15,7 @@ const Cart = async () => {
     }
   );
   if (res.error) {
-    toast.error(res.message);
-    return <div>Error fetching cart items</div>;
+    return <NotFound />;
   }
   console.log("Cart items:", res.data);
   const cartItems = res.data || [];

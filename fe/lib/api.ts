@@ -48,43 +48,41 @@ export async function fetchWithAuth<T>(
   };
 
   const response = await fetch(`${BASE_URL}${url}`, fetchOptions);
+  console.log("API Response:", response);
 
-  let data: any = null;
-  try {
-    data = await response.json();
-  } catch (e) {}
+  const data: IApiResponse<T> | null = await response.json();
+  console.log("API Data:", data);
 
-  const isUnauthorized =
-    response.status === 401 || (data && data.statusCode === 401);
-
-  if (isUnauthorized && retry) {
+  if (data && data.statusCode === 401 && retry) {
     try {
       const refreshResponse = await fetch(`${BASE_URL}/auth/refresh`, {
         method: "POST",
         credentials: "include",
       });
+      console.log("Refresh Response:", refreshResponse);
 
       if (refreshResponse.ok) {
         const refreshData = await refreshResponse.json();
         if (refreshData && refreshData.success) {
-          return fetchWithAuth(url, options, false);
+          return fetchWithAuth(url, fetchOptions, false);
         }
       } else {
         window.location.href = "/login";
         return {
           success: false,
-          message: "Đăng nhập lại để tiếp tục sử dụng trang web",
+          message: "Đăng nhập để tiếp tục",
           statusCode: 401,
         };
       }
     } catch (e) {}
   }
-  if (response.ok && data.success) {
-    return data as IApiResponse<T>;
+  if (data?.success) {
+    return data;
   }
+
   return {
-    message: data.message || "Lỗi không xác định",
-    statusCode: data.statusCode ?? 500,
+    message: data?.message || "Lỗi không xác định",
+    statusCode: data?.statusCode || 500,
     error: data?.error || "Lỗi mạng",
   };
 }
@@ -107,6 +105,8 @@ export async function apiGet<T>(
       (fetchOptions as any).cache = "no-store";
     } else {
       (fetchOptions as any).cache = "force-cache";
+      // (fetchOptions as any).cache = "no-store";
+
       (fetchOptions as any).next = { tags: cacheTags };
     }
 

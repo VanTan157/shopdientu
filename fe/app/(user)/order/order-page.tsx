@@ -38,6 +38,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
     EOrderStatus.ALL
   );
   const [search, setSearch] = useState("");
+  const [openDelete, setOpenDelete] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { start, stop } = loadingStore();
@@ -55,7 +56,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
       toast.error(res.message);
     }
     toast.success("Hủy đơn hàng thành công!");
-    setOpen(false);
+    setOpenDelete(false);
     router.refresh();
     stop();
   };
@@ -267,7 +268,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                 </Dialog>
 
                 {order.status === EOrderStatus.PENDING && (
-                  <Dialog open={open} onOpenChange={setOpen}>
+                  <Dialog open={openDelete} onOpenChange={setOpenDelete}>
                     <DialogTrigger asChild>
                       <Button
                         variant="destructive"
@@ -286,7 +287,7 @@ const OrderPage = ({ orders }: { orders: Order[] }) => {
                         <Button
                           variant="outline"
                           onClick={() => {
-                            setOpen(false);
+                            setOpenDelete(false);
                           }}
                         >
                           Không
